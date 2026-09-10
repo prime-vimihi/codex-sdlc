@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = resolve(root, "build/marketplace");
 const plugin = resolve(output, "plugins/codex-sdlc");
+const marketplaceManifest = resolve(output, ".agents/plugins/marketplace.json");
 
 await rm(output, { recursive: true, force: true });
 await mkdir(plugin, { recursive: true });
@@ -13,7 +14,8 @@ await cp(resolve(root, ".codex-plugin"), resolve(plugin, ".codex-plugin"), { rec
 await cp(resolve(root, "skills"), resolve(plugin, "skills"), { recursive: true });
 await cp(resolve(root, "assets/brand"), resolve(plugin, "assets/brand"), { recursive: true });
 await writeFile(resolve(plugin, "README.md"), await readFile(resolve(root, "README.md"), "utf8"), "utf8");
-await writeFile(resolve(output, "marketplace.json"), `${JSON.stringify({
+await mkdir(dirname(marketplaceManifest), { recursive: true });
+await writeFile(marketplaceManifest, `${JSON.stringify({
   name: "codex-sdlc-local",
   interface: { displayName: "codex-sdlc local development" },
   plugins: [{

@@ -144,7 +144,7 @@ Build a self-contained local marketplace directory:
 npm run build:marketplace
 ```
 
-The command writes `build/marketplace/marketplace.json` and `build/marketplace/plugins/codex-sdlc/`. Install it with:
+The command writes `build/marketplace/.agents/plugins/marketplace.json` and `build/marketplace/plugins/codex-sdlc/`. Install it with:
 
 ```sh
 codex plugin marketplace add ./build/marketplace
