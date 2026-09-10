@@ -19,4 +19,17 @@ jobs:
           node-version: 24.16.0
           registry-url: https://registry.npmjs.org
       - run: npm ci
-      - run: npm publish
+      - name: Read package version
+        id: package
+        run: node -e "const pkg = require('./package.json'); console.log('spec=' + pkg.name + '@' + pkg.version)" >> "$GITHUB_OUTPUT"
+      - name: Check whether this version is already published
+        id: registry
+        run: |
+          if npm view "${{ steps.package.outputs.spec }}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish npm package with provenance
+        if: steps.registry.outputs.published != 'true'
+        run: npm publish --provenance
