@@ -16,6 +16,7 @@
     "assignment_id": { "$ref": "#/$defs/assignmentId" },
     "run_id": { "$ref": "#/$defs/canonicalId" },
     "task_id": { "$ref": "#/$defs/canonicalId" },
+    "repository": { "$ref": "#/$defs/repositoryId" },
     "producer": { "const": "pm" },
     "role": { "enum": ["backend", "frontend"] },
     "target": { "enum": ["backend", "web", "mobile"] },
@@ -156,6 +157,7 @@
       "minLength": 1,
       "pattern": "^(?:\\.|(?![A-Za-z]:)(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)$"
     },
+    "repositoryId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
     "taskStatus": {
       "enum": ["pending", "ready", "running", "awaiting_review", "awaiting_approval", "blocked", "failed", "completed", "cancelled"]
     },

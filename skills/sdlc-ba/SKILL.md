@@ -7,7 +7,7 @@ description: Use when an active SDLC run needs feature requirements, typed fact-
 
 Create reviewable requirements from the run's typed facts; Product Owner and PM approval remain separate decisions.
 
-1. Read the active run manifest, assigned BA task, immutable request, PM intake artifacts including `facts.yaml`, `.sdlc/project.yaml`, applicable `AGENTS.md`, policies, workflow, and templates.
+1. Read the active run manifest, assigned BA task, immutable request, PM intake artifacts including `facts.yaml`, `.sdlc/project.yaml`, applicable `AGENTS.md`, policies, workflow, and templates. If project documentation is configured in another repository, resolve `resources.documentation` through `.sdlc/local.yaml`; cite it as source material while keeping authoritative BA run artifacts in the coordinator repository.
 2. Read [role contract](references/role-contract.md), [requirements contract](references/requirements-contract.md), and [output example](references/output-example.md).
 3. Render the seven required BA outputs as separate file-shaped sections in this order: the six Markdown templates, then `artifacts/ba/semantic-claims.yaml`. Give every Markdown artifact its own exact metadata block.
 4. Treat `facts.yaml` as the deterministic input truth. Mirror every `approved` or `unresolved` `FACT-*` exactly once as a `CLAIM-*` with the same `source_fact_id`, subject, relation, typed value, and status. Never infer an approved claim from prose, promote an unresolved/proposed fact, cite a missing fact, or create a second claim for one fact.

@@ -6,7 +6,7 @@ The framework is distributed as both an npm CLI and a Codex skills plugin. Exist
 
 ## Current status
 
-Version `0.3.0` is the first public release candidate. Runtime packaging, web-only, mobile-only, backend-only, and combined-project initialization, technology presets, configuration diagnostics, reversible installation lifecycle commands, delivery lifecycle commands, frozen legacy assets, and plugin validation are implemented here. Linux and Windows qualification is deferred from this candidate.
+Version `0.4.0` adds single- and multi-repository workspaces. Runtime packaging, web-only, mobile-only, backend-only, and combined-project initialization, technology presets, configuration diagnostics, reversible installation lifecycle commands, delivery lifecycle commands, frozen legacy assets, and plugin validation are implemented here. Native Linux and Windows qualification remains deferred.
 
 ## Build and test
 
@@ -53,7 +53,41 @@ codex-sdlc init --root /path/to/project --name example-platform \
   --database-preset postgresql --redis
 ```
 
-For one selected application the default root is `.`. For a combined project the default roots are `backend`, `web`, and `mobile`. Application roots must be separate and cannot overlap.
+For one selected application the default root is `.`. For a combined project the default roots are `backend`, `web`, and `mobile`. Application roots in the same repository must be separate and cannot overlap.
+
+### Multi-repository setup
+
+Use one checkout as the coordinator. It owns `.sdlc/`, requests, run manifests, assignments, reports, and evidence. Map every other checkout by a stable repository ID and assign each application or shared resource to one of those IDs:
+
+```sh
+codex-sdlc init --root /work/platform-delivery --name example-platform \
+  --workspace-mode multi-repository \
+  --repo backend=/work/platform-api \
+  --repo web=/work/platform-web \
+  --repo mobile=/work/platform-mobile \
+  --repo docs=/work/platform-docs \
+  --applications backend,web,mobile \
+  --backend-repo backend --backend-root . --backend-preset go \
+  --web-repo web --web-root . --web-preset nextjs \
+  --mobile-repo mobile --mobile-root . --mobile-preset flutter \
+  --docs-repo docs --docs-root . \
+  --contracts-repo backend --contracts-root contracts \
+  --database-preset postgresql --redis
+```
+
+Every mapped path must be the root of a Git checkout with an `origin` remote. The initializer records stable remotes and default branches in committed `.sdlc/project.yaml`. It writes absolute device paths to ignored `.sdlc/local.yaml` and creates committed `.sdlc/local.example.yaml` for other contributors.
+
+After cloning or moving a checkout, update only the local mapping:
+
+```sh
+codex-sdlc configure --root /work/platform-delivery --repo backend=/new/path/platform-api --dry-run
+codex-sdlc configure --root /work/platform-delivery --repo backend=/new/path/platform-api
+codex-sdlc doctor --root /work/platform-delivery
+```
+
+`doctor`, `validate-config`, command evidence, delivery permissions, and changed-file authority verify the mapping before use. Commands run with their declared repository as the process root. Multi-repository changed-file entries use `{ repository, path }`; coordinator run artifacts retain their portable string paths. Existing schema-family 1 single-repository installations continue to work and can be upgraded without adding local mappings.
+
+See [Multi-repository workspace configuration](docs/multi-repository.md) for the complete file formats and runtime behavior.
 
 | Preset | Target | Generated verification commands |
 | --- | --- | --- |
@@ -70,9 +104,9 @@ Use the `generic` application preset or `none` database preset when a listed pre
 Install the generated tarball, preview the bounded changes, and then initialize. During local testing, pin the generated repository launcher to the tarball:
 
 ```sh
-npm install --global ./codex-sdlc-0.3.0.tgz
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.3.0.tgz --dry-run
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.3.0.tgz
+npm install --global ./codex-sdlc-0.4.0.tgz
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.0.tgz --dry-run
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 ```
@@ -91,8 +125,8 @@ The installer preserves existing `AGENTS.md` and `.gitignore` content, refuses c
 Preview and apply an upgrade with the new runtime package pinned into the repository:
 
 ```sh
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.3.0.tgz --dry-run
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.3.0.tgz
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.0.tgz --dry-run
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 node .sdlc/runtime.cjs doctor

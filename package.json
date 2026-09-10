@@ -1,6 +1,6 @@
 {
   "name": "codex-sdlc",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Evidence-backed, repository-resumable SDLC runtime for Codex",
   "type": "module",
   "license": "Apache-2.0",

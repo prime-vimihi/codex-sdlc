@@ -29,7 +29,7 @@ export async function executeConfiguredCommand(
     }
     const command = project.commands[commandId as keyof typeof project.commands];
     assertNetworkPolicyAttested(command, project.security.network_policy_attestation_environment);
-    const canonicalCommand = await canonicalizeCommandDeclaration(root, command, secrets);
+    const canonicalCommand = await canonicalizeCommandDeclaration(root, command, secrets, project);
 
     const manifest = await loadRun(root, runId);
     if (!manifest.tasks.some((task) => task.id === taskId)) {
@@ -44,7 +44,23 @@ export async function executeConfiguredCommand(
         ? legacyClock(timing)
         : timing.clock ?? (() => new Date().toISOString());
       const startedAt = clock();
-      const result = await executeCommand(command, canonicalCommand.cwdPath);
+      let exitCode = 0;
+      let stdout = "";
+      let stderr = "";
+      for (const invocation of canonicalCommand.invocations) {
+        const result = await executeCommand({
+          ...invocation.definition,
+          network: command.network,
+          mutates: command.mutates,
+        }, invocation.cwdPath);
+        const label = command.steps === undefined ? "" : `[${invocation.repository}:${invocation.definition.cwd}]\n`;
+        stdout += `${label}${result.stdout}`;
+        stderr += `${label}${result.stderr}`;
+        if (result.exitCode !== 0) {
+          exitCode = result.exitCode;
+          break;
+        }
+      }
       let completedAt = clock();
       if (Date.parse(completedAt) <= Date.parse(startedAt)) completedAt = new Date(Date.parse(startedAt) + 1).toISOString();
       const transaction = await mutateRunManifest(root, runId, async (currentManifest) => {
@@ -59,9 +75,9 @@ export async function executeConfiguredCommand(
           startedAt,
           completedAt,
           provenance: canonicalCommand.provenance,
-          exitCode: result.exitCode,
-          stdout: redactText(result.stdout, secrets),
-          stderr: redactText(result.stderr, secrets),
+          exitCode,
+          stdout: redactText(stdout, secrets),
+          stderr: redactText(stderr, secrets),
           stagingDirectory,
           commandsDirectory,
         });
@@ -113,6 +129,8 @@ async function publishEvidence(input: PublicationInput): Promise<{ record: Evide
       executable: input.provenance.executable,
       args: input.provenance.args,
       cwd: input.provenance.cwd,
+      ...(input.provenance.repository === undefined ? {} : { repository: input.provenance.repository }),
+      ...(input.provenance.steps === undefined ? {} : { steps: input.provenance.steps }),
       started_at: input.startedAt,
       completed_at: input.completedAt,
       exit_code: input.exitCode,

@@ -20,6 +20,7 @@ import {
   permissionsSource,
   toolingPackageSource,
   type ApplicationKind,
+  type ApplicationRepositories,
   type ApplicationRoots,
   type RepositoryEditRecord,
 } from "./install.js";
@@ -106,10 +107,12 @@ export async function upgradeProject(options: UpgradeProjectOptions): Promise<Li
   ]);
   const fromVersion = installedVersion(framework);
   const roots = applicationRootsFromProject(project);
+  const repositories = applicationRepositoriesFromProject(project);
+  const coordinator = isRecord(project.workspace) && typeof project.workspace.coordinator === "string" ? project.workspace.coordinator : "coordinator";
   const runtimeSpec = normalizeRuntimeSpec(options.runtimeSpec ?? FRAMEWORK_VERSION);
   const repositoryEdits = upgradedRepositoryEdits(lock, existingAgents, existingIgnore);
   const nextProject = withProjectVersion(project);
-  const nextLock = withLockVersion(lock, runtimeSpec, repositoryEdits);
+  const nextLock = withLockVersion(lock, runtimeSpec, repositoryEdits, isRecord(project.workspace) && project.workspace.mode === "multi-repository");
   const nextAgents = replaceManagedBlock(existingAgents, agentsBlock());
   const nextIgnore = mergeIgnore(existingIgnore);
   const timestamp = normalizedTimestamp(options.now);
@@ -130,7 +133,7 @@ export async function upgradeProject(options: UpgradeProjectOptions): Promise<Li
     await writeAtomic(resolve(root, ".sdlc/framework.lock.yaml"), stringify(nextLock));
     await writeAtomic(resolve(root, ".sdlc/runtime.cjs"), launcherSource());
     await writeAtomic(resolve(root, ".sdlc/tooling/package.json"), toolingPackageSource(runtimeSpec));
-    await writeAtomic(resolve(root, ".sdlc/policies/permissions.yaml"), permissionsSource(roots));
+    await writeAtomic(resolve(root, ".sdlc/policies/permissions.yaml"), permissionsSource(roots, repositories, coordinator, project.resources ?? {}));
     await writeAtomic(resolve(root, "AGENTS.md"), nextAgents);
     await writeAtomic(resolve(root, ".gitignore"), nextIgnore);
     await removeRestoredDependencies(root);
@@ -422,24 +425,37 @@ function applicationRootsFromProject(project: Record<string, unknown>): Applicat
   if (entries.length === 0) throw new Error("project must configure at least one application");
   for (let left = 0; left < entries.length; left += 1) {
     for (let right = left + 1; right < entries.length; right += 1) {
-      if (portablePathsOverlap(entries[left]![1], entries[right]![1])) throw new Error("project application roots overlap");
+      const repositories = applicationRepositoriesFromProject(project);
+      if (repositories[entries[left]![0]] === repositories[entries[right]![0]] && portablePathsOverlap(entries[left]![1], entries[right]![1])) throw new Error("project application roots overlap");
     }
   }
   return roots;
+}
+
+function applicationRepositoriesFromProject(project: Record<string, unknown>): ApplicationRepositories {
+  const result: ApplicationRepositories = {};
+  const coordinator = isRecord(project.workspace) && typeof project.workspace.coordinator === "string" ? project.workspace.coordinator : "coordinator";
+  if (!isRecord(project.applications)) return result;
+  for (const application of ["backend", "web", "mobile"] as const) {
+    const config = project.applications[application];
+    if (!isRecord(config)) continue;
+    result[application] = typeof config.repository === "string" ? config.repository : coordinator;
+  }
+  return result;
 }
 
 function withProjectVersion(project: Record<string, unknown>): Record<string, unknown> {
   return { ...project, framework: { ...(project.framework as Record<string, unknown>), name: FRAMEWORK_NAME, version: FRAMEWORK_VERSION } };
 }
 
-function withLockVersion(lock: Record<string, unknown>, runtimeSpec: string, repositoryEdits: RepositoryEditRecord): Record<string, unknown> {
+function withLockVersion(lock: Record<string, unknown>, runtimeSpec: string, repositoryEdits: RepositoryEditRecord, multiRepository: boolean): Record<string, unknown> {
   return {
     ...lock,
     schema_version: 1,
     product: FRAMEWORK_NAME,
     version: FRAMEWORK_VERSION,
     runtime_spec: runtimeSpec,
-    schema_family: 1,
+    schema_family: multiRepository ? 2 : 1,
     skill_contract_version: 1,
     repository_edits: repositoryEdits,
   };

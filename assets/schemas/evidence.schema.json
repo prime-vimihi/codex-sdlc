@@ -18,6 +18,22 @@
     "executable": { "type": "string", "minLength": 1 },
     "args": { "type": "array", "items": { "type": "string" } },
     "cwd": { "type": "string", "minLength": 1 },
+    "repository": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repository", "executable", "args", "cwd"],
+        "properties": {
+          "repository": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "executable": { "type": "string", "minLength": 1 },
+          "args": { "type": "array", "items": { "type": "string" } },
+          "cwd": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
     "started_at": { "type": "string", "format": "date-time" },
     "completed_at": { "type": "string", "format": "date-time" },
     "exit_code": { "type": "integer", "minimum": 0 },

@@ -6,6 +6,7 @@ import { portablePathContains, portableRepositoryPathKey } from "./paths.js";
 import {
   parseStrictYamlDocument,
   reconcileDeliveryAssignmentAuthority,
+  repositoryPathIdentity,
   type DeliveryAuthorityReconciliationOptions,
   type ArtifactKind,
   type DeliveryArtifactResult,
@@ -14,6 +15,7 @@ import {
   type DeliveryAuthoritySnapshot,
   type DeliveryReport,
   type DeliveryResultStatus,
+  type PortableDeliveryPath,
 } from "./semantic-contracts.js";
 import { validateDocument } from "./schemas.js";
 import type { ValidationResult } from "./types.js";
@@ -127,6 +129,7 @@ export function reconcileDeliveryReportPackage(
   compareScalar(pkg.report.target, pkg.assignment.target, "target", diagnostics);
   compareScalar(pkg.report.stage, pkg.assignment.stage, "stage", diagnostics);
   compareScalar(pkg.report.scenario, pkg.assignment.scenario, "scenario", diagnostics);
+  compareScalar(pkg.report.repository, pkg.assignment.repository, "repository", diagnostics);
 
   const expected = normativeDisposition(pkg.assignment, pkg.authority_snapshot, pkg.report, pkg.artifact_integrity, options);
   reconcileArtifacts(pkg.assignment, pkg.report, pkg.artifact_integrity, expected, diagnostics);
@@ -193,9 +196,16 @@ function reconcileWrites(
   expected: NormativeDeliveryState,
   diagnostics: string[],
 ): void {
-  const reportPaths = report.writes.map((write) => write.path);
+  const reportPaths = report.writes.map((write): PortableDeliveryPath => write.type === "artifact"
+    ? write.path
+    : assignment.repository === undefined && write.repository === undefined
+      ? write.path
+      : { repository: write.repository ?? assignment.repository!, path: write.path });
   compareScalarSets(authority.changed_files.files, reportPaths, "writes", "path", diagnostics);
   for (const write of report.writes) {
+    if (write.type !== "artifact" && assignment.repository !== undefined && (write.repository ?? report.repository) !== assignment.repository) {
+      diagnostics.push(`write path ${write.path} uses repository ${write.repository ?? report.repository ?? "unspecified"} outside assignment repository ${assignment.repository}`);
+    }
     if (!assignment.allowed_write_roots.some((root) => containsPath(root, write.path))) {
       diagnostics.push(`write path ${write.path} is outside allowed roots`);
     }
@@ -336,7 +346,7 @@ function reconcileResultArtifactBacking(
         || artifact.revision !== actual.revision
         || artifact.sha256 !== actual.sha256
         || write?.type !== "artifact"
-        || !authority.changed_files.files.includes(output.path);
+        || !authority.changed_files.files.some((path) => typeof path === "string" && path === output.path);
     })
     .map((output) => output.path);
 
@@ -430,9 +440,9 @@ function compareKeyed<TExpected extends object, TActual extends object>(
   for (const value of actualKeys) if (!expectedKeys.has(value)) diagnostics.push(`${path} has unexpected ${key} ${value}`);
 }
 
-function compareScalarSets(expected: readonly string[], actual: readonly string[], path: string, key: string, diagnostics: string[]): void {
-  const expectedSet = new Set(expected);
-  const actualSet = new Set(actual);
+function compareScalarSets(expected: readonly PortableDeliveryPath[], actual: readonly PortableDeliveryPath[], path: string, key: string, diagnostics: string[]): void {
+  const expectedSet = new Set(expected.map(repositoryPathIdentity));
+  const actualSet = new Set(actual.map(repositoryPathIdentity));
   for (const value of expectedSet) if (!actualSet.has(value)) diagnostics.push(`${path} is missing ${key} ${value}`);
   for (const value of actualSet) if (!expectedSet.has(value)) diagnostics.push(`${path} has unexpected ${key} ${value}`);
 }

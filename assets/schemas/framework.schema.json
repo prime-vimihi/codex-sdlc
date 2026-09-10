@@ -14,7 +14,7 @@
         "name": { "const": "codex-sdlc" },
         "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
         "run_schema_version": { "const": 1 },
-        "project_schema_version": { "const": 1 }
+        "project_schema_version": { "enum": [1, 2] }
       }
     },
     "installation": {

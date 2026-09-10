@@ -7,23 +7,26 @@ import {
   resolvePathInsideRoot,
 } from "./paths.js";
 import { validateDocument } from "./schemas.js";
-import { parseStrictYamlDocument } from "./semantic-contracts.js";
-import type { DeliveryAssignment } from "./semantic-contracts.js";
+import { parseStrictYamlDocument, repositoryPathIdentity } from "./semantic-contracts.js";
+import type { DeliveryAssignment, PortableDeliveryPath, RepositoryPath } from "./semantic-contracts.js";
 import type { ProjectConfig, RunManifest, Task } from "./types.js";
+import { repositoryForApplication, resolveWorkspace, resolveWorkspacePath } from "./workspace.js";
 
 export interface ChangedFileOwnership {
   path: string;
+  repository?: string;
   task_id: string;
 }
 
 export interface ChangedFilesAuthorityDocument {
-  files: string[];
+  files: PortableDeliveryPath[];
   ownership: ChangedFileOwnership[];
 }
 
 interface PermissionsPolicy {
   protectedPaths: string[];
   roleWritePaths: Map<string, string[]>;
+  roleWriteLocations: Map<string, Array<{ repository: string; path: string }>>;
 }
 
 export async function validateChangedFilesAuthorityDocument(
@@ -35,22 +38,22 @@ export async function validateChangedFilesAuthorityDocument(
   if (!isRecord(value)
     || !["files", "files,ownership"].includes(Object.keys(value).sort().join(","))
     || !Array.isArray(value.files)
-    || !value.files.every(isPortableRepositoryPath)
+    || !value.files.every(isPortableDeliveryPath)
     || (value.ownership !== undefined && (!Array.isArray(value.ownership) || !value.ownership.every(isChangedFileOwnership)))) {
     throw new Error("changed-files manifest must contain only portable repository paths and optional closed ownership records");
   }
 
-  const files = value.files as string[];
+  const files = value.files as PortableDeliveryPath[];
   assertUniquePortableIdentities(files, "changed-files manifest paths");
   const ownership = (value.ownership ?? []) as ChangedFileOwnership[];
-  assertUniquePortableIdentities(ownership.map((entry) => entry.path), "changed-files manifest ownership paths");
-  const filePathKeys = new Set(files.map(portableRepositoryPathKey));
-  const exactFiles = new Set(files);
-  const ownershipByPath = new Map(ownership.map((entry) => [portableRepositoryPathKey(entry.path), entry.task_id]));
+  assertUniquePortableIdentities(ownership.map(ownershipPath), "changed-files manifest ownership paths");
+  const filePathKeys = new Set(files.map(repositoryPathIdentity));
+  const ownershipByPath = new Map(ownership.map((entry) => [repositoryPathIdentity(ownershipPath(entry)), entry.task_id]));
   const permissions = await readPermissionsPolicy(root);
-  const authorityRootsByTask = new Map<string, Promise<string[]>>();
+  const authorityRootsByTask = new Map<string, Promise<PortableDeliveryPath[]>>();
 
-  for (const path of files) {
+  for (const entry of files) {
+    const path = deliveryPath(entry).path;
     const protectedPattern = permissions.protectedPaths.find((pattern) => portableGlobMatches(pattern, path));
     if (protectedPattern !== undefined) {
       throw new Error(`changed-files protected path ${path} matches permissions policy pattern ${protectedPattern}`);
@@ -58,8 +61,9 @@ export async function validateChangedFilesAuthorityDocument(
   }
 
   for (const entry of ownership) {
-    if (!filePathKeys.has(portableRepositoryPathKey(entry.path)) || !exactFiles.has(entry.path)) {
-      throw new Error(`changed-files ownership path is not exactly listed in files: ${entry.path}`);
+    const scopedPath = ownershipPath(entry);
+    if (!filePathKeys.has(repositoryPathIdentity(scopedPath))) {
+      throw new Error(`changed-files ownership path is not exactly listed in files: ${formatDeliveryPath(scopedPath)}`);
     }
     const owner = manifest.tasks.find((candidate) => candidate.id === entry.task_id);
     if (owner === undefined) throw new Error(`changed-files path ${entry.path} names unknown task owner ${entry.task_id}`);
@@ -68,15 +72,16 @@ export async function validateChangedFilesAuthorityDocument(
       authorityRoots = resolveTaskAuthorityRoots(root, manifest.run.id, owner, project, permissions);
       authorityRootsByTask.set(owner.id, authorityRoots);
     }
-    if (!(await authorityRoots).some((authorityRoot) => portablePathContains(authorityRoot, entry.path))) {
+    if (!(await authorityRoots).some((authorityRoot) => sameRepository(authorityRoot, scopedPath)
+      && portablePathContains(deliveryPath(authorityRoot).path, entry.path))) {
       throw new Error(`changed-files path ${entry.path} is owned by ${entry.task_id}, which has no permitted write authority`);
     }
-    if (!(await repositoryFileExists(root, entry.path))) throw new Error(`task-owned repository path ${entry.path} does not exist`);
+    if (!(await repositoryFileExists(root, project, scopedPath))) throw new Error(`task-owned repository path ${formatDeliveryPath(scopedPath)} does not exist`);
   }
 
   for (const path of files) {
-    if (requiresTaskOwnership(path, project) && !ownershipByPath.has(portableRepositoryPathKey(path))) {
-      throw new Error(`changed-files manifest requires explicit task ownership for repository path ${path}`);
+    if (requiresTaskOwnership(path, project) && !ownershipByPath.has(repositoryPathIdentity(path))) {
+      throw new Error(`changed-files manifest requires explicit task ownership for repository path ${formatDeliveryPath(path)}`);
     }
   }
 
@@ -88,28 +93,35 @@ export function changedFilesForTask(
   task: Task,
   _project: ProjectConfig,
   taskOutputPaths: readonly string[],
-): string[] {
-  const ownershipByPath = new Map(document.ownership.map((entry) => [portableRepositoryPathKey(entry.path), entry.task_id]));
-  return document.files.filter((path) => taskOutputPaths.includes(path)
-    || ownershipByPath.get(portableRepositoryPathKey(path)) === task.id);
+): PortableDeliveryPath[] {
+  const ownershipByPath = new Map(document.ownership.map((entry) => [repositoryPathIdentity(ownershipPath(entry)), entry.task_id]));
+  return document.files.filter((path) => (typeof path === "string" && taskOutputPaths.includes(path))
+    || ownershipByPath.get(repositoryPathIdentity(path)) === task.id);
 }
 
 function isChangedFileOwnership(value: unknown): value is ChangedFileOwnership {
   return isRecord(value)
-    && Object.keys(value).sort().join(",") === "path,task_id"
+    && ["path,task_id", "path,repository,task_id"].includes(Object.keys(value).sort().join(","))
     && isPortableRepositoryPath(value.path)
+    && (value.repository === undefined || (typeof value.repository === "string" && /^[a-z][a-z0-9-]*$/u.test(value.repository)))
     && typeof value.task_id === "string";
 }
 
-function applicationRootForPath(path: string, project: ProjectConfig): string | undefined {
-  return [project.applications.backend?.root, project.applications.web?.root, project.applications.mobile?.root]
-    .find((root): root is string => root !== undefined && portablePathContains(root, path));
+function applicationRootForPath(path: PortableDeliveryPath, project: ProjectConfig): string | undefined {
+  const scoped = deliveryPath(path);
+  return (["backend", "web", "mobile"] as const).flatMap((application) => {
+    const config = project.applications[application];
+    return config === undefined ? [] : [{ root: config.root, repository: repositoryForApplication(project, application) }];
+  }).find((candidate) => candidate.repository === scoped.repository && portablePathContains(candidate.root, scoped.path))?.root;
 }
 
-function requiresTaskOwnership(path: string, project: ProjectConfig): boolean {
+function requiresTaskOwnership(path: PortableDeliveryPath, project: ProjectConfig): boolean {
+  const scoped = deliveryPath(path);
+  const contract = project.resources?.api_contracts;
   return applicationRootForPath(path, project) !== undefined
-    || path === "packages/api-contracts/openapi.yaml"
-    || portablePathContains("packages/api-contracts/generated", path);
+    || (contract !== undefined && scoped.repository === contract.repository && portablePathContains(contract.root, scoped.path))
+    || (contract === undefined && scoped.path === "packages/api-contracts/openapi.yaml")
+    || (contract === undefined && portablePathContains("packages/api-contracts/generated", scoped.path));
 }
 
 async function resolveTaskAuthorityRoots(
@@ -118,7 +130,7 @@ async function resolveTaskAuthorityRoots(
   task: Task,
   project: ProjectConfig,
   permissions: PermissionsPolicy,
-): Promise<string[]> {
+): Promise<PortableDeliveryPath[]> {
   const assignmentPath = `.sdlc/runs/${runId}/tasks/${task.id}.assignment.yaml`;
   const source = await readFile(await resolvePathInsideRoot(root, assignmentPath, { mustExist: true }), "utf8");
   const value = parseStrictYamlDocument(source);
@@ -134,33 +146,44 @@ async function resolveTaskAuthorityRoots(
   }
 
   const stageRoots = stageSpecificAuthorityRoots(task, project, runId);
+  const repository = assignment.repository ?? project.workspace?.coordinator ?? "coordinator";
   const policyWritePaths = permissions.roleWritePaths.get(task.role) ?? [];
-  return assignment.allowed_write_roots.filter((candidate) => stageRoots.some((stageRoot) => samePortableIdentity(stageRoot, candidate))
-    && policyWritePaths.some((pattern) => portableGlobMatches(pattern, candidate)));
+  const policyLocations = permissions.roleWriteLocations.get(task.role) ?? [];
+  return assignment.allowed_write_roots.flatMap((candidate) => {
+    const scoped: PortableDeliveryPath = candidate.startsWith(".sdlc/") ? candidate : { repository, path: candidate };
+    const permitted = typeof scoped === "string"
+      ? policyWritePaths.some((pattern) => portableGlobMatches(pattern, candidate))
+      : policyLocations.some((location) => location.repository === scoped.repository && portableGlobMatches(location.path, scoped.path));
+    return stageRoots.some((stageRoot) => sameRepository(stageRoot, scoped)
+      && samePortableIdentity(deliveryPath(stageRoot).path, deliveryPath(scoped).path)) && permitted ? [scoped] : [];
+  });
 }
 
-function stageSpecificAuthorityRoots(task: Task, project: ProjectConfig, runId: string): string[] {
+function stageSpecificAuthorityRoots(task: Task, project: ProjectConfig, runId: string): PortableDeliveryPath[] {
   const artifactRoot = task.target === "backend" || task.target === "web" || task.target === "mobile"
     ? `.sdlc/runs/${runId}/artifacts/${task.target}`
     : undefined;
   if (task.role === "backend" && task.target === "backend" && task.stage === "api_contract") {
     if (project.applications.backend === undefined) return [];
+    const applicationRepository = repositoryForApplication(project, "backend");
+    const contract = project.resources?.api_contracts;
     return [
-      project.applications.backend.root,
-      "packages/api-contracts/openapi.yaml",
-      "packages/api-contracts/generated",
+      { repository: applicationRepository, path: project.applications.backend.root },
+      ...(contract === undefined
+        ? [{ repository: applicationRepository, path: "packages/api-contracts/openapi.yaml" }, { repository: applicationRepository, path: "packages/api-contracts/generated" }]
+        : [{ repository: contract.repository, path: contract.root }]),
       ...(artifactRoot === undefined ? [] : [artifactRoot]),
     ];
   }
   if (task.role === "backend" && task.target === "backend" && task.stage === "backend_implementation") {
     if (project.applications.backend === undefined) return [];
-    return [project.applications.backend.root, ...(artifactRoot === undefined ? [] : [artifactRoot])];
+    return [{ repository: repositoryForApplication(project, "backend"), path: project.applications.backend.root }, ...(artifactRoot === undefined ? [] : [artifactRoot])];
   }
   if (task.role === "frontend" && task.target === "web" && task.stage === "web_implementation" && project.applications.web !== undefined) {
-    return [project.applications.web.root, ...(artifactRoot === undefined ? [] : [artifactRoot])];
+    return [{ repository: repositoryForApplication(project, "web"), path: project.applications.web.root }, ...(artifactRoot === undefined ? [] : [artifactRoot])];
   }
   if (task.role === "frontend" && task.target === "mobile" && task.stage === "mobile_implementation" && project.applications.mobile !== undefined) {
-    return [project.applications.mobile.root, ...(artifactRoot === undefined ? [] : [artifactRoot])];
+    return [{ repository: repositoryForApplication(project, "mobile"), path: project.applications.mobile.root }, ...(artifactRoot === undefined ? [] : [artifactRoot])];
   }
   return [];
 }
@@ -173,13 +196,21 @@ async function readPermissionsPolicy(root: string): Promise<PermissionsPolicy> {
     throw new Error("permissions policy must declare portable protected_paths and role write_paths");
   }
   const roleWritePaths = new Map<string, string[]>();
+  const roleWriteLocations = new Map<string, Array<{ repository: string; path: string }>>();
   for (const [role, rolePolicy] of Object.entries(value.roles)) {
     if (!isRecord(rolePolicy) || !Array.isArray(rolePolicy.write_paths) || !rolePolicy.write_paths.every(isPortableGlobPattern)) {
       throw new Error(`permissions policy write paths are invalid for role ${role}`);
     }
     roleWritePaths.set(role, rolePolicy.write_paths);
+    const locations = rolePolicy.write_locations ?? [];
+    if (!Array.isArray(locations) || !locations.every(isWriteLocation)) throw new Error(`permissions policy write locations are invalid for role ${role}`);
+    roleWriteLocations.set(role, locations);
   }
-  return { protectedPaths: value.protected_paths, roleWritePaths };
+  return { protectedPaths: value.protected_paths, roleWritePaths, roleWriteLocations };
+}
+
+function isWriteLocation(value: unknown): value is { repository: string; path: string } {
+  return isRecord(value) && typeof value.repository === "string" && isPortableGlobPattern(value.path);
 }
 
 function isPortableGlobPattern(value: unknown): value is string {
@@ -226,22 +257,47 @@ function escapeRegularExpression(character: string): string {
   return /[\\^$.*+?()[\]{}|]/u.test(character) ? `\\${character}` : character;
 }
 
-function assertUniquePortableIdentities(paths: readonly string[], label: string): void {
+function assertUniquePortableIdentities(paths: readonly PortableDeliveryPath[], label: string): void {
   const identities = new Set<string>();
   for (const path of paths) {
-    const identity = portableRepositoryPathKey(path);
+    const identity = repositoryPathIdentity(path);
     if (identities.has(identity)) throw new Error(`${label} contains duplicate portable path identity: ${path}`);
     identities.add(identity);
   }
 }
 
-async function repositoryFileExists(root: string, path: string): Promise<boolean> {
+async function repositoryFileExists(root: string, project: ProjectConfig, path: PortableDeliveryPath): Promise<boolean> {
   try {
-    return (await lstat(await resolvePathInsideRoot(root, path))).isFile();
+    const workspace = await resolveWorkspace(root, project);
+    const scoped = typeof path === "string" ? { repository: workspace.coordinator, path } : path;
+    return (await lstat(await resolveWorkspacePath(workspace, scoped.repository, scoped.path))).isFile();
   } catch (error) {
     if (isMissingPath(error)) return false;
     throw error;
   }
+}
+
+function isPortableDeliveryPath(value: unknown): value is PortableDeliveryPath {
+  return isPortableRepositoryPath(value)
+    || (isRecord(value) && Object.keys(value).sort().join(",") === "path,repository"
+      && typeof value.repository === "string" && /^[a-z][a-z0-9-]*$/u.test(value.repository)
+      && isPortableRepositoryPath(value.path));
+}
+
+function ownershipPath(entry: ChangedFileOwnership): PortableDeliveryPath {
+  return entry.repository === undefined ? entry.path : { repository: entry.repository, path: entry.path };
+}
+
+function deliveryPath(value: PortableDeliveryPath): RepositoryPath {
+  return typeof value === "string" ? { repository: "coordinator", path: value } : value;
+}
+
+function sameRepository(left: PortableDeliveryPath, right: PortableDeliveryPath): boolean {
+  return deliveryPath(left).repository === deliveryPath(right).repository;
+}
+
+function formatDeliveryPath(value: PortableDeliveryPath): string {
+  return typeof value === "string" ? value : `${value.repository}:${value.path}`;
 }
 
 function isRecord(value: unknown): value is Record<string, any> {

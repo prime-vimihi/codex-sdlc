@@ -85,10 +85,12 @@ export async function readEvidenceReference(input: EvidenceReferenceValidationIn
   }
   const command = input.project.commands[evidence.command_id as keyof typeof input.project.commands];
   const secretValues = configuredSecretValues(input.project.security.secret_environment_variables);
-  const canonicalCommand = await canonicalizeCommandDeclaration(input.root, command, secretValues);
+  const canonicalCommand = await canonicalizeCommandDeclaration(input.root, command, secretValues, input.project);
   const provenanceMatches = evidence.executable === canonicalCommand.provenance.executable
     && equalOrderedStrings(evidence.args, canonicalCommand.provenance.args)
-    && evidence.cwd === canonicalCommand.provenance.cwd;
+    && evidence.cwd === canonicalCommand.provenance.cwd
+    && evidence.repository === canonicalCommand.provenance.repository
+    && JSON.stringify(evidence.steps) === JSON.stringify(canonicalCommand.provenance.steps);
   if (!provenanceMatches) {
     throw new Error(`evidence command provenance does not match the active project command declaration: ${input.reference}`);
   }

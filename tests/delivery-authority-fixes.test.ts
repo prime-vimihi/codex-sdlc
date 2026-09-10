@@ -100,6 +100,38 @@ describe("delivery authority regressions", () => {
     expect(validateDocument("deliveryAssignment", invalid).valid).toBe(false);
   });
 
+  test("binds multi-repository assignments and changed files to a stable repository ID", () => {
+    const assignment = webAssignment();
+    assignment.repository = "web";
+    const authority: DeliveryAuthoritySnapshot = {
+      schema_version: 1,
+      kind: "delivery_authority_snapshot",
+      captured_at: "2026-09-11T00:00:00.000Z",
+      assignment: { path: ".sdlc/runs/TEST-001/tasks/WEB-001.assignment.yaml", assignment_id: "ASN-001", revision: 1, sha256: hash },
+      run: { path: ".sdlc/runs/TEST-001/manifest.yaml", run_id: "TEST-001", sha256: hash },
+      task: { task_id: "WEB-001", repository: "web", role: "frontend", target: "web", stage: "web_implementation", status: "running", dependencies: assignment.dependencies },
+      facts: { path: ".sdlc/runs/TEST-001/facts.yaml", producer: "pm", revision: 1, sha256: hash },
+      required_inputs: [],
+      workflow: { required_outputs: assignment.required_outputs, permission_roots: ["."] },
+      evidence_documents: [],
+      changed_files: { path: "evidence/diffs/changed-files.json", sha256: hash, files: [{ repository: "web", path: "src/status.ts" }] },
+      approval_decisions: [],
+    };
+    const integrity: DeliveryAuthorityIntegrityInputs = {
+      assignment_sha256: hash,
+      run_sha256: hash,
+      facts_sha256: hash,
+      required_inputs: [],
+      evidence_documents: [],
+      changed_files: structuredClone(authority.changed_files),
+      approval_decisions: [],
+    };
+
+    expect(validateDocument("deliveryAssignment", assignment).valid).toBe(true);
+    expect(validateDocument("deliveryAuthoritySnapshot", authority)).toEqual({ valid: true, diagnostics: [] });
+    expect(reconcileDeliveryAssignmentAuthority(assignment, authority, integrity)).toEqual({ valid: true, diagnostics: [] });
+  });
+
   test("allows PM to publish running execution authority immediately before activation", () => {
     const assignment = webAssignment();
     const task: Task = {

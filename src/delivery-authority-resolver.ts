@@ -31,6 +31,7 @@ import {
   resolvePathInsideRoot,
 } from "./paths.js";
 import { loadProject } from "./config.js";
+import { repositoryForApplication } from "./workspace.js";
 import { validateDocument } from "./schemas.js";
 import {
   acquireRunAuthorityLock,
@@ -123,6 +124,10 @@ async function resolveRepositoryDeliveryAuthorityUnderLock(
   if (facts.run_id !== runId || facts.producer !== "pm") throw new Error(`${runId} facts identity does not match active run`);
 
   const project = await loadProject(root);
+  const taskRepository = repositoryForTask(project, task);
+  if (project.workspace?.mode === "multi-repository" && assignment.repository !== taskRepository) {
+    throw new Error(`${task.id} delivery assignment repository must be ${taskRepository}`);
+  }
   assertConfiguredEvidenceRequirements(assignment, project);
   const requiredInputs = await resolveRequiredInputs(root, runId, task);
   const evidenceDocuments = await resolveEvidenceDocuments(root, runId, manifest, task, assignment, project);
@@ -151,6 +156,7 @@ async function resolveRepositoryDeliveryAuthorityUnderLock(
       role: task.role,
       target: task.target,
       stage: task.stage,
+      ...(project.workspace?.mode === "multi-repository" ? { repository: taskRepository } : {}),
       status: assignment.task_status,
       dependencies: task.dependencies.map((dependencyId) => ({
         task_id: dependencyId,
@@ -347,15 +353,24 @@ async function resolvePermissionRoots(
   if (!isRecord(value) || !isRecord(value.roles) || !isRecord(value.roles[task.role])) {
     throw new Error(`permissions policy is missing role ${task.role}`);
   }
-  const paths = value.roles[task.role].write_paths;
+  const rolePolicy = value.roles[task.role];
+  const paths = rolePolicy.write_paths;
   if (!Array.isArray(paths) || !paths.every((entry) => typeof entry === "string")) {
     throw new Error(`permissions policy write paths are invalid for role ${task.role}`);
   }
   const requestedRoots = new Set(assignment.allowed_write_roots);
-  return paths
+  const legacyRoots = paths
     .map((path) => normalizePermissionPolicyRoot(path, runId))
+    .filter((path) => project.workspace?.mode !== "multi-repository" || path.startsWith(".sdlc/"))
     .filter((path) => isTargetPermissionRoot(task, path, project, runId))
-    .filter((path) => !isSharedContractRoot(path) || requestedRoots.has(path));
+    .filter((path) => !isSharedContractRoot(path, project) || requestedRoots.has(path));
+  const locations: unknown[] = Array.isArray(rolePolicy.write_locations) ? rolePolicy.write_locations : [];
+  const repository = repositoryForTask(project, task);
+  const locationRoots: string[] = locations.flatMap((location: unknown) => isRecord(location)
+    && location.repository === repository && typeof location.path === "string"
+    ? [normalizePermissionPolicyRoot(location.path, runId)] : [])
+    .filter((path: string) => isTargetPermissionRoot(task, path, project, runId));
+  return [...new Set([...legacyRoots, ...locationRoots])];
 }
 
 export function normalizePermissionPolicyRoot(path: string, runId: string): string {
@@ -372,8 +387,11 @@ function assertConfiguredEvidenceRequirements(assignment: DeliveryAssignment, pr
   }
 }
 
-function isSharedContractRoot(path: string): boolean {
-  return path === "packages/api-contracts/openapi.yaml" || path === "packages/api-contracts/generated";
+function isSharedContractRoot(path: string, project: ProjectConfig): boolean {
+  const configured = project.resources?.api_contracts?.root;
+  return configured === undefined
+    ? path === "packages/api-contracts/openapi.yaml" || path === "packages/api-contracts/generated"
+    : path === configured;
 }
 
 function resolveApprovalDecisions(manifest: RunManifest, task: Task): DeliveryAuthorityApproval[] {
@@ -581,10 +599,20 @@ function isTargetPermissionRoot(task: Task, path: string, project: ProjectConfig
   if (task.role === "backend") {
     if (path === project.applications.backend?.root || path === artifactRoot) return true;
     return task.stage === "api_contract"
-      && (path === "packages/api-contracts/openapi.yaml" || path === "packages/api-contracts/generated");
+      && (project.resources?.api_contracts?.root === path || path === "packages/api-contracts/openapi.yaml" || path === "packages/api-contracts/generated");
   }
   if (task.target === "web") return path === project.applications.web?.root || path === artifactRoot;
   return path === project.applications.mobile?.root || path === artifactRoot;
+}
+
+function repositoryForTask(project: ProjectConfig, task: Task): string {
+  if (task.stage === "api_contract" && project.resources?.api_contracts !== undefined) {
+    return project.resources.api_contracts.repository;
+  }
+  if (task.target === "backend" || task.target === "web" || task.target === "mobile") {
+    return repositoryForApplication(project, task.target);
+  }
+  return project.workspace?.coordinator ?? "coordinator";
 }
 
 function documentRevision(source: string, path: string): number {

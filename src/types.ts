@@ -26,12 +26,17 @@ export type RunStatus =
   | "failed"
   | "cancelled";
 
-export interface CommandDefinition {
+export interface CommandStep {
   executable: string;
   args: string[];
   cwd: string;
+  repository?: string;
+}
+
+export interface CommandDefinition extends CommandStep {
   network: "disabled" | "restricted" | "required";
   mutates: boolean;
+  steps?: CommandStep[];
 }
 
 export interface FrameworkConfig {
@@ -40,7 +45,7 @@ export interface FrameworkConfig {
     name: "codex-sdlc";
     version: string;
     run_schema_version: 1;
-    project_schema_version: 1;
+    project_schema_version: 1 | 2;
   };
   installation: {
     mode: "repository";
@@ -49,8 +54,23 @@ export interface FrameworkConfig {
   };
 }
 
-export interface ProjectConfig {
+export interface RepositoryConfig {
+  remote: string;
+  default_branch: string;
+}
+
+export interface ProjectLocation {
+  repository: string;
+  root: string;
+}
+
+export interface LocalConfig {
   schema_version: 1;
+  repositories: Record<string, string>;
+}
+
+export interface ProjectConfig {
+  schema_version: 1 | 2;
   framework: {
     name: "codex-sdlc";
     version: string;
@@ -61,10 +81,19 @@ export interface ProjectConfig {
     default_branch: string;
     repository_structure: string;
   };
+  workspace?: {
+    mode: "single-repository" | "multi-repository";
+    coordinator: string;
+  };
+  repositories?: Record<string, RepositoryConfig>;
   applications: Record<string, ApplicationConfig> & {
     backend?: ApplicationConfig;
     web?: ApplicationConfig;
     mobile?: ApplicationConfig;
+  };
+  resources?: {
+    documentation?: ProjectLocation;
+    api_contracts?: ProjectLocation;
   };
   data: {
     primary_database: string;
@@ -91,6 +120,7 @@ export interface ProjectConfig {
 
 export interface ApplicationConfig {
   lifecycle: ApplicationLifecycle;
+  repository?: string;
   root: string;
   framework: string;
   language: string;
@@ -184,6 +214,13 @@ export interface EvidenceRecord {
   executable: string;
   args: string[];
   cwd: string;
+  repository?: string;
+  steps?: Array<{
+    repository: string;
+    executable: string;
+    args: string[];
+    cwd: string;
+  }>;
   started_at: string;
   completed_at: string;
   exit_code: number;

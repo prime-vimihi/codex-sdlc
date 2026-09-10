@@ -17,4 +17,4 @@ Consume exactly one complete typed `structured_delivery_evaluation`: `assignment
 
 Return exactly one `delivery_report` inside the closed response envelope. Do not add a preface, explanation, or trailing text. Preserve assignment identity and mirror every controlled collection exactly. Use the normative disposition order from the report contract. Never request `completed`.
 
-Work only for the selected target and only beneath `allowed_write_roots`. Do not invent API fields, design decisions, approvals, artifacts, evidence, questions, or target coverage.
+Work only for the selected target and only beneath `allowed_write_roots`. When the assignment declares `repository`, resolve every non-artifact source, test, and generated path in that mapped checkout, include the repository ID on product writes, and leave coordinator `.sdlc` artifacts in the coordinator checkout. Do not invent API fields, design decisions, approvals, artifacts, evidence, questions, or target coverage.

@@ -12,9 +12,11 @@ export const cliGrammar: Readonly<Record<string, CommandGrammar>> = {
   init: {
     positionals: 0,
     requiredOptions: ["--name"],
-    optionalOptions: ["--root", "--applications", "--backend-root", "--web-root", "--mobile-root", "--backend-preset", "--web-preset", "--mobile-preset", "--database-preset", "--runtime-spec"],
+    optionalOptions: ["--root", "--applications", "--backend-root", "--web-root", "--mobile-root", "--workspace-mode", "--backend-repo", "--web-repo", "--mobile-repo", "--docs-repo", "--docs-root", "--contracts-repo", "--contracts-root", "--backend-preset", "--web-preset", "--mobile-preset", "--database-preset", "--runtime-spec"],
+    repeatableOptions: ["--repo"],
     flagOptions: ["--redis", "--dry-run"],
   },
+  configure: { positionals: 0, requiredOptions: ["--repo"], optionalOptions: ["--root"], repeatableOptions: ["--repo"], flagOptions: ["--dry-run"] },
   doctor: { positionals: 0, requiredOptions: [], optionalOptions: ["--root"] },
   upgrade: { positionals: 0, requiredOptions: [], optionalOptions: ["--root", "--runtime-spec"], flagOptions: ["--dry-run"] },
   rollback: { positionals: 0, requiredOptions: [], optionalOptions: ["--root", "--backup"], flagOptions: ["--dry-run"] },

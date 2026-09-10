@@ -16,6 +16,7 @@
     "assignment_revision": { "type": "integer", "minimum": 1 },
     "run_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
     "task_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+    "repository": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryId" },
     "producer": { "enum": ["backend", "frontend"] },
     "role": { "enum": ["backend", "frontend"] },
     "target": { "enum": ["backend", "web", "mobile"] },
@@ -175,6 +176,7 @@
       "required": ["path", "type"],
       "properties": {
         "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "repository": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryId" },
         "type": { "enum": ["source", "test", "artifact", "generated"] }
       }
     },

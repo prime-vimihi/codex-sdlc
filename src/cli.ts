@@ -8,7 +8,7 @@ import { validateCliArguments } from "./cli-grammar.js";
 import { executeConfiguredCommand } from "./evidence.js";
 import { finalizeRun } from "./finalize.js";
 import { decideApproval, recordProductOwnerDecision, recordQualityGate, requestApproval } from "./lifecycle.js";
-import { initializeProject, inspectProject } from "./install.js";
+import { configureRepositories, initializeProject, inspectProject } from "./install.js";
 import { rollbackProject, uninstallProject, upgradeProject } from "./installation-lifecycle.js";
 import { FRAMEWORK_VERSION } from "./constants.js";
 import { mutateRunManifest, publishRunAuthority, type RunAuthorityPublication } from "./manifest-transaction.js";
@@ -18,6 +18,7 @@ import { loadRun, startRun, validateRun } from "./runs.js";
 import { parseStrictYamlDocument } from "./semantic-contracts.js";
 import { prepareTransitionContext, SdlcTransitionError, SdlcTransitionUsageError, transitionTask } from "./transitions.js";
 import { SdlcValidationError, type TaskStatus } from "./types.js";
+import { resolveWorkspace } from "./workspace.js";
 
 const exitCodes = {
   success: 0,
@@ -59,6 +60,15 @@ interface InitOptions {
   backendRoot?: string;
   webRoot?: string;
   mobileRoot?: string;
+  workspaceMode?: string;
+  repo: string[];
+  backendRepo?: string;
+  webRepo?: string;
+  mobileRepo?: string;
+  docsRepo?: string;
+  docsRoot?: string;
+  contractsRepo?: string;
+  contractsRoot?: string;
   backendPreset?: string;
   webPreset?: string;
   mobilePreset?: string;
@@ -67,6 +77,8 @@ interface InitOptions {
   dryRun?: boolean;
   runtimeSpec?: string;
 }
+
+interface ConfigureOptions extends RootOptions { repo: string[]; dryRun?: boolean }
 
 interface RootOptions { root?: string }
 
@@ -148,6 +160,15 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
     .option("--backend-root <path>", "backend application root")
     .option("--web-root <path>", "web application root")
     .option("--mobile-root <path>", "mobile application root")
+    .option("--workspace-mode <mode>", "single-repository or multi-repository", "single-repository")
+    .option("--repo <id=path>", "map a repository ID to a local Git checkout; repeatable", collectOption, [])
+    .option("--backend-repo <id>", "repository containing the backend application")
+    .option("--web-repo <id>", "repository containing the web application")
+    .option("--mobile-repo <id>", "repository containing the mobile application")
+    .option("--docs-repo <id>", "repository containing project documentation")
+    .option("--docs-root <path>", "documentation root within its repository")
+    .option("--contracts-repo <id>", "repository containing API contracts")
+    .option("--contracts-root <path>", "API contract root within its repository")
     .option("--backend-preset <id>", "generic or go", "generic")
     .option("--web-preset <id>", "generic or nextjs", "generic")
     .option("--mobile-preset <id>", "generic or flutter", "generic")
@@ -165,6 +186,15 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
         backendRoot: options.backendRoot,
         webRoot: options.webRoot,
         mobileRoot: options.mobileRoot,
+        workspaceMode: assertPreset(options.workspaceMode ?? "single-repository", ["single-repository", "multi-repository"] as const, "workspace mode") as "single-repository" | "multi-repository",
+        repositories: parseRepositoryMappings(options.repo),
+        backendRepository: options.backendRepo,
+        webRepository: options.webRepo,
+        mobileRepository: options.mobileRepo,
+        docsRepository: options.docsRepo,
+        docsRoot: options.docsRoot,
+        contractsRepository: options.contractsRepo,
+        contractsRoot: options.contractsRoot,
         backendPreset: assertPreset(options.backendPreset ?? "generic", ["generic", "go"], "backend") as "generic" | "go",
         webPreset: assertPreset(options.webPreset ?? "generic", ["generic", "nextjs"], "web") as "generic" | "nextjs",
         mobilePreset: assertPreset(options.mobilePreset ?? "generic", ["generic", "flutter"], "mobile") as "generic" | "flutter",
@@ -174,6 +204,23 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
         runtimeSpec: options.runtimeSpec,
       });
       emit("init", result, result.dry_run ? `planned ${result.files.length} files` : `initialized ${result.root}`);
+    });
+
+  program.command("configure")
+    .option("--root <path>", "coordinator repository root", ".")
+    .requiredOption("--repo <id=path>", "update a repository mapping; repeatable", collectOption, [])
+    .option("--dry-run", "show the local mapping update without writing")
+    .action(async (options: ConfigureOptions) => {
+      executed = true;
+      activeCommand = "configure";
+      const result = await configureRepositories({
+        root: options.root ?? ".",
+        repositories: parseRepositoryMappings(options.repo),
+        dryRun: options.dryRun ?? false,
+      });
+      emit("configure", result, result.dry_run
+        ? `planned mappings for ${result.repositories.join(", ")}`
+        : `updated ${result.file} for ${result.repositories.join(", ")}`);
     });
 
   program.command("doctor")
@@ -249,6 +296,7 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
     if (framework.status !== "fulfilled" || project.status !== "fulfilled") {
       throw new Error("configuration validation did not produce a result");
     }
+    await resolveWorkspace(root, project.value);
     emit("validate-config", { framework: framework.value, project: project.value }, "configuration is valid");
   });
 
@@ -473,6 +521,18 @@ function assertTaskStatus(value: string): TaskStatus {
 }
 
 function collectOption(value: string, previous: string[]): string[] { return [...previous, value]; }
+
+function parseRepositoryMappings(values: string[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const value of values) {
+    const separator = value.indexOf("=");
+    if (separator <= 0 || separator === value.length - 1) throw new CliFailure(exitCodes.usage, { code: "USAGE", message: `repository mapping must use id=path: ${value}` });
+    const id = value.slice(0, separator);
+    if (Object.hasOwn(result, id)) throw new CliFailure(exitCodes.usage, { code: "USAGE", message: `duplicate repository mapping: ${id}` });
+    result[id] = value.slice(separator + 1);
+  }
+  return result;
+}
 
 function assertPublicationActor(value: string): PublicationActor {
   const actors: readonly PublicationActor[] = ["pm", "ba", "backend", "frontend", "qc", "runtime_collector"];

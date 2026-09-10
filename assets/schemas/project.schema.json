@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "framework", "project", "applications", "data", "security", "commands"],
   "properties": {
-    "schema_version": { "const": 1 },
+    "schema_version": { "enum": [1, 2] },
     "framework": {
       "type": "object",
       "additionalProperties": false,
@@ -26,6 +26,20 @@
         "repository_structure": { "type": "string", "minLength": 1 }
       }
     },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "coordinator"],
+      "properties": {
+        "mode": { "enum": ["single-repository", "multi-repository"] },
+        "coordinator": { "$ref": "#/$defs/repositoryId" }
+      }
+    },
+    "repositories": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/repositoryId" },
+      "additionalProperties": { "$ref": "#/$defs/repository" }
+    },
     "applications": {
       "type": "object",
       "additionalProperties": false,
@@ -34,6 +48,14 @@
         "web": { "$ref": "#/$defs/application" },
         "mobile": { "$ref": "#/$defs/application" },
         "backend": { "$ref": "#/$defs/application" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "documentation": { "$ref": "#/$defs/location" },
+        "api_contracts": { "$ref": "#/$defs/location" }
       }
     },
     "data": {
@@ -113,7 +135,36 @@
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["workspace"],
+        "properties": { "workspace": { "type": "object", "properties": { "mode": { "const": "multi-repository" } }, "required": ["mode"] } }
+      },
+      "then": { "type": "object", "properties": { "schema_version": { "const": 2 }, "repositories": {} }, "required": ["repositories"] }
+    }
+  ],
   "$defs": {
+    "repositoryId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["remote", "default_branch"],
+      "properties": {
+        "remote": { "type": "string", "minLength": 1 },
+        "default_branch": { "type": "string", "minLength": 1 }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "root"],
+      "properties": {
+        "repository": { "$ref": "#/$defs/repositoryId" },
+        "root": { "type": "string", "minLength": 1 }
+      }
+    },
     "activationCommands": {
       "type": "object",
       "properties": {
@@ -168,6 +219,7 @@
       "required": ["lifecycle", "root", "framework", "language"],
       "properties": {
         "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "repository": { "$ref": "#/$defs/repositoryId" },
         "root": { "type": "string", "minLength": 1 },
         "framework": { "type": "string", "minLength": 1 },
         "language": { "type": "string", "minLength": 1 },
@@ -188,6 +240,7 @@
       "additionalProperties": false,
       "required": ["executable", "args", "cwd", "network", "mutates"],
       "properties": {
+        "repository": { "$ref": "#/$defs/repositoryId" },
         "executable": { "type": "string", "minLength": 1 },
         "args": { "type": "array", "items": { "type": "string" } },
         "cwd": {
@@ -195,7 +248,26 @@
           "pattern": "^(?:\\./?|(?!\\.{1,2}(?:/|$))(?!(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\\.|/|$))[a-z0-9._-]*[a-z0-9_-](?:/(?!\\.{1,2}(?:/|$))(?!(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\\.|/|$))[a-z0-9._-]*[a-z0-9_-])*(?:/\\.)?)$"
         },
         "network": { "enum": ["disabled", "restricted", "required"] },
-        "mutates": { "type": "boolean" }
+        "mutates": { "type": "boolean" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/commandStep" }
+        }
+      }
+    },
+    "commandStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "executable", "args", "cwd"],
+      "properties": {
+        "repository": { "$ref": "#/$defs/repositoryId" },
+        "executable": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "cwd": {
+          "type": "string",
+          "pattern": "^(?:\\./?|(?!\\.{1,2}(?:/|$))(?!(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\\.|/|$))[a-z0-9._-]*[a-z0-9_-](?:/(?!\\.{1,2}(?:/|$))(?!(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\\.|/|$))[a-z0-9._-]*[a-z0-9_-])*(?:/\\.)?)$"
+        }
       }
     }
   }

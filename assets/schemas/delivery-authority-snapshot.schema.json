@@ -57,6 +57,7 @@
       "required": ["task_id", "role", "target", "stage", "status", "dependencies"],
       "properties": {
         "task_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+        "repository": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryId" },
         "role": {},
         "target": {},
         "stage": {},
@@ -153,6 +154,20 @@
         }
       }
     },
+    "portableDeliveryPath": {
+      "oneOf": [
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "path"],
+          "properties": {
+            "repository": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryId" },
+            "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" }
+          }
+        }
+      ]
+    },
     "evidenceAuthority": {
       "type": "object",
       "additionalProperties": false,
@@ -175,7 +190,7 @@
         "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" },
         "files": {
           "type": "array",
-          "items": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" }
+          "items": { "$ref": "#/$defs/portableDeliveryPath" }
         }
       }
     },

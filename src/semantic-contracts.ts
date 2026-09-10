@@ -31,6 +31,8 @@ export type DeliveryScenario =
   | "api_gap" | "design_gap" | "unscaffolded" | "target_isolation" | "evidence_boundary" | "full_task";
 export type ArtifactKind = "technical_design" | "openapi" | "database_impact" | "security_impact" | "implementation_summary" | "delivery_report" | "source" | "test" | "generated" | "screenshot";
 export type DeliveryResultStatus = "planned" | "documented" | "implemented" | "blocked" | "not_applicable";
+export interface RepositoryPath { repository: string; path: string }
+export type PortableDeliveryPath = string | RepositoryPath;
 
 export interface DeliveryDependency { task_id: string; status: TaskStatus }
 export interface DeliveryInput {
@@ -168,6 +170,7 @@ interface DeliveryAssignmentBase {
   assignment_id: string;
   run_id: string;
   task_id: string;
+  repository?: string;
   producer: "pm";
   revision: number;
   facts_revision: number;
@@ -200,7 +203,7 @@ interface DeliveryArtifactResultBase {
 export type DeliveryArtifactResult =
   | DeliveryArtifactResultBase & { status: "produced"; revision: number; sha256: string }
   | DeliveryArtifactResultBase & { status: "planned" | "blocked" | "not_applicable"; revision: null; sha256: null };
-export interface DeliveryWrite { path: string; type: "source" | "test" | "artifact" | "generated" }
+export interface DeliveryWrite { path: string; repository?: string; type: "source" | "test" | "artifact" | "generated" }
 type DeliveryEvidenceResultBase = Omit<CollectorEvidence, "reference" | "document_sha256" | "status">;
 export type DeliveryEvidenceResult =
   | DeliveryEvidenceResultBase & { status: "passed" | "failed"; reference: string; document_sha256: string }
@@ -237,6 +240,7 @@ interface DeliveryReportEnvelope {
   assignment_revision: number;
   run_id: string;
   task_id: string;
+  repository?: string;
   revision: number;
   artifacts: DeliveryArtifactResult[];
   writes: DeliveryWrite[];
@@ -267,7 +271,7 @@ export interface DeliveryAuthoritySnapshot {
   changed_files: DeliveryAuthorityChangedFiles;
   approval_decisions: DeliveryAuthorityApproval[];
 }
-interface DeliveryAuthorityTaskBase { task_id: string; status: TaskStatus; dependencies: DeliveryDependency[] }
+interface DeliveryAuthorityTaskBase { task_id: string; repository?: string; status: TaskStatus; dependencies: DeliveryDependency[] }
 export type DeliveryAuthorityTask =
   | DeliveryAuthorityTaskBase & { role: "backend"; target: "backend"; stage: "api_contract" | "backend_implementation" }
   | DeliveryAuthorityTaskBase & { role: "frontend"; target: "web"; stage: "web_implementation" }
@@ -287,7 +291,7 @@ export type DeliveryAuthorityApproval =
   | DeliveryAuthorityApprovalBase & { status: "approved"; complete: true; approved_by: "product-owner"; consumed: false; consumed_at: null }
   | DeliveryAuthorityApprovalBase & { status: "approved"; complete: true; approved_by: "product-owner"; consumed: true; consumed_at: string }
   | DeliveryAuthorityApprovalBase & { status: "rejected"; complete: true; approved_by: "product-owner"; consumed: false; consumed_at: null };
-export interface DeliveryAuthorityChangedFiles { path: string; sha256: string; files: string[] }
+export interface DeliveryAuthorityChangedFiles { path: string; sha256: string; files: PortableDeliveryPath[] }
 export interface DeliveryAuthorityIntegrityInputs {
   assignment_sha256: string;
   run_sha256: string;
@@ -332,6 +336,7 @@ export function reconcileDeliveryAssignmentAuthority(
   compareScalar(authority.task.role, assignment.role, "task.role", diagnostics);
   compareScalar(authority.task.target, assignment.target, "task.target", diagnostics);
   compareScalar(authority.task.stage, assignment.stage, "task.stage", diagnostics);
+  compareScalar(authority.task.repository, assignment.repository, "task.repository", diagnostics);
   compareScalar(authority.task.status, assignment.task_status, "task.status", diagnostics);
   compareKeyedRecords(
     authority.task.dependencies,
@@ -483,9 +488,9 @@ function compareKeyedRecords<TActual extends object, TExpected extends object>(
   }
 }
 
-function compareScalarSets(actual: readonly string[], expected: readonly string[], path: string, diagnostics: string[]): void {
-  const actualSet = new Set(actual);
-  const expectedSet = new Set(expected);
+function compareScalarSets(actual: readonly unknown[], expected: readonly unknown[], path: string, diagnostics: string[]): void {
+  const actualSet = new Set(actual.map(semanticIdentity));
+  const expectedSet = new Set(expected.map(semanticIdentity));
   for (const value of expectedSet) {
     if (!actualSet.has(value)) diagnostics.push(`${path} is missing value ${value}`);
   }
@@ -498,14 +503,29 @@ function compareScalar(actual: unknown, expected: unknown, path: string, diagnos
   if (actual !== expected) diagnostics.push(`${path} expected ${String(expected)} but received ${String(actual)}`);
 }
 
-function normalizeRepositoryPath(path: string): string {
+function normalizeRepositoryPath(path: PortableDeliveryPath): string {
   try {
-    return portableRepositoryPathKey(path);
+    return repositoryPathIdentity(path);
   } catch {
     // Schema diagnostics own malformed-input reporting; preserve a distinct
     // comparison identity so reconciliation remains total and cannot accept it.
-    return `invalid:${path}`;
+    return `invalid:${JSON.stringify(path)}`;
   }
+}
+
+export function repositoryPathIdentity(value: PortableDeliveryPath): string {
+  return typeof value === "string"
+    ? portableRepositoryPathKey(value)
+    : `${value.repository}::${portableRepositoryPathKey(value.path)}`;
+}
+
+function semanticIdentity(value: unknown): string {
+  if (typeof value === "string") return portableRepositoryPathKey(value);
+  if (value !== null && typeof value === "object" && "repository" in value && "path" in value
+    && typeof value.repository === "string" && typeof value.path === "string") {
+    return repositoryPathIdentity(value as RepositoryPath);
+  }
+  return JSON.stringify(value);
 }
 
 export function parseStrictYamlDocument(source: string): unknown {

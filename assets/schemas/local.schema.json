@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/local.schema.json",
+  "title": "Machine-local codex-sdlc repository mappings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repositories"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "repositories": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/repositoryId" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "repositoryId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }
+  }
+}

@@ -5,7 +5,7 @@ import { dirname, join, relative } from "node:path";
 import { parseDocument, stringify } from "yaml";
 
 import { assertAcyclic } from "./graph.js";
-import { loadWorkflow } from "./config.js";
+import { loadProject, loadWorkflow } from "./config.js";
 import { FRAMEWORK_VERSION } from "./constants.js";
 import { resolvePathInsideRoot, SdlcPathError } from "./paths.js";
 import { validateDocument } from "./schemas.js";
@@ -18,6 +18,7 @@ import {
   type RunAuthorityLockOptions,
 } from "./run-authority-lock.js";
 import type { RunManifest, Task, TaskRole, TaskStage, TaskStatus, TaskTarget, WorkflowConfig } from "./types.js";
+import { resolveWorkspace } from "./workspace.js";
 
 const runIdPattern = /^[A-Z][A-Z0-9]*-[0-9]+$/;
 
@@ -57,6 +58,7 @@ export async function startRun(root: string, input: StartRunInput, options: Star
   if (!input.affectedApplications.backend && !input.affectedApplications.web && !input.affectedApplications.mobile) {
     throw new Error("at least one of backend, web, or mobile must be affected in v0.1");
   }
+  await resolveWorkspace(root, await loadProject(root));
   const runsDirectory = await resolvePathInsideRoot(root, ".sdlc/runs", { mustExist: true });
   const requestSource = await resolvePathInsideRoot(root, input.requestFile, { mustExist: true });
   const templatePath = await resolvePathInsideRoot(root, ".sdlc/templates/run-manifest.yaml", { mustExist: true });
@@ -125,6 +127,7 @@ export async function loadRun(root: string, runId: string, options: RunAuthority
 
 export async function validateRun(root: string, runId: string, options: RunAuthorityLockOptions = {}): Promise<ValidationReport> {
   try {
+    await resolveWorkspace(root, await loadProject(root));
     const lock = await acquireRunAuthorityLock(root, runId, options);
     try {
       return await validateStoredRunUnderLock(root, runId, true, lock);

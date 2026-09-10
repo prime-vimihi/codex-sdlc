@@ -31,7 +31,7 @@ describe("distribution content", () => {
     const manifest = JSON.parse(await readFile(resolve(root, "plugin.json"), "utf8"));
     expect(manifest.$schema).toBe("https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
     expect(manifest.name).toBe("codex-sdlc");
-    expect(manifest.version).toBe("0.3.0");
+    expect(manifest.version).toBe("0.4.0");
     expect(manifest.license).toBe("Apache-2.0");
     expect(manifest.extensions["com.openai"].interface.capabilities).toEqual(["Read", "Write"]);
     expect(manifest.extensions["com.openai"].interface.logo).toBe("./assets/brand/codex-sdlc.svg");

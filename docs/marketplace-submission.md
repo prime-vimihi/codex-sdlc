@@ -14,7 +14,7 @@
 
 Long description:
 
-Initialize and operate resumable, repository-scoped software delivery with specialized workflows for requirements, backend, web and mobile implementation, integration, independent quality control, and Product Owner review. codex-sdlc records tasks, approvals, evidence, defects, and release decisions in the repository so delivery can be validated and resumed. It also manages installation, upgrades, rollback, and uninstall for existing Go, Next.js, and Flutter projects, with PostgreSQL and Redis presets.
+Initialize and operate resumable software delivery across one repository or a set of mapped Git checkouts, with specialized workflows for requirements, backend, web and mobile implementation, integration, independent quality control, and Product Owner review. codex-sdlc records tasks, approvals, evidence, defects, and release decisions in a coordinator repository so delivery can be validated and resumed. It also manages installation, local checkout configuration, upgrades, rollback, and uninstall for existing Go, Next.js, and Flutter projects, with PostgreSQL and Redis presets.
 
 ## Starter prompts
 
@@ -45,7 +45,7 @@ Initialize and operate resumable, repository-scoped software delivery with speci
 - User prompt: `Preview an upgrade of this codex-sdlc installation, apply it, roll it back, and show me the uninstall preview.`
 - Expected behavior: The `sdlc-setup` skill uses dry-run before each mutation, creates an upgrade backup, applies the upgrade, restores the backup with rollback, and performs only a dry-run uninstall.
 - Expected result: The report identifies the backup, shows the restored version and checksums, and lists the bounded uninstall changes without deleting project configuration or run history.
-- Fixture: A disposable Git repository initialized by codex-sdlc 0.3.0 with no edits to framework-managed files after initialization. No account or credentials are required.
+- Fixture: Disposable Git repositories initialized by codex-sdlc 0.4.0 with no edits to framework-managed files after initialization. Use one single-repository fixture and one coordinator plus backend/web checkout fixture. No account or credentials are required.
 
 ### 4. Produce requirements authority
 
@@ -83,7 +83,7 @@ Initialize and operate resumable, repository-scoped software delivery with speci
 
 ## Release notes
 
-Initial public submission of codex-sdlc, a skills-only plugin for repository-resumable software delivery. Version 0.3.0 includes six skills covering setup and lifecycle management, project coordination, business analysis, backend delivery, web/mobile delivery, and independent quality control. The package uses a local Node.js runtime and requires no remote MCP server, plugin authentication, or external codex-sdlc account.
+Version 0.4.0 of codex-sdlc, a skills-only plugin for repository-resumable software delivery. It includes six skills covering setup and lifecycle management, project coordination, business analysis, backend delivery, web/mobile delivery, and independent quality control. This version adds coordinator-based multi-repository configuration and repository-aware command evidence and delivery authority. The package uses a local Node.js runtime and requires no remote MCP server, plugin authentication, or external codex-sdlc account.
 
 ## Portal prerequisites
 

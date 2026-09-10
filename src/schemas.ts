@@ -12,6 +12,7 @@ import type { ValidationResult } from "./types.js";
 const schemaFileNames = {
   framework: "framework.schema.json",
   project: "project.schema.json",
+  local: "local.schema.json",
   workflow: "workflow.schema.json",
   task: "task.schema.json",
   run: "run.schema.json",
@@ -229,10 +230,10 @@ function sourceReferenceDiagnostics(value: unknown, path: string): string[] {
 }
 
 function duplicateKeyDiagnostics(value: unknown, key: string, path: string): string[] {
-  const seen = new Set<unknown>();
+  const seen = new Set<string>();
   const diagnostics: string[] = [];
   for (const [index, entry] of objectArray(value).entries()) {
-    const semanticKey = entry[key];
+    const semanticKey = semanticValueIdentity(entry[key]);
     if (seen.has(semanticKey)) diagnostics.push(`${path}[${index}] duplicates semantic key ${key}=${String(semanticKey)}`);
     seen.add(semanticKey);
   }
@@ -241,13 +242,21 @@ function duplicateKeyDiagnostics(value: unknown, key: string, path: string): str
 
 function duplicateScalarDiagnostics(value: unknown, path: string): string[] {
   if (!Array.isArray(value)) return [];
-  const seen = new Set<unknown>();
+  const seen = new Set<string>();
   const diagnostics: string[] = [];
   for (const [index, entry] of value.entries()) {
-    if (seen.has(entry)) diagnostics.push(`${path}[${index}] duplicates semantic value ${String(entry)}`);
-    seen.add(entry);
+    const identity = semanticValueIdentity(entry);
+    if (seen.has(identity)) diagnostics.push(`${path}[${index}] duplicates semantic value ${identity}`);
+    seen.add(identity);
   }
   return diagnostics;
+}
+
+function semanticValueIdentity(value: unknown): string {
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    return JSON.stringify(Object.fromEntries(Object.entries(value).sort(([left], [right]) => left.localeCompare(right))));
+  }
+  return String(value);
 }
 
 function objectRecord(value: unknown): Record<string, unknown> {
