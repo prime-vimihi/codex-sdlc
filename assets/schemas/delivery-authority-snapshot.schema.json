@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/delivery-authority-snapshot.schema.json",
+  "title": "SDLC delivery authority snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "kind", "captured_at", "assignment", "run", "task", "facts", "required_inputs",
+    "workflow", "evidence_documents", "changed_files", "approval_decisions"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "delivery_authority_snapshot" },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "assignment": { "$ref": "#/$defs/assignmentAuthority" },
+    "run": { "$ref": "#/$defs/runAuthority" },
+    "task": { "$ref": "#/$defs/taskAuthority" },
+    "facts": { "$ref": "#/$defs/factsAuthority" },
+    "required_inputs": { "type": "array", "items": { "$ref": "#/$defs/inputAuthority" } },
+    "workflow": { "$ref": "#/$defs/workflowAuthority" },
+    "evidence_documents": { "type": "array", "items": { "$ref": "#/$defs/evidenceAuthority" } },
+    "changed_files": { "$ref": "#/$defs/changedFilesAuthority" },
+    "approval_decisions": { "type": "array", "items": { "$ref": "#/$defs/approvalAuthority" } }
+  },
+  "$defs": {
+    "assignmentAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "assignment_id", "revision", "sha256"],
+      "properties": {
+        "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "assignment_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/assignmentId" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" }
+      }
+    },
+    "runAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "run_id", "sha256"],
+      "properties": {
+        "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "run_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+        "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" }
+      }
+    },
+    "taskAuthority": {
+      "oneOf": [
+        { "$ref": "#/$defs/backendTaskAuthority" },
+        { "$ref": "#/$defs/webTaskAuthority" },
+        { "$ref": "#/$defs/mobileTaskAuthority" }
+      ]
+    },
+    "taskAuthorityBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "role", "target", "stage", "status", "dependencies"],
+      "properties": {
+        "task_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+        "role": {},
+        "target": {},
+        "stage": {},
+        "status": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/taskStatus" },
+        "dependencies": {
+          "type": "array",
+          "items": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/dependency" }
+        }
+      }
+    },
+    "backendTaskAuthority": {
+      "allOf": [
+        { "$ref": "#/$defs/taskAuthorityBase" },
+        {
+          "type": "object",
+          "properties": {
+            "role": { "const": "backend" },
+            "target": { "const": "backend" },
+            "stage": { "enum": ["api_contract", "backend_implementation"] }
+          }
+        }
+      ]
+    },
+    "webTaskAuthority": {
+      "allOf": [
+        { "$ref": "#/$defs/taskAuthorityBase" },
+        {
+          "type": "object",
+          "properties": {
+            "role": { "const": "frontend" },
+            "target": { "const": "web" },
+            "stage": { "const": "web_implementation" }
+          }
+        }
+      ]
+    },
+    "mobileTaskAuthority": {
+      "allOf": [
+        { "$ref": "#/$defs/taskAuthorityBase" },
+        {
+          "type": "object",
+          "properties": {
+            "role": { "const": "frontend" },
+            "target": { "const": "mobile" },
+            "stage": { "const": "mobile_implementation" }
+          }
+        }
+      ]
+    },
+    "factsAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "producer", "revision", "sha256"],
+      "properties": {
+        "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "producer": { "const": "pm" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" }
+      }
+    },
+    "inputAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "producer", "revision", "exists", "sha256"],
+      "properties": {
+        "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "producer": { "enum": ["pm", "ba", "backend", "frontend", "qc"] },
+        "revision": { "type": "integer", "minimum": 1 },
+        "exists": { "type": "boolean" },
+        "sha256": {
+          "anyOf": [
+            { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "oneOf": [
+        { "properties": { "exists": { "const": true }, "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" } } },
+        { "properties": { "exists": { "const": false }, "sha256": { "const": null } } }
+      ]
+    },
+    "workflowAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_outputs", "permission_roots"],
+      "properties": {
+        "required_outputs": {
+          "type": "array",
+          "items": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/requiredOutput" }
+        },
+        "permission_roots": {
+          "type": "array",
+          "items": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" }
+        }
+      }
+    },
+    "evidenceAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "command_key", "owner", "reference", "document_sha256", "status"],
+      "properties": {
+        "evidence_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/evidenceId" },
+        "command_key": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "owner": { "const": "runtime_collector" },
+        "reference": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/evidenceReference" },
+        "document_sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" },
+        "status": { "enum": ["passed", "failed", "blocked", "not_run"] }
+      }
+    },
+    "changedFilesAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "files"],
+      "properties": {
+        "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" },
+        "files": {
+          "type": "array",
+          "items": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" }
+        }
+      }
+    },
+    "approvalBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "task_id", "action"],
+      "properties": {
+        "run_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+        "task_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+        "action": { "type": "string", "pattern": "^(?:destructive_migration|transition:[A-Z][A-Z0-9]*-[0-9]+:(?:running|completed))$" }
+      }
+    },
+    "approvalAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "producer", "status", "complete", "approved_by", "binding", "consumed", "consumed_at", "sha256"],
+      "properties": {
+        "decision_id": { "type": "string", "pattern": "^DEC-[A-Z0-9-]+$" },
+        "producer": { "const": "product-owner" },
+        "status": { "enum": ["pending", "approved", "rejected"] },
+        "complete": { "type": "boolean" },
+        "approved_by": { "type": ["string", "null"], "enum": [null, "product-owner"] },
+        "binding": { "$ref": "#/$defs/approvalBinding" },
+        "consumed": { "type": "boolean" },
+        "consumed_at": { "type": ["string", "null"], "format": "date-time" },
+        "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "status": { "const": "pending" }, "complete": { "const": false }, "approved_by": { "const": null },
+            "consumed": { "const": false }, "consumed_at": { "const": null }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "approved" }, "complete": { "const": true }, "approved_by": { "const": "product-owner" },
+            "consumed": { "const": false }, "consumed_at": { "const": null }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "approved" }, "complete": { "const": true }, "approved_by": { "const": "product-owner" },
+            "consumed": { "const": true }, "consumed_at": { "type": "string", "format": "date-time" }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "rejected" }, "complete": { "const": true }, "approved_by": { "const": "product-owner" },
+            "consumed": { "const": false }, "consumed_at": { "const": null }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/workflow.schema.json",
+  "title": "SDLC workflow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workflow", "execution", "stages", "task_statuses", "run_statuses", "state_transitions", "rules"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description"],
+      "properties": {
+        "id": { "const": "feature-development" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_mode", "allow_parallel_execution", "stop_on_failed_required_gate", "resume_supported"],
+      "properties": {
+        "default_mode": { "const": "sequential" },
+        "allow_parallel_execution": { "const": false },
+        "stop_on_failed_required_gate": { "const": true },
+        "resume_supported": { "const": true }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "prefixItems": [
+        { "$ref": "#/$defs/intakeStage" },
+        { "$ref": "#/$defs/requirementsStage" },
+        { "$ref": "#/$defs/requirementsReviewStage" },
+        { "$ref": "#/$defs/apiContractStage" },
+        { "$ref": "#/$defs/apiContractReviewStage" },
+        { "$ref": "#/$defs/backendImplementationStage" },
+        { "$ref": "#/$defs/webImplementationStage" },
+        { "$ref": "#/$defs/mobileImplementationStage" },
+        { "$ref": "#/$defs/integrationStage" },
+        { "$ref": "#/$defs/qcStage" },
+        { "$ref": "#/$defs/productOwnerReviewStage" }
+      ],
+      "items": false
+    },
+    "task_statuses": { "const": ["pending", "ready", "running", "awaiting_review", "awaiting_approval", "blocked", "failed", "completed", "cancelled"] },
+    "run_statuses": { "const": ["draft", "intake", "requirements", "awaiting_approval", "technical_design", "implementation", "integration", "qc", "product_owner_review", "completed", "blocked", "failed", "cancelled"] },
+    "state_transitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pending", "ready", "running", "awaiting_review", "awaiting_approval", "blocked", "failed", "completed", "cancelled"],
+      "properties": {
+        "pending": { "const": ["ready", "cancelled"] },
+        "ready": { "const": ["running", "blocked", "cancelled"] },
+        "running": { "const": ["awaiting_review", "awaiting_approval", "blocked", "failed", "cancelled"] },
+        "awaiting_review": { "const": ["completed", "running", "blocked", "failed"] },
+        "awaiting_approval": { "const": ["running", "completed", "blocked", "cancelled"] },
+        "blocked": { "const": ["ready", "cancelled"] },
+        "failed": { "const": ["ready", "cancelled"] },
+        "completed": { "const": [] },
+        "cancelled": { "const": [] }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "owner", "depends_on", "required_outputs", "completion_conditions"],
+      "properties": {
+        "id": { "type": "string", "enum": ["intake", "requirements", "requirements_review", "api_contract", "api_contract_review", "backend_implementation", "web_implementation", "mobile_implementation", "integration", "qc", "product_owner_review"] },
+        "name": { "type": "string", "minLength": 1 },
+        "owner": { "enum": ["pm", "ba", "backend", "frontend", "qc"] },
+        "target": { "enum": ["backend", "web", "mobile"] },
+        "when_affected": { "enum": ["backend", "web", "mobile"] },
+        "depends_on": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "required_outputs": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "completion_conditions": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true }
+      }
+    },
+    "intakeStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "intake" }, "owner": { "const": "pm" }, "depends_on": { "const": [] }, "required_outputs": { "const": ["request.md", "manifest.yaml", "scope.md", "assumptions.md", "facts.yaml", "artifacts/pm/discovery-report.md"] }, "completion_conditions": { "const": ["original_request_recorded", "affected_applications_identified", "initial_scope_defined", "risks_identified"] } } }]
+    },
+    "requirementsStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "requirements" }, "owner": { "const": "ba" }, "depends_on": { "const": ["intake"] }, "required_outputs": { "const": ["artifacts/ba/user-stories.md", "artifacts/ba/acceptance-criteria.md", "artifacts/ba/business-rules.md", "artifacts/ba/validation-rules.md", "artifacts/ba/edge-cases.md", "artifacts/ba/traceability.md", "artifacts/ba/semantic-claims.yaml"] }, "completion_conditions": { "const": ["all_requirements_have_ids", "acceptance_criteria_are_testable", "permission_rules_defined", "error_scenarios_defined", "assumptions_recorded", "open_questions_recorded"] } } }]
+    },
+    "requirementsReviewStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "requirements_review" }, "owner": { "const": "pm" }, "depends_on": { "const": ["requirements"] }, "required_outputs": { "const": ["artifacts/pm/requirements-review.md"] }, "completion_conditions": { "const": ["requirements_validated", "scope_confirmed", "material_assumptions_approved", "requirements_ready_for_implementation"] } } }]
+    },
+    "apiContractStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "api_contract" }, "owner": { "const": "backend" }, "depends_on": { "const": ["requirements_review"] }, "required_outputs": { "const": ["artifacts/backend/technical-design.md", "artifacts/backend/openapi.yaml", "artifacts/backend/database-impact.md", "artifacts/backend/security-impact.md", "artifacts/backend/{task_id}-delivery-report.yaml"] }, "completion_conditions": { "const": ["openapi_specification_valid", "request_schemas_defined", "response_schemas_defined", "error_schemas_defined", "authentication_rules_defined", "authorization_rules_defined", "database_impact_documented"] } } }]
+    },
+    "apiContractReviewStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "api_contract_review" }, "owner": { "const": "pm" }, "depends_on": { "const": ["api_contract"] }, "required_outputs": { "const": ["artifacts/pm/api-contract-review.md"] }, "completion_conditions": { "const": ["api_supports_requirements", "web_requirements_supported", "mobile_requirements_supported", "breaking_changes_identified", "security_decisions_reviewed"] } } }]
+    },
+    "backendImplementationStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "type": "object", "required": ["target", "when_affected"], "properties": { "id": { "const": "backend_implementation" }, "owner": { "const": "backend" }, "target": { "const": "backend" }, "when_affected": { "const": "backend" }, "depends_on": { "const": ["api_contract_review"] }, "required_outputs": { "const": ["artifacts/backend/implementation-summary.md", "artifacts/backend/{task_id}-delivery-report.yaml"] }, "completion_conditions": { "const": ["backend_code_complete", "backend_build_passed", "backend_unit_tests_passed", "backend_integration_tests_passed", "migrations_validated", "api_documentation_updated"] } } }]
+    },
+    "webImplementationStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "type": "object", "required": ["target", "when_affected"], "properties": { "id": { "const": "web_implementation" }, "owner": { "const": "frontend" }, "target": { "const": "web" }, "when_affected": { "const": "web" }, "depends_on": { "const": ["api_contract_review"] }, "required_outputs": { "const": ["artifacts/web/implementation-summary.md", "artifacts/web/{task_id}-delivery-report.yaml"] }, "completion_conditions": { "const": ["web_code_complete", "web_typecheck_passed", "web_lint_passed", "web_unit_tests_passed", "web_build_passed", "web_acceptance_states_implemented"] } } }]
+    },
+    "mobileImplementationStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "type": "object", "required": ["target", "when_affected"], "properties": { "id": { "const": "mobile_implementation" }, "owner": { "const": "frontend" }, "target": { "const": "mobile" }, "when_affected": { "const": "mobile" }, "depends_on": { "const": ["api_contract_review"] }, "required_outputs": { "const": ["artifacts/mobile/implementation-summary.md", "artifacts/mobile/{task_id}-delivery-report.yaml"] }, "completion_conditions": { "const": ["mobile_code_complete", "mobile_analysis_passed", "mobile_unit_tests_passed", "mobile_android_build_passed", "mobile_acceptance_states_implemented"] } } }]
+    },
+    "integrationStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "integration" }, "owner": { "const": "pm" }, "depends_on": { "const": ["backend_implementation", "web_implementation", "mobile_implementation"] }, "required_outputs": { "const": ["artifacts/integration/integration-report.md"] }, "completion_conditions": { "const": ["backend_matches_api_contract", "web_matches_api_contract", "mobile_matches_api_contract", "web_backend_flow_verified", "mobile_backend_flow_verified", "database_migrations_verified", "integration_tests_passed"] } } }]
+    },
+    "qcStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "qc" }, "owner": { "const": "qc" }, "depends_on": { "const": ["integration"] }, "required_outputs": { "const": ["artifacts/qc/test-plan.md", "artifacts/qc/test-cases.md", "artifacts/qc/execution-results.md", "artifacts/qc/requirement-coverage.md", "artifacts/qc/defects.md", "artifacts/qc/qc-recommendation.md"] }, "completion_conditions": { "const": ["all_acceptance_criteria_tested", "web_testing_completed", "mobile_testing_completed", "api_testing_completed", "regression_testing_completed", "critical_defects_resolved", "qc_recommendation_recorded"] } } }]
+    },
+    "productOwnerReviewStage": {
+      "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "product_owner_review" }, "owner": { "const": "pm" }, "depends_on": { "const": ["qc"] }, "required_outputs": { "const": ["final-report.md"] }, "completion_conditions": { "const": ["delivery_summary_complete", "requirement_coverage_complete", "test_evidence_attached", "known_limitations_documented", "deferred_items_documented", "product_owner_decision_recorded"] } } }]
+    },
+    "nonImplementationStage": {
+      "type": "object",
+      "not": {
+        "anyOf": [
+          { "type": "object", "required": ["target"] },
+          { "type": "object", "required": ["when_affected"] }
+        ]
+      }
+    }
+  }
+}

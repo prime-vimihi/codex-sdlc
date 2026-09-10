@@ -1,0 +1,16 @@
+schema_version: 1
+policy: git
+prohibited:
+  - direct_feature_work_on_main
+  - force_push
+  - history_rewrite
+  - destructive_git_commands
+  - unrelated_files_in_role_or_task_commits
+  - nested_git_repositories
+  - submodules
+required:
+  - one_feature_branch_per_run
+  - coherent_task_scoped_commits
+  - clean_worktree_at_formal_handoff
+  - commit_references_for_completed_implementation_tasks
+  - post_integration_full_validation

@@ -1,0 +1,10 @@
+schema_version: 1
+preset:
+  id: flutter
+  target: mobile
+  framework: flutter
+  language: dart
+commands:
+  test: [flutter, test]
+  typecheck: [flutter, analyze]
+  build_android: [flutter, build, apk, --debug]

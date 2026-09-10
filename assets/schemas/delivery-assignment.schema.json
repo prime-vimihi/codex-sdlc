@@ -1,0 +1,479 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json",
+  "title": "SDLC delivery assignment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "kind", "assignment_id", "run_id", "task_id", "producer", "role", "target",
+    "stage", "scenario", "revision", "facts_revision", "task_status", "scaffold_status", "dependencies",
+    "required_inputs", "required_outputs", "allowed_write_roots", "available_evidence", "evidence_requirements",
+    "transition_policy", "controls"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "delivery_assignment" },
+    "assignment_id": { "$ref": "#/$defs/assignmentId" },
+    "run_id": { "$ref": "#/$defs/canonicalId" },
+    "task_id": { "$ref": "#/$defs/canonicalId" },
+    "producer": { "const": "pm" },
+    "role": { "enum": ["backend", "frontend"] },
+    "target": { "enum": ["backend", "web", "mobile"] },
+    "stage": { "enum": ["api_contract", "backend_implementation", "web_implementation", "mobile_implementation"] },
+    "scenario": {
+      "enum": [
+        "pending_dependency", "contract_ready", "destructive_migration", "durable_storage",
+        "unscaffolded_implementation", "api_gap", "design_gap", "unscaffolded", "target_isolation",
+        "evidence_boundary", "full_task"
+      ]
+    },
+    "revision": { "type": "integer", "minimum": 1 },
+    "facts_revision": { "type": "integer", "minimum": 1 },
+    "facts_sha256": { "$ref": "#/$defs/sha256" },
+    "task_status": { "$ref": "#/$defs/taskStatus" },
+    "scaffold_status": { "enum": ["application_not_scaffolded", "scaffolded"] },
+    "dependencies": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+    "required_inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
+    "required_outputs": { "type": "array", "items": { "$ref": "#/$defs/requiredOutput" } },
+    "allowed_write_roots": { "type": "array", "items": { "$ref": "#/$defs/repositoryPath" } },
+    "available_evidence": { "type": "array", "items": { "$ref": "#/$defs/availableEvidence" } },
+    "evidence_requirements": { "type": "array", "items": { "$ref": "#/$defs/evidenceRequirement" } },
+    "transition_policy": { "$ref": "#/$defs/transitionPolicy" },
+    "controls": {}
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        { "$ref": "#/$defs/tupleBackendPendingDependency" },
+        { "$ref": "#/$defs/tupleBackendContractReady" },
+        { "$ref": "#/$defs/tupleBackendDestructiveMigration" },
+        { "$ref": "#/$defs/tupleBackendDurableStorage" },
+        { "$ref": "#/$defs/tupleBackendUnscaffoldedImplementation" },
+        { "$ref": "#/$defs/tupleBackendFullTask" },
+        { "$ref": "#/$defs/tupleWebApiGap" },
+        { "$ref": "#/$defs/tupleWebDesignGap" },
+        { "$ref": "#/$defs/tupleWebUnscaffolded" },
+        { "$ref": "#/$defs/tupleWebTargetIsolation" },
+        { "$ref": "#/$defs/tupleWebEvidenceBoundary" },
+        { "$ref": "#/$defs/tupleWebFullTask" },
+        { "$ref": "#/$defs/tupleMobileApiGap" },
+        { "$ref": "#/$defs/tupleMobileDesignGap" },
+        { "$ref": "#/$defs/tupleMobileUnscaffolded" },
+        { "$ref": "#/$defs/tupleMobileTargetIsolation" },
+        { "$ref": "#/$defs/tupleMobileEvidenceBoundary" },
+        { "$ref": "#/$defs/tupleMobileFullTask" }
+      ]
+    },
+    {
+      "if": { "required": ["role"], "properties": { "role": { "const": "backend" } } },
+      "then": { "properties": { "controls": { "$ref": "#/$defs/backendControls" } } }
+    },
+    {
+      "if": { "required": ["role", "target"], "properties": { "role": { "const": "frontend" }, "target": { "const": "web" } } },
+      "then": { "properties": { "controls": { "$ref": "#/$defs/webControls" } } }
+    },
+    {
+      "if": { "required": ["role", "target"], "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" } } },
+      "then": { "properties": { "controls": { "$ref": "#/$defs/mobileControls" } } }
+    },
+    {
+      "if": { "required": ["scenario"], "properties": { "scenario": { "const": "destructive_migration" } } },
+      "then": {
+        "properties": {
+          "controls": {
+            "type": "object",
+            "required": ["migration"],
+            "properties": { "migration": { "type": "object", "properties": { "impact": { "const": "destructive" } } } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "required": ["scenario"], "properties": { "scenario": { "enum": ["unscaffolded", "unscaffolded_implementation"] } } },
+      "then": { "properties": { "scaffold_status": { "const": "application_not_scaffolded" } } }
+    },
+    {
+      "if": { "required": ["scenario"], "properties": { "scenario": { "const": "full_task" } } },
+      "then": { "properties": { "scaffold_status": { "const": "scaffolded" } } }
+    },
+    {
+      "if": { "required": ["scenario"], "properties": { "scenario": { "const": "pending_dependency" } } },
+      "then": {
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "contains": { "type": "object", "properties": { "status": { "not": { "const": "completed" } } }, "required": ["status"] },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "if": { "required": ["scenario"], "properties": { "scenario": { "const": "api_gap" } } },
+      "then": {
+        "properties": {
+          "controls": {
+            "type": "object",
+            "required": ["api_contract_status", "gaps"],
+            "properties": {
+              "api_contract_status": { "enum": ["missing", "blocked"] },
+              "gaps": { "type": "array", "contains": { "type": "object", "properties": { "kind": { "const": "api" }, "state": { "const": "unresolved" } }, "required": ["kind", "state"] } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "required": ["scenario"], "properties": { "scenario": { "const": "design_gap" } } },
+      "then": {
+        "properties": {
+          "controls": {
+            "type": "object",
+            "required": ["gaps"],
+            "properties": {
+              "gaps": { "type": "array", "contains": { "type": "object", "properties": { "kind": { "const": "design" }, "state": { "const": "unresolved" } }, "required": ["kind", "state"] } }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "canonicalId": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+    "assignmentId": { "type": "string", "pattern": "^ASN-[0-9]+$" },
+    "requirementId": { "type": "string", "pattern": "^REQ-[0-9]+$" },
+    "questionId": { "type": "string", "pattern": "^Q-[0-9]+$" },
+    "gapId": { "type": "string", "pattern": "^GAP-[0-9]+$" },
+    "evidenceId": { "type": "string", "pattern": "^EVD-[0-9a-f]{16}(?:-(?:[2-9]|[1-9][0-9]+))?$" },
+    "evidenceReference": {
+      "type": "string",
+      "pattern": "^evidence/commands/EVD-[0-9a-f]{16}(?:-(?:[2-9]|[1-9][0-9]+))?/evidence\\.json$"
+    },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:\\.|(?![A-Za-z]:)(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)$"
+    },
+    "taskStatus": {
+      "enum": ["pending", "ready", "running", "awaiting_review", "awaiting_approval", "blocked", "failed", "completed", "cancelled"]
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "status"],
+      "properties": { "task_id": { "$ref": "#/$defs/canonicalId" }, "status": { "$ref": "#/$defs/taskStatus" } }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "status"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repositoryPath" },
+        "status": { "enum": ["available", "missing", "blocked"] },
+        "producer": { "enum": ["pm", "ba", "backend", "frontend", "qc"] },
+        "revision": { "type": "integer", "minimum": 1 },
+        "exists": { "type": "boolean" },
+        "sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      }
+    },
+    "artifactKind": {
+      "enum": [
+        "technical_design", "openapi", "database_impact", "security_impact", "implementation_summary",
+        "delivery_report", "source", "test", "generated", "screenshot"
+      ]
+    },
+    "requiredOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "artifact_kind", "producer", "required"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repositoryPath" },
+        "artifact_kind": { "$ref": "#/$defs/artifactKind" },
+        "producer": { "enum": ["backend", "frontend"] },
+        "required": { "type": "boolean" }
+      }
+    },
+    "availableEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "command_key", "owner", "reference", "document_sha256", "status"],
+      "properties": {
+        "evidence_id": { "$ref": "#/$defs/evidenceId" },
+        "command_key": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "owner": { "const": "runtime_collector" },
+        "reference": { "$ref": "#/$defs/evidenceReference" },
+        "document_sha256": { "$ref": "#/$defs/sha256" },
+        "status": { "enum": ["passed", "failed", "blocked", "not_run"] }
+      }
+    },
+    "evidenceRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command_key", "required", "owner"],
+      "properties": {
+        "command_key": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "required": { "type": "boolean" },
+        "owner": { "const": "runtime_collector" }
+      }
+    },
+    "transitionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current_status", "allowed_request", "unmet_disposition"],
+      "properties": {
+        "current_status": { "$ref": "#/$defs/taskStatus" },
+        "allowed_request": { "type": ["string", "null"], "enum": [null, "blocked", "awaiting_approval", "awaiting_review"] },
+        "unmet_disposition": { "enum": ["blocked", "awaiting_approval", "refuse"] }
+      },
+      "oneOf": [
+        { "type": "object", "properties": { "current_status": { "const": "running" }, "allowed_request": { "const": null }, "unmet_disposition": { "const": "refuse" } } },
+        { "type": "object", "properties": { "current_status": { "const": "running" }, "allowed_request": { "const": "blocked" }, "unmet_disposition": { "const": "blocked" } } },
+        { "type": "object", "properties": { "current_status": { "const": "running" }, "allowed_request": { "const": "awaiting_approval" }, "unmet_disposition": { "const": "awaiting_approval" } } },
+        { "type": "object", "properties": { "current_status": { "const": "running" }, "allowed_request": { "const": "awaiting_review" }, "unmet_disposition": { "const": "refuse" } } },
+        { "type": "object", "properties": { "current_status": { "not": { "const": "running" } }, "allowed_request": { "const": null }, "unmet_disposition": { "const": "refuse" } } }
+      ]
+    },
+    "factSourceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference"],
+      "properties": {
+        "kind": { "const": "fact" },
+        "reference": { "$ref": "https://codex-sdlc.local/schemas/facts.schema.json#/$defs/fact/properties/id" }
+      }
+    },
+    "claimSourceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference"],
+      "properties": {
+        "kind": { "const": "claim" },
+        "reference": { "$ref": "https://codex-sdlc.local/schemas/semantic-claims.schema.json#/$defs/claim/properties/id" }
+      }
+    },
+    "contractReferenceId": { "type": "string", "pattern": "^CONTRACT-[0-9]+$" },
+    "contractSourceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference"],
+      "properties": {
+        "kind": { "const": "contract" },
+        "reference": { "$ref": "#/$defs/contractReferenceId" }
+      }
+    },
+    "designSourceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference"],
+      "properties": {
+        "kind": { "const": "design" },
+        "reference": { "type": "string", "pattern": "^DESIGN-[A-Z0-9._-]+$" }
+      }
+    },
+    "backendSourceReferences": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/factSourceReference" },
+          { "$ref": "#/$defs/claimSourceReference" },
+          { "$ref": "#/$defs/contractSourceReference" }
+        ]
+      }
+    },
+    "frontendSourceReferences": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/factSourceReference" },
+          { "$ref": "#/$defs/claimSourceReference" },
+          { "$ref": "#/$defs/contractSourceReference" },
+          { "$ref": "#/$defs/designSourceReference" }
+        ]
+      }
+    },
+    "backendRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement_id", "capability", "required", "source_references"],
+      "properties": {
+        "requirement_id": { "$ref": "#/$defs/requirementId" },
+        "capability": { "enum": ["request", "response", "error", "authentication", "authorization"] },
+        "required": { "type": "boolean" },
+        "source_references": { "$ref": "#/$defs/backendSourceReferences" }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["postgresql_role", "redis_roles", "redis_authoritative"],
+      "properties": {
+        "postgresql_role": { "const": "durable_truth" },
+        "redis_roles": {
+          "type": "array", "uniqueItems": true,
+          "items": { "enum": ["cache", "ephemeral_presence", "rate_limit", "queue", "pubsub"] }
+        },
+        "redis_authoritative": { "const": false }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["impact", "approval_status", "decision_id"],
+      "properties": {
+        "impact": { "enum": ["none", "additive", "destructive"] },
+        "approval_status": { "enum": ["not_required", "pending", "approved", "rejected"] },
+        "decision_id": { "type": ["string", "null"], "pattern": "^DEC-[A-Z0-9-]+$" }
+      },
+      "oneOf": [
+        {
+          "type": "object", "properties": {
+            "impact": { "enum": ["none", "additive"] },
+            "approval_status": { "const": "not_required" },
+            "decision_id": { "const": null }
+          }
+        },
+        {
+          "type": "object", "properties": {
+            "impact": { "const": "destructive" },
+            "approval_status": { "enum": ["pending", "approved", "rejected"] },
+            "decision_id": { "type": "string", "pattern": "^DEC-[A-Z0-9-]+$" }
+          }
+        }
+      ]
+    },
+    "backendControls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "api_requirements", "storage", "migration"],
+      "properties": {
+        "mode": { "enum": ["api_contract", "implementation"] },
+        "api_requirements": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/backendRequirement" } },
+        "storage": { "$ref": "#/$defs/storage" },
+        "migration": { "$ref": "#/$defs/migration" }
+      }
+    },
+    "gap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gap_id", "kind", "state", "question_ids", "resolution_reference"],
+      "properties": {
+        "gap_id": { "$ref": "#/$defs/gapId" },
+        "kind": { "enum": ["api", "design"] },
+        "state": { "enum": ["unresolved", "approved", "rejected"] },
+        "question_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/questionId" } },
+        "resolution_reference": { "type": ["string", "null"], "pattern": "^(?:DEC|FACT|CLAIM|DESIGN|CONTRACT)-[A-Z0-9._-]+$" }
+      },
+      "oneOf": [
+        {
+          "type": "object", "properties": {
+            "state": { "const": "unresolved" },
+            "question_ids": { "type": "array", "minItems": 1 },
+            "resolution_reference": { "const": null }
+          }
+        },
+        {
+          "type": "object", "properties": {
+            "state": { "enum": ["approved", "rejected"] },
+            "question_ids": { "type": "array", "maxItems": 0 },
+            "resolution_reference": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question_id", "topic", "status"],
+      "properties": {
+        "question_id": { "$ref": "#/$defs/questionId" },
+        "topic": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "status": { "enum": ["open", "resolved"] }
+      }
+    },
+    "requirementBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement_id", "capability", "required", "parameters", "source_references"],
+      "properties": {
+        "requirement_id": { "$ref": "#/$defs/requirementId" },
+        "capability": {},
+        "required": { "type": "boolean" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "breakpoints": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+            "minimum_size": { "type": "number", "exclusiveMinimum": 0 },
+            "unit": { "enum": ["px", "dp", "sp", "percent"] },
+            "platforms": { "type": "array", "uniqueItems": true, "items": { "enum": ["web", "android", "ios"] } },
+            "maximum_text_scale": { "type": "number", "minimum": 1 }
+          }
+        },
+        "source_references": { "$ref": "#/$defs/frontendSourceReferences" }
+      }
+    },
+    "webRequirement": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/requirementBase" },
+        { "type": "object", "properties": { "capability": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "mobileRequirement": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/requirementBase" },
+        { "type": "object", "properties": { "capability": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "frontendControlsBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api_contract_status", "gaps", "questions", "requirements"],
+      "properties": {
+        "api_contract_status": { "enum": ["approved", "missing", "blocked"] },
+        "gaps": { "type": "array", "items": { "$ref": "#/$defs/gap" } },
+        "questions": { "type": "array", "items": { "$ref": "#/$defs/question" } },
+        "requirements": { "type": "array", "minItems": 1 }
+      }
+    },
+    "webControls": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/frontendControlsBase" },
+        { "type": "object", "properties": { "requirements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/webRequirement" } } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "mobileControls": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/frontendControlsBase" },
+        { "type": "object", "properties": { "requirements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/mobileRequirement" } } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "tupleBackendPendingDependency": { "type": "object", "properties": { "role": { "const": "backend" }, "target": { "const": "backend" }, "stage": { "const": "api_contract" }, "scenario": { "const": "pending_dependency" } } },
+    "tupleBackendContractReady": { "type": "object", "properties": { "role": { "const": "backend" }, "target": { "const": "backend" }, "stage": { "const": "api_contract" }, "scenario": { "const": "contract_ready" } } },
+    "tupleBackendDestructiveMigration": { "type": "object", "properties": { "role": { "const": "backend" }, "target": { "const": "backend" }, "stage": { "const": "api_contract" }, "scenario": { "const": "destructive_migration" } } },
+    "tupleBackendDurableStorage": { "type": "object", "properties": { "role": { "const": "backend" }, "target": { "const": "backend" }, "stage": { "const": "api_contract" }, "scenario": { "const": "durable_storage" } } },
+    "tupleBackendUnscaffoldedImplementation": { "type": "object", "properties": { "role": { "const": "backend" }, "target": { "const": "backend" }, "stage": { "const": "backend_implementation" }, "scenario": { "const": "unscaffolded_implementation" } } },
+    "tupleBackendFullTask": { "type": "object", "properties": { "role": { "const": "backend" }, "target": { "const": "backend" }, "stage": { "const": "backend_implementation" }, "scenario": { "const": "full_task" } } },
+    "tupleWebApiGap": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "web" }, "stage": { "const": "web_implementation" }, "scenario": { "const": "api_gap" } } },
+    "tupleWebDesignGap": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "web" }, "stage": { "const": "web_implementation" }, "scenario": { "const": "design_gap" } } },
+    "tupleWebUnscaffolded": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "web" }, "stage": { "const": "web_implementation" }, "scenario": { "const": "unscaffolded" } } },
+    "tupleWebTargetIsolation": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "web" }, "stage": { "const": "web_implementation" }, "scenario": { "const": "target_isolation" } } },
+    "tupleWebEvidenceBoundary": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "web" }, "stage": { "const": "web_implementation" }, "scenario": { "const": "evidence_boundary" } } },
+    "tupleWebFullTask": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "web" }, "stage": { "const": "web_implementation" }, "scenario": { "const": "full_task" } } },
+    "tupleMobileApiGap": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" }, "stage": { "const": "mobile_implementation" }, "scenario": { "const": "api_gap" } } },
+    "tupleMobileDesignGap": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" }, "stage": { "const": "mobile_implementation" }, "scenario": { "const": "design_gap" } } },
+    "tupleMobileUnscaffolded": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" }, "stage": { "const": "mobile_implementation" }, "scenario": { "const": "unscaffolded" } } },
+    "tupleMobileTargetIsolation": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" }, "stage": { "const": "mobile_implementation" }, "scenario": { "const": "target_isolation" } } },
+    "tupleMobileEvidenceBoundary": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" }, "stage": { "const": "mobile_implementation" }, "scenario": { "const": "evidence_boundary" } } },
+    "tupleMobileFullTask": { "type": "object", "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" }, "stage": { "const": "mobile_implementation" }, "scenario": { "const": "full_task" } } }
+  }
+}

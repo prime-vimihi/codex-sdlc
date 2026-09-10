@@ -1,0 +1,89 @@
+schema_version: 1
+kind: delivery_assignment
+assignment_id: ASN-001
+run_id: PROFILE-001
+task_id: BE-001
+producer: pm
+role: backend
+target: backend
+stage: api_contract
+scenario: contract_ready
+revision: 1
+facts_revision: 1
+facts_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+task_status: running
+scaffold_status: scaffolded
+dependencies:
+  - task_id: BA-001
+    status: completed
+required_inputs:
+  - path: .sdlc/runs/PROFILE-001/artifacts/ba/semantic-claims.yaml
+    status: available
+    producer: ba
+    revision: 1
+    exists: true
+    sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+required_outputs:
+  - path: .sdlc/runs/PROFILE-001/artifacts/backend/technical-design.md
+    artifact_kind: technical_design
+    producer: backend
+    required: true
+allowed_write_roots:
+  - .sdlc/runs/PROFILE-001/artifacts/backend
+available_evidence:
+  - evidence_id: EVD-aaaaaaaaaaaaaaaa
+    command_key: sdlc_test
+    owner: runtime_collector
+    reference: evidence/commands/EVD-aaaaaaaaaaaaaaaa/evidence.json
+    document_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    status: passed
+evidence_requirements:
+  - command_key: sdlc_test
+    required: true
+    owner: runtime_collector
+transition_policy:
+  current_status: running
+  allowed_request: awaiting_review
+  unmet_disposition: refuse
+controls:
+  mode: api_contract
+  api_requirements:
+    - requirement_id: REQ-001
+      capability: request
+      required: true
+      source_references:
+        - kind: fact
+          reference: FACT-001
+    - requirement_id: REQ-002
+      capability: response
+      required: true
+      source_references:
+        - kind: contract
+          reference: CONTRACT-001
+    - requirement_id: REQ-003
+      capability: error
+      required: true
+      source_references:
+        - kind: claim
+          reference: CLAIM-001
+    - requirement_id: REQ-004
+      capability: authentication
+      required: true
+      source_references:
+        - kind: claim
+          reference: CLAIM-001
+    - requirement_id: REQ-005
+      capability: authorization
+      required: true
+      source_references:
+        - kind: claim
+          reference: CLAIM-001
+  storage:
+    postgresql_role: durable_truth
+    redis_roles:
+      - cache
+    redis_authoritative: false
+  migration:
+    impact: none
+    approval_status: not_required
+    decision_id: null

@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/project.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "framework", "project", "applications", "data", "security", "commands"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "codex-sdlc" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "default_branch", "repository_structure"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "default_branch": { "type": "string", "minLength": 1 },
+        "repository_structure": { "type": "string", "minLength": 1 }
+      }
+    },
+    "applications": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "web": { "$ref": "#/$defs/application" },
+        "mobile": { "$ref": "#/$defs/application" },
+        "backend": { "$ref": "#/$defs/application" }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary_database", "redis", "media", "future_capabilities"],
+      "properties": {
+        "primary_database": { "type": "string", "minLength": 1 },
+        "redis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "roles"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "roles": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+          }
+        },
+        "media": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["object_storage", "cdn"],
+          "properties": {
+            "object_storage": { "type": "string", "minLength": 1 },
+            "cdn": { "type": "boolean" }
+          }
+        },
+        "future_capabilities": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/futureCapability" }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["secret_environment_variables", "network_policy_attestation_environment"],
+      "properties": {
+        "secret_environment_variables": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "network_policy_attestation_environment": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sdlc_test", "sdlc_typecheck", "sdlc_validate"],
+      "properties": {
+        "sdlc_test": { "$ref": "#/$defs/command" },
+        "sdlc_typecheck": { "$ref": "#/$defs/command" },
+        "sdlc_validate": { "$ref": "#/$defs/command" },
+        "foundation_setup": { "$ref": "#/$defs/command" },
+        "foundation_verify": { "$ref": "#/$defs/command" },
+        "npm_audit": { "$ref": "#/$defs/command" },
+        "contracts_generate": { "$ref": "#/$defs/command" },
+        "contracts_check": { "$ref": "#/$defs/command" },
+        "backend_format": { "$ref": "#/$defs/command" },
+        "backend_lint": { "$ref": "#/$defs/command" },
+        "backend_test": { "$ref": "#/$defs/command" },
+        "backend_build": { "$ref": "#/$defs/command" },
+        "backend_integration": { "$ref": "#/$defs/command" },
+        "web_format": { "$ref": "#/$defs/command" },
+        "web_lint": { "$ref": "#/$defs/command" },
+        "web_typecheck": { "$ref": "#/$defs/command" },
+        "web_test": { "$ref": "#/$defs/command" },
+        "web_build": { "$ref": "#/$defs/command" },
+        "mobile_format": { "$ref": "#/$defs/command" },
+        "mobile_analyze": { "$ref": "#/$defs/command" },
+        "mobile_test": { "$ref": "#/$defs/command" },
+        "mobile_build_android": { "$ref": "#/$defs/command" },
+        "integration_health": { "$ref": "#/$defs/command" }
+      }
+    }
+  },
+  "$defs": {
+    "activationCommands": {
+      "type": "object",
+      "properties": {
+        "foundation_setup": true,
+        "foundation_verify": true,
+        "npm_audit": true,
+        "contracts_generate": true,
+        "contracts_check": true,
+        "backend_format": true,
+        "backend_lint": true,
+        "backend_test": true,
+        "backend_build": true,
+        "backend_integration": true,
+        "web_format": true,
+        "web_lint": true,
+        "web_typecheck": true,
+        "web_test": true,
+        "web_build": true,
+        "mobile_format": true,
+        "mobile_analyze": true,
+        "mobile_test": true,
+        "mobile_build_android": true,
+        "integration_health": true
+      },
+      "required": [
+        "foundation_setup",
+        "foundation_verify",
+        "npm_audit",
+        "contracts_generate",
+        "contracts_check",
+        "backend_format",
+        "backend_lint",
+        "backend_test",
+        "backend_build",
+        "backend_integration",
+        "web_format",
+        "web_lint",
+        "web_typecheck",
+        "web_test",
+        "web_build",
+        "mobile_format",
+        "mobile_analyze",
+        "mobile_test",
+        "mobile_build_android",
+        "integration_health"
+      ]
+    },
+    "lifecycle": { "enum": ["planned", "scaffolded", "active"] },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lifecycle", "root", "framework", "language"],
+      "properties": {
+        "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "root": { "type": "string", "minLength": 1 },
+        "framework": { "type": "string", "minLength": 1 },
+        "language": { "type": "string", "minLength": 1 },
+        "identifiers": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "futureCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": { "enabled": { "type": "boolean" } }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executable", "args", "cwd", "network", "mutates"],
+      "properties": {
+        "executable": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "cwd": {
+          "type": "string",
+          "pattern": "^(?:\\./?|(?!\\.{1,2}(?:/|$))(?!(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\\.|/|$))[a-z0-9._-]*[a-z0-9_-](?:/(?!\\.{1,2}(?:/|$))(?!(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\\.|/|$))[a-z0-9._-]*[a-z0-9_-])*(?:/\\.)?)$"
+        },
+        "network": { "enum": ["disabled", "restricted", "required"] },
+        "mutates": { "type": "boolean" }
+      }
+    }
+  }
+}

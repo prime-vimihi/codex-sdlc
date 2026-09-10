@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDLC Backend Delivery"
+  short_description: "Produce typed, evidence-bound backend reports"
+  default_prompt: "Use $sdlc-backend to execute the current typed backend delivery assignment."

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/task.schema.json",
+  "title": "SDLC task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "stage", "role", "target", "status", "dependencies", "required_inputs", "required_outputs", "outputs", "evidence", "transitions", "started_at", "completed_at", "commit", "blocker_reason", "failure_reason"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "stage": { "enum": ["intake", "requirements", "requirements_review", "api_contract", "api_contract_review", "backend_implementation", "web_implementation", "mobile_implementation", "integration", "qc", "product_owner_review"] },
+    "role": { "enum": ["pm", "ba", "backend", "frontend", "qc"] },
+    "target": { "type": ["string", "null"], "enum": [null, "backend", "web", "mobile", "integration", "qc"] },
+    "status": { "$ref": "#/$defs/taskStatus" },
+    "dependencies": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "required_inputs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "required_outputs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "outputs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "evidence": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "transitions": { "type": "array", "items": { "$ref": "#/$defs/transition" } },
+    "started_at": { "type": ["string", "null"], "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "commit": { "type": ["string", "null"] },
+    "blocker_reason": { "type": ["string", "null"] },
+    "failure_reason": { "type": ["string", "null"] }
+  },
+  "allOf": [
+    { "if": { "properties": { "stage": { "const": "intake" } } }, "then": { "properties": { "role": { "const": "pm" }, "target": { "const": null } } } },
+    { "if": { "properties": { "stage": { "const": "requirements" } } }, "then": { "properties": { "role": { "const": "ba" }, "target": { "const": null } } } },
+    { "if": { "properties": { "stage": { "const": "requirements_review" } } }, "then": { "properties": { "role": { "const": "pm" }, "target": { "const": null } } } },
+    { "if": { "properties": { "stage": { "const": "api_contract" } } }, "then": { "properties": { "role": { "const": "backend" }, "target": { "const": "backend" } } } },
+    { "if": { "properties": { "stage": { "const": "api_contract_review" } } }, "then": { "properties": { "role": { "const": "pm" }, "target": { "const": null } } } },
+    { "if": { "properties": { "stage": { "const": "backend_implementation" } } }, "then": { "properties": { "role": { "const": "backend" }, "target": { "const": "backend" } } } },
+    { "if": { "properties": { "stage": { "const": "web_implementation" } } }, "then": { "properties": { "role": { "const": "frontend" }, "target": { "const": "web" } } } },
+    { "if": { "properties": { "stage": { "const": "mobile_implementation" } } }, "then": { "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" } } } },
+    { "if": { "properties": { "stage": { "const": "integration" } } }, "then": { "properties": { "role": { "const": "pm" }, "target": { "const": "integration" } } } },
+    { "if": { "properties": { "stage": { "const": "qc" } } }, "then": { "properties": { "role": { "const": "qc" }, "target": { "const": "qc" } } } },
+    { "if": { "properties": { "stage": { "const": "product_owner_review" } } }, "then": { "properties": { "role": { "const": "pm" }, "target": { "const": null } } } }
+  ],
+  "$defs": {
+    "taskStatus": {
+      "enum": ["pending", "ready", "running", "awaiting_review", "awaiting_approval", "blocked", "failed", "completed", "cancelled"]
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "actor", "reason", "at"],
+      "properties": {
+        "from": { "type": ["string", "null"], "enum": [null, "pending", "ready", "running", "awaiting_review", "awaiting_approval", "blocked", "failed", "completed", "cancelled"] },
+        "to": { "$ref": "#/$defs/taskStatus" },
+        "actor": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            { "properties": { "from": { "const": null }, "to": { "const": "ready" } } },
+            { "properties": { "from": { "const": "pending" }, "to": { "enum": ["ready", "cancelled"] } } },
+            { "properties": { "from": { "const": "ready" }, "to": { "enum": ["running", "blocked", "cancelled"] } } },
+            { "properties": { "from": { "const": "running" }, "to": { "enum": ["awaiting_review", "awaiting_approval", "blocked", "failed", "cancelled"] } } },
+            { "properties": { "from": { "const": "awaiting_review" }, "to": { "enum": ["completed", "running", "blocked", "failed"] } } },
+            { "properties": { "from": { "const": "awaiting_approval" }, "to": { "enum": ["running", "completed", "blocked", "cancelled"] } } },
+            { "properties": { "from": { "const": "blocked" }, "to": { "enum": ["ready", "cancelled"] } } },
+            { "properties": { "from": { "const": "failed" }, "to": { "enum": ["ready", "cancelled"] } } }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+schema_version: 1
+run_id: "[RUN-ID]"
+producer: pm
+revision: 1
+facts:
+  - id: FACT-001
+    subject: feature.example
+    relation: equals
+    value: true
+    status: approved

@@ -1,0 +1,7 @@
+schema_version: 1
+preset:
+  id: postgresql
+  capability: durable_database
+configuration:
+  primary_database: postgresql
+  authoritative: true

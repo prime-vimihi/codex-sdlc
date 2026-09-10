@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDLC Quality Assurance"
+  short_description: "Independently verify feature quality"
+  default_prompt: "Use $sdlc-qc to test the integrated feature against approved acceptance criteria."

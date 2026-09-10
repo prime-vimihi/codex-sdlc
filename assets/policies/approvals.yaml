@@ -1,0 +1,37 @@
+schema_version: 1
+policy: approvals
+product_owner_required_for:
+  - material_scope_change
+  - requested_functionality_removal_or_deferral
+  - destructive_database_work
+  - breaking_public_api_change
+  - authentication_architecture_change
+  - authorization_model_change
+  - sensitive_data_handling_change
+  - paid_or_external_service
+  - significant_web_or_mobile_design_deviation
+  - android_package_or_ios_bundle_identifier_change
+  - production_deployment
+  - critical_known_limitation_acceptance
+pm_preapproved:
+  - internal_file_organization_following_existing_patterns
+  - non_breaking_refactoring_required_by_feature
+  - additional_automated_tests
+  - documentation_correction
+  - formatting
+  - internal_implementation_choice_without_product_or_security_impact
+  - ordinary_test_or_build_retry
+approval_record:
+  required_fields:
+    - id
+    - requested_by
+    - approved_by
+    - status
+    - decision
+    - affected_tasks
+    - action
+    - requested_at
+    - decided_at
+    - consumed_at
+    - consumed_by_transition
+  id_pattern: DEC-*

@@ -1,0 +1,23 @@
+schema_version: 1
+framework:
+  name: codex-sdlc
+  version: 0.3.0
+  run_schema_version: 1
+  project_schema_version: 1
+installation:
+  mode: repository
+  managed_paths:
+    - .sdlc/schemas
+    - .sdlc/templates
+    - .sdlc/workflows
+    - .sdlc/policies
+    - .sdlc/presets
+    - .sdlc/runtime.cjs
+    - .sdlc/tooling
+  repository_specific_paths:
+    - AGENTS.md
+    - .sdlc/project.yaml
+    - .sdlc/framework.lock.yaml
+    - .sdlc/runs
+    - .sdlc/requests
+    - .sdlc/backups

@@ -1,0 +1,11 @@
+schema_version: 1
+preset:
+  id: nextjs
+  target: web
+  framework: nextjs
+  language: typescript
+commands:
+  test: [npm, test]
+  typecheck: [npm, run, typecheck]
+  lint: [npm, run, lint]
+  build: [npm, run, build]

@@ -1,0 +1,27 @@
+schema_version: 1
+policy: quality-gates
+gates:
+  requirements:
+    required: [requirements_traceability, observable_acceptance_criteria, approval_or_recorded_assumption, structured_fact_claim_reconciliation]
+  api_contract:
+    required: [contract_review, request_response_error_shapes, security_impact, delivery_assignment_schema, delivery_authority_reconciliation, delivery_report_schema, delivery_report_reconciliation]
+  backend:
+    required: [implementation_summary, test_evidence, build_evidence, delivery_assignment_schema, delivery_authority_reconciliation, delivery_report_schema, delivery_report_reconciliation]
+    application_commands:
+      status: enabled
+  web:
+    required: [implementation_summary, test_evidence, build_evidence, delivery_assignment_schema, delivery_authority_reconciliation, delivery_report_schema, delivery_report_reconciliation]
+    application_commands:
+      status: enabled
+  mobile:
+    required: [implementation_summary, test_evidence, build_evidence, delivery_assignment_schema, delivery_authority_reconciliation, delivery_report_schema, delivery_report_reconciliation]
+    application_commands:
+      status: enabled
+  integration:
+    required: [integration_report, integration_evidence, post_integration_full_validation]
+  qc:
+    required: [requirement_coverage, execution_results, defect_disposition, recommendation]
+  product_owner_review:
+    required: [delivery_report, evidence_references, known_limitations, recorded_decision]
+executable_commands_source: .sdlc/project.yaml
+application_command_policy: verified_application_commands

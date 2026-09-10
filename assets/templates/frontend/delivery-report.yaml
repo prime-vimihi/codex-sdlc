@@ -1,0 +1,42 @@
+schema_version: 1
+kind: delivery_report
+assignment_id: ASN-002
+assignment_revision: 1
+run_id: PROFILE-001
+task_id: WEB-001
+producer: frontend
+role: frontend
+target: web
+stage: web_implementation
+scenario: full_task
+revision: 1
+disposition: proceed
+artifacts:
+  - path: .sdlc/runs/PROFILE-001/artifacts/web/implementation-summary.md
+    artifact_kind: implementation_summary
+    producer: frontend
+    status: produced
+    revision: 1
+    sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+writes:
+  - path: .sdlc/runs/PROFILE-001/artifacts/web/implementation-summary.md
+    type: artifact
+evidence:
+  - evidence_id: EVD-aaaaaaaaaaaaaaaa
+    command_key: sdlc_test
+    owner: runtime_collector
+    reference: evidence/commands/EVD-aaaaaaaaaaaaaaaa/evidence.json
+    document_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    status: passed
+observations:
+  api_contract_status: approved
+  gaps: []
+  questions: []
+  requirement_results:
+    - requirement_id: REQ-001
+      capability: loading
+      required: true
+      status: implemented
+transition_request:
+  from: running
+  to: awaiting_review

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/evidence.schema.json",
+  "title": "SDLC command evidence",
+  "$comment": "The v0.1 evidence envelope records executable, ordered arguments, and canonical cwd. It does not record or attest project command network or mutates metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "run_id", "task_id", "command_id", "executable", "args", "cwd", "started_at", "completed_at", "exit_code", "result_status", "evidence_path", "stdout_path", "stderr_path"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^EVD-[0-9a-f]{16}(?:-(?:[2-9]|[1-9][0-9]+))?$"
+    },
+    "run_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+    "task_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+    "command_id": { "type": "string", "minLength": 1 },
+    "executable": { "type": "string", "minLength": 1 },
+    "args": { "type": "array", "items": { "type": "string" } },
+    "cwd": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time" },
+    "exit_code": { "type": "integer", "minimum": 0 },
+    "result_status": { "enum": ["passed", "failed"] },
+    "evidence_path": {
+      "type": "string",
+      "pattern": "^evidence/commands/EVD-[0-9a-f]{16}(?:-(?:[2-9]|[1-9][0-9]+))?/evidence\\.json$"
+    },
+    "stdout_path": {
+      "type": "string",
+      "pattern": "^evidence/commands/EVD-[0-9a-f]{16}(?:-(?:[2-9]|[1-9][0-9]+))?/stdout\\.txt$"
+    },
+    "stderr_path": {
+      "type": "string",
+      "pattern": "^evidence/commands/EVD-[0-9a-f]{16}(?:-(?:[2-9]|[1-9][0-9]+))?/stderr\\.txt$"
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "result_status": { "const": "passed" },
+        "exit_code": { "const": 0 }
+      }
+    },
+    {
+      "properties": {
+        "result_status": { "const": "failed" },
+        "exit_code": { "type": "integer", "minimum": 1 }
+      }
+    }
+  ]
+}

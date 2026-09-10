@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/facts.schema.json",
+  "title": "SDLC semantic facts package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "producer", "revision", "facts"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "run_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+    "producer": { "const": "pm" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "facts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/fact" }
+    }
+  },
+  "$defs": {
+    "jsonValue": {
+      "anyOf": [
+        { "type": "boolean" },
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/jsonValue" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/jsonValue" } }
+      ]
+    },
+    "equalsValue": {
+      "anyOf": [
+        { "type": "boolean" },
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "null" },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/jsonValue" } }
+      ]
+    },
+    "rangeValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "unit", "inclusive_min", "inclusive_max"],
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "unit": { "type": "string", "minLength": 1 },
+        "inclusive_min": { "type": "boolean" },
+        "inclusive_max": { "type": "boolean" }
+      }
+    },
+    "setValue": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "anyOf": [
+          { "type": "boolean" },
+          { "type": "string" },
+          { "type": "number" }
+        ]
+      }
+    },
+    "permissionValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor", "actions", "resource", "scope", "effect"],
+      "properties": {
+        "actor": { "type": "string", "minLength": 1 },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "resource": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 },
+        "effect": { "enum": ["allow", "deny"] }
+      }
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "subject", "relation", "value", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^FACT-[0-9]+$" },
+        "subject": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$" },
+        "relation": { "enum": ["equals", "range", "set", "permission", "decision_status"] },
+        "value": {},
+        "status": { "enum": ["approved", "unresolved", "proposed", "out_of_scope"] }
+      },
+      "allOf": [
+        {
+          "if": { "type": "object", "required": ["relation"], "properties": { "relation": { "const": "equals" } } },
+          "then": { "type": "object", "properties": { "value": { "$ref": "#/$defs/equalsValue" } } }
+        },
+        {
+          "if": { "type": "object", "required": ["relation"], "properties": { "relation": { "const": "range" } } },
+          "then": { "type": "object", "properties": { "value": { "$ref": "#/$defs/rangeValue" } } }
+        },
+        {
+          "if": { "type": "object", "required": ["relation"], "properties": { "relation": { "const": "set" } } },
+          "then": { "type": "object", "properties": { "value": { "$ref": "#/$defs/setValue" } } }
+        },
+        {
+          "if": { "type": "object", "required": ["relation"], "properties": { "relation": { "const": "permission" } } },
+          "then": { "type": "object", "properties": { "value": { "$ref": "#/$defs/permissionValue" } } }
+        },
+        {
+          "if": { "type": "object", "required": ["relation"], "properties": { "relation": { "const": "decision_status" } } },
+          "then": {
+            "type": "object",
+            "oneOf": [
+              { "properties": { "value": { "const": "approved" }, "status": { "const": "approved" } } },
+              { "properties": { "value": { "const": "unresolved" }, "status": { "const": "unresolved" } } },
+              { "properties": { "value": { "const": "out_of_scope" }, "status": { "const": "out_of_scope" } } }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

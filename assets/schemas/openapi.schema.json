@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/openapi.schema.json",
+  "title": "SDLC canonical OpenAPI authority document",
+  "type": "object",
+  "required": ["x-sdlc-metadata", "openapi", "info", "paths"],
+  "properties": {
+    "x-sdlc-metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "task_id", "producer", "status", "revision"],
+      "properties": {
+        "run_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+        "task_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+        "producer": { "const": "backend" },
+        "status": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "openapi": { "type": "string", "pattern": "^3\\.1\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+    "info": {
+      "type": "object",
+      "required": ["title", "version"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "paths": { "type": "object" }
+  }
+}

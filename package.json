@@ -1,0 +1,64 @@
+{
+  "name": "codex-sdlc",
+  "version": "0.3.0",
+  "description": "Evidence-backed, repository-resumable SDLC runtime for Codex",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "vimihi",
+  "homepage": "https://github.com/prime-vimihi/codex-sdlc#readme",
+  "bugs": {
+    "url": "https://github.com/prime-vimihi/codex-sdlc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prime-vimihi/codex-sdlc.git"
+  },
+  "keywords": [
+    "codex",
+    "sdlc",
+    "software-delivery",
+    "workflow",
+    "quality-assurance"
+  ],
+  "engines": {
+    "node": ">=24.16.0 <25"
+  },
+  "bin": {
+    "codex-sdlc": "dist/bin.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./cli": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "skills",
+    "plugin.json",
+    ".codex-plugin/plugin.json",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:marketplace": "node scripts/build-local-marketplace.mjs",
+    "prepack": "npm run verify",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "verify": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "commander": "15.0.0",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "vitest": "4.1.11"
+  }
+}

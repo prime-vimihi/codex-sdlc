@@ -1,0 +1,7 @@
+dist/
+node_modules/
+*.tgz
+coverage/
+build/
+compatibility/
+docs/extraction-map.md

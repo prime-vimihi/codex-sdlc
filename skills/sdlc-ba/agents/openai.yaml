@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDLC Business Analysis"
+  short_description: "Create testable feature requirements"
+  default_prompt: "Use $sdlc-ba to analyze the active feature run into testable requirements."

@@ -1,0 +1,10 @@
+schema_version: 1
+preset:
+  id: go
+  target: backend
+  framework: go
+  language: go
+commands:
+  test: [go, test, ./...]
+  typecheck: [go, vet, ./...]
+  build: [go, build, ./...]

@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDLC Project Orchestrator"
+  short_description: "Coordinate evidence-backed feature delivery"
+  default_prompt: "Use $sdlc-pm to start or resume a complete feature-delivery run."

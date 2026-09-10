@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/delivery-report.schema.json",
+  "title": "SDLC delivery report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "kind", "assignment_id", "assignment_revision", "run_id", "task_id", "producer",
+    "role", "target", "stage", "scenario", "revision", "disposition", "artifacts", "writes", "evidence",
+    "observations", "transition_request"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "delivery_report" },
+    "assignment_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/assignmentId" },
+    "assignment_revision": { "type": "integer", "minimum": 1 },
+    "run_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+    "task_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/canonicalId" },
+    "producer": { "enum": ["backend", "frontend"] },
+    "role": { "enum": ["backend", "frontend"] },
+    "target": { "enum": ["backend", "web", "mobile"] },
+    "stage": { "enum": ["api_contract", "backend_implementation", "web_implementation", "mobile_implementation"] },
+    "scenario": {
+      "enum": [
+        "pending_dependency", "contract_ready", "destructive_migration", "durable_storage",
+        "unscaffolded_implementation", "api_gap", "design_gap", "unscaffolded", "target_isolation",
+        "evidence_boundary", "full_task"
+      ]
+    },
+    "revision": { "type": "integer", "minimum": 1 },
+    "disposition": { "enum": ["proceed", "blocked", "awaiting_approval", "refuse"] },
+    "artifacts": { "type": "array", "items": { "$ref": "#/$defs/artifact" } },
+    "writes": { "type": "array", "items": { "$ref": "#/$defs/write" } },
+    "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "observations": {},
+    "transition_request": { "$ref": "#/$defs/transitionRequest" }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleBackendPendingDependency" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleBackendContractReady" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleBackendDestructiveMigration" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleBackendDurableStorage" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleBackendUnscaffoldedImplementation" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleBackendFullTask" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleWebApiGap" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleWebDesignGap" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleWebUnscaffolded" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleWebTargetIsolation" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleWebEvidenceBoundary" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleWebFullTask" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleMobileApiGap" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleMobileDesignGap" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleMobileUnscaffolded" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleMobileTargetIsolation" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleMobileEvidenceBoundary" },
+        { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/tupleMobileFullTask" }
+      ]
+    },
+    {
+      "if": { "required": ["role"], "properties": { "role": { "const": "backend" } } },
+      "then": {
+        "properties": {
+          "producer": { "const": "backend" },
+          "observations": { "$ref": "#/$defs/backendObservations" }
+        }
+      }
+    },
+    {
+      "if": { "required": ["role", "target"], "properties": { "role": { "const": "frontend" }, "target": { "const": "web" } } },
+      "then": {
+        "properties": {
+          "producer": { "const": "frontend" },
+          "observations": { "$ref": "#/$defs/webObservations" }
+        }
+      }
+    },
+    {
+      "if": { "required": ["role", "target"], "properties": { "role": { "const": "frontend" }, "target": { "const": "mobile" } } },
+      "then": {
+        "properties": {
+          "producer": { "const": "frontend" },
+          "observations": { "$ref": "#/$defs/mobileObservations" }
+        }
+      }
+    },
+    {
+      "if": { "required": ["disposition"], "properties": { "disposition": { "const": "proceed" } } },
+      "then": {
+        "properties": {
+          "transition_request": {
+            "type": "object",
+            "properties": { "from": { "const": "running" }, "to": { "type": ["string", "null"], "enum": [null, "awaiting_review"] } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "required": ["disposition"], "properties": { "disposition": { "const": "blocked" } } },
+      "then": { "properties": { "transition_request": { "type": "object", "properties": { "from": { "const": "running" }, "to": { "const": "blocked" } } } } }
+    },
+    {
+      "if": { "required": ["disposition"], "properties": { "disposition": { "const": "awaiting_approval" } } },
+      "then": { "properties": { "transition_request": { "type": "object", "properties": { "from": { "const": "running" }, "to": { "const": "awaiting_approval" } } } } }
+    },
+    {
+      "if": { "required": ["disposition"], "properties": { "disposition": { "const": "refuse" } } },
+      "then": { "properties": { "transition_request": { "type": "object", "properties": { "to": { "const": null } } } } }
+    },
+    {
+      "if": { "required": ["scenario"], "properties": { "scenario": { "enum": ["unscaffolded", "unscaffolded_implementation"] } } },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                { "type": "object", "properties": { "status": { "not": { "const": "produced" } } } },
+                { "type": "object", "properties": { "artifact_kind": { "not": { "const": "screenshot" } } } }
+              ]
+            }
+          },
+          "writes": { "type": "array", "items": { "type": "object", "properties": { "type": { "const": "artifact" } } } },
+          "evidence": { "type": "array", "items": { "type": "object", "properties": { "status": { "not": { "const": "passed" } } } } },
+          "observations": {
+            "type": "object",
+            "properties": {
+              "requirement_results": {
+                "type": "array",
+                "items": { "type": "object", "properties": { "status": { "not": { "const": "implemented" } } } }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "artifact_kind", "producer", "status", "revision", "sha256"],
+      "properties": {
+        "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "artifact_kind": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/artifactKind" },
+        "producer": { "enum": ["backend", "frontend"] },
+        "status": { "enum": ["planned", "produced", "blocked", "not_applicable"] },
+        "revision": { "type": ["integer", "null"], "minimum": 1 },
+        "sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "status": { "const": "produced" },
+            "revision": { "type": "integer", "minimum": 1 },
+            "sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" }
+          }
+        },
+        {
+          "properties": {
+            "status": { "enum": ["planned", "blocked", "not_applicable"] },
+            "revision": { "const": null },
+            "sha256": { "const": null }
+          }
+        }
+      ]
+    },
+    "write": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "type"],
+      "properties": {
+        "path": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+        "type": { "enum": ["source", "test", "artifact", "generated"] }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "command_key", "owner", "reference", "document_sha256", "status"],
+      "properties": {
+        "evidence_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/evidenceId" },
+        "command_key": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "owner": { "const": "runtime_collector" },
+        "reference": {
+          "anyOf": [
+            { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/repositoryPath" },
+            { "type": "null" }
+          ]
+        },
+        "document_sha256": {
+          "anyOf": [
+            { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "status": { "enum": ["passed", "failed", "blocked", "not_run"] }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "status": { "enum": ["passed", "failed"] },
+            "reference": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/evidenceReference" },
+            "document_sha256": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/sha256" }
+          }
+        },
+        {
+          "properties": {
+            "status": { "enum": ["blocked", "not_run"] },
+            "reference": { "const": null },
+            "document_sha256": { "const": null }
+          }
+        }
+      ]
+    },
+    "resultStatus": { "enum": ["planned", "documented", "implemented", "blocked", "not_applicable"] },
+    "backendResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement_id", "capability", "required", "status"],
+      "properties": {
+        "requirement_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/requirementId" },
+        "capability": { "enum": ["request", "response", "error", "authentication", "authorization"] },
+        "required": { "type": "boolean" },
+        "status": { "$ref": "#/$defs/resultStatus" }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["required"], "properties": { "required": { "const": true } } },
+          "then": { "properties": { "status": { "not": { "const": "not_applicable" } } } }
+        }
+      ]
+    },
+    "frontendResultBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement_id", "capability", "required", "status"],
+      "properties": {
+        "requirement_id": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/requirementId" },
+        "capability": {},
+        "required": { "type": "boolean" },
+        "status": { "$ref": "#/$defs/resultStatus" }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["required"], "properties": { "required": { "const": true } } },
+          "then": { "properties": { "status": { "not": { "const": "not_applicable" } } } }
+        }
+      ]
+    },
+    "webResult": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/frontendResultBase" },
+        { "type": "object", "properties": { "capability": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "mobileResult": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/frontendResultBase" },
+        { "type": "object", "properties": { "capability": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "backendObservations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "storage", "migration", "requirement_results"],
+      "properties": {
+        "mode": { "enum": ["api_contract", "implementation"] },
+        "storage": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/storage" },
+        "migration": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/migration" },
+        "requirement_results": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/backendResult" } }
+      }
+    },
+    "frontendObservationsBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api_contract_status", "gaps", "questions", "requirement_results"],
+      "properties": {
+        "api_contract_status": { "enum": ["approved", "missing", "blocked"] },
+        "gaps": { "type": "array", "items": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/gap" } },
+        "questions": { "type": "array", "items": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/question" } },
+        "requirement_results": { "type": "array", "minItems": 1 }
+      }
+    },
+    "webObservations": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/frontendObservationsBase" },
+        { "type": "object", "properties": { "requirement_results": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/webResult" } } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "mobileObservations": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/frontendObservationsBase" },
+        { "type": "object", "properties": { "requirement_results": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/mobileResult" } } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "transitionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "$ref": "https://codex-sdlc.local/schemas/delivery-assignment.schema.json#/$defs/taskStatus" },
+        "to": { "type": ["string", "null"], "enum": [null, "blocked", "awaiting_approval", "awaiting_review"] }
+      }
+    }
+  }
+}

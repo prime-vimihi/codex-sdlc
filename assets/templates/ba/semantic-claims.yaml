@@ -1,0 +1,14 @@
+schema_version: 1
+run_id: "[RUN-ID]"
+task_id: BA-001
+producer: ba
+revision: 1
+claims:
+  - id: CLAIM-001
+    source_fact_id: FACT-001
+    subject: feature.example
+    relation: equals
+    value: true
+    status: approved
+    requirement_ids: [REQ-001]
+    question_ids: []

@@ -1,0 +1,8 @@
+schema_version: 1
+preset:
+  id: redis
+  capability: non_authoritative_storage
+configuration:
+  enabled: true
+  default_roles: [cache]
+  authoritative: false

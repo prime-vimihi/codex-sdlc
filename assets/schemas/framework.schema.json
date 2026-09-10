@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/framework.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "framework", "installation"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "run_schema_version", "project_schema_version"],
+      "properties": {
+        "name": { "const": "codex-sdlc" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "run_schema_version": { "const": 1 },
+        "project_schema_version": { "const": 1 }
+      }
+    },
+    "installation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "managed_paths", "repository_specific_paths"],
+      "properties": {
+        "mode": { "const": "repository" },
+        "managed_paths": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "repository_specific_paths": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      }
+    }
+  }
+}

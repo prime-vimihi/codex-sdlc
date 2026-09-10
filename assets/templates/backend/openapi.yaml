@@ -1,0 +1,17 @@
+x-sdlc-metadata:
+  run_id: "[RUN-ID]"
+  task_id: "BE-001"
+  producer: backend
+  status: draft
+  revision: 1
+openapi: 3.1.0
+info:
+  title: Product API contract
+  version: 0.1.0
+paths:
+  /example:
+    get:
+      summary: Example operation mapped to REQ-001
+      responses:
+        "200":
+          description: Successful observable response

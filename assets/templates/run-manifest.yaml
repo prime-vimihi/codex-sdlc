@@ -1,0 +1,81 @@
+schema_version: 1
+
+run:
+  id: {{run_id}}
+  title: {{title}}
+  workflow: feature-development
+  status: intake
+  current_stage: intake
+  created_at: {{created_at}}
+  updated_at: {{updated_at}}
+  created_by: product-owner
+  current_owner: pm
+  branch: null
+  framework_version: {{framework_version}}
+
+request:
+  source: product-owner-prompt
+  file: request.md
+
+scope:
+  status: draft
+  approved: false
+  approval_reference: null
+
+affected_applications:
+  backend: {{affected_backend}}
+  web: {{affected_web}}
+  mobile: {{affected_mobile}}
+  database: {{affected_database}}
+  shared_packages: {{affected_shared_packages}}
+
+design:
+  provided: false
+  references: []
+
+assumptions: []
+open_questions: []
+decisions: []
+blockers: []
+
+tasks: [] # {{tasks_yaml}}
+
+quality_gates:
+  requirements:
+    status: pending
+    evidence: []
+  api_contract:
+    status: {{api_contract_quality_gate_status}}
+    evidence: []
+  backend:
+    status: {{backend_quality_gate_status}}
+    evidence: []
+  web:
+    status: {{web_quality_gate_status}}
+    evidence: []
+  mobile:
+    status: {{mobile_quality_gate_status}}
+    evidence: []
+  integration:
+    status: pending
+    evidence: []
+  qc:
+    status: pending
+    evidence: []
+
+defects:
+  blocker: 0
+  critical: 0
+  major: 0
+  minor: 0
+
+product_owner_review:
+  status: pending
+  decision: null
+  comments: null
+  decided_at: null
+
+final_result:
+  status: pending
+  completed_at: null
+  report: final-report.md

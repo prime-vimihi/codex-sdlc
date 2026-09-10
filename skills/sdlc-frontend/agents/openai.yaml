@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDLC Frontend Delivery"
+  short_description: "Produce typed web and mobile delivery reports"
+  default_prompt: "Use $sdlc-frontend to execute the current typed web or mobile delivery assignment."

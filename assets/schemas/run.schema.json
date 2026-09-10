@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/run.schema.json",
+  "title": "SDLC feature run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run", "request", "scope", "affected_applications", "design", "assumptions", "open_questions", "decisions", "blockers", "tasks", "quality_gates", "defects", "product_owner_review", "final_result"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "run": { "$ref": "#/$defs/run" },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "file"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "file": { "type": "string", "minLength": 1 }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "approved", "approval_reference"],
+      "properties": {
+        "status": { "enum": ["draft", "review", "approved", "rejected"] },
+        "approved": { "type": "boolean" },
+        "approval_reference": { "type": ["string", "null"] }
+      }
+    },
+    "affected_applications": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "web", "mobile", "database", "shared_packages"],
+      "properties": {
+        "backend": { "type": "boolean" },
+        "web": { "type": "boolean" },
+        "mobile": { "type": "boolean" },
+        "database": { "type": "boolean" },
+        "shared_packages": { "type": "boolean" }
+      }
+    },
+    "design": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provided", "references"],
+      "properties": {
+        "provided": { "type": "boolean" },
+        "references": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "assumptions": { "type": "array", "items": { "$ref": "#/$defs/record" } },
+    "open_questions": { "type": "array", "items": { "$ref": "#/$defs/record" } },
+    "decisions": { "type": "array", "items": { "$ref": "#/$defs/decision" } },
+    "blockers": { "type": "array", "items": { "$ref": "#/$defs/blocker" } },
+    "tasks": { "type": "array", "minItems": 1, "items": { "$ref": "https://codex-sdlc.local/schemas/task.schema.json" } },
+    "quality_gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirements", "api_contract", "backend", "web", "mobile", "integration", "qc"],
+      "properties": {
+        "requirements": { "$ref": "#/$defs/qualityGate" },
+        "api_contract": { "$ref": "#/$defs/qualityGate" },
+        "backend": { "$ref": "#/$defs/qualityGate" },
+        "web": { "$ref": "#/$defs/qualityGate" },
+        "mobile": { "$ref": "#/$defs/qualityGate" },
+        "integration": { "$ref": "#/$defs/qualityGate" },
+        "qc": { "$ref": "#/$defs/qualityGate" }
+      }
+    },
+    "defects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blocker", "critical", "major", "minor"],
+      "properties": {
+        "blocker": { "type": "integer", "minimum": 0 },
+        "critical": { "type": "integer", "minimum": 0 },
+        "major": { "type": "integer", "minimum": 0 },
+        "minor": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "product_owner_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "decision", "comments", "decided_at"],
+      "properties": {
+        "status": { "enum": ["pending", "ready", "completed"] },
+        "decision": { "type": ["string", "null"], "enum": [null, "accepted", "accepted_with_limitations", "changes_requested", "rejected", "deferred"] },
+        "comments": { "type": ["string", "null"] },
+        "decided_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "final_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "completed_at", "report"],
+      "properties": {
+        "status": { "enum": ["pending", "ready", "completed", "failed", "cancelled"] },
+        "completed_at": { "type": ["string", "null"], "format": "date-time" },
+        "report": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "workflow", "status", "current_stage", "created_at", "updated_at", "created_by", "current_owner", "branch", "framework_version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "workflow": { "const": "feature-development" },
+        "status": { "enum": ["draft", "intake", "requirements", "awaiting_approval", "technical_design", "implementation", "integration", "qc", "product_owner_review", "completed", "blocked", "failed", "cancelled"] },
+        "current_stage": { "enum": ["intake", "requirements", "requirements_review", "api_contract", "api_contract_review", "backend_implementation", "web_implementation", "mobile_implementation", "integration", "qc", "product_owner_review"] },
+        "created_at": { "type": ["string", "null"], "format": "date-time" },
+        "updated_at": { "type": ["string", "null"], "format": "date-time" },
+        "created_by": { "type": "string", "minLength": 1 },
+        "current_owner": { "enum": ["product-owner", "pm", "ba", "backend", "frontend", "qc"] },
+        "branch": { "type": ["string", "null"] },
+        "framework_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "resolved", "accepted", "rejected"] }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "topic", "status", "decision", "requested_by", "approved_by", "affected_tasks", "consumed_at", "consumed_by_transition"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "topic": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "approved", "rejected", "deferred"] },
+        "decision": { "type": ["string", "null"] },
+        "requested_by": { "type": "string", "minLength": 1 },
+        "approved_by": { "type": ["string", "null"] },
+        "affected_tasks": { "type": "array", "items": { "type": "string" } },
+        "action": { "type": "string", "minLength": 1 },
+        "requested_at": { "type": "string", "format": "date-time" },
+        "decided_at": { "type": ["string", "null"], "format": "date-time" },
+        "consumed_at": { "type": ["string", "null"], "format": "date-time" },
+        "consumed_by_transition": { "type": ["string", "null"], "minLength": 1 },
+        "transition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "to", "actor", "at"],
+          "properties": {
+            "from": { "enum": ["draft", "intake", "requirements", "awaiting_approval", "technical_design", "implementation", "integration", "qc", "product_owner_review", "completed", "blocked", "failed", "cancelled"] },
+            "to": { "enum": ["draft", "intake", "requirements", "awaiting_approval", "technical_design", "implementation", "integration", "qc", "product_owner_review", "completed", "blocked", "failed", "cancelled"] },
+            "actor": { "type": "string", "minLength": 1 },
+            "at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "task_id", "description", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "resolved"] }
+      }
+    },
+    "qualityGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence"],
+      "properties": {
+        "status": { "enum": ["pending", "running", "passed", "failed", "blocked", "not_applicable"] },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "evidence", "actor", "reason", "at"],
+            "properties": {
+              "status": { "enum": ["pending", "running", "passed", "failed", "blocked", "not_applicable"] },
+              "evidence": { "type": "array", "items": { "type": "string" } },
+              "actor": { "type": "string", "minLength": 1 },
+              "reason": { "type": "string", "minLength": 1 },
+              "at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

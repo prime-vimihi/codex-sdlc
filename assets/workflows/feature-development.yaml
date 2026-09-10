@@ -1,0 +1,112 @@
+schema_version: 1
+workflow:
+  id: feature-development
+  name: Feature Development
+  description: Repository-resumable delivery workflow for product features.
+execution:
+  default_mode: sequential
+  allow_parallel_execution: false
+  stop_on_failed_required_gate: true
+  resume_supported: true
+stages:
+  - id: intake
+    name: Feature Intake
+    owner: pm
+    depends_on: []
+    required_outputs: [request.md, manifest.yaml, scope.md, assumptions.md, facts.yaml, artifacts/pm/discovery-report.md]
+    completion_conditions: [original_request_recorded, affected_applications_identified, initial_scope_defined, risks_identified]
+  - id: requirements
+    name: Business Analysis
+    owner: ba
+    depends_on: [intake]
+    required_outputs: [artifacts/ba/user-stories.md, artifacts/ba/acceptance-criteria.md, artifacts/ba/business-rules.md, artifacts/ba/validation-rules.md, artifacts/ba/edge-cases.md, artifacts/ba/traceability.md, artifacts/ba/semantic-claims.yaml]
+    completion_conditions: [all_requirements_have_ids, acceptance_criteria_are_testable, permission_rules_defined, error_scenarios_defined, assumptions_recorded, open_questions_recorded]
+  - id: requirements_review
+    name: Requirements Review
+    owner: pm
+    depends_on: [requirements]
+    required_outputs: [artifacts/pm/requirements-review.md]
+    completion_conditions: [requirements_validated, scope_confirmed, material_assumptions_approved, requirements_ready_for_implementation]
+  - id: api_contract
+    name: API Contract
+    owner: backend
+    depends_on: [requirements_review]
+    required_outputs: [artifacts/backend/technical-design.md, artifacts/backend/openapi.yaml, artifacts/backend/database-impact.md, artifacts/backend/security-impact.md, "artifacts/backend/{task_id}-delivery-report.yaml"]
+    completion_conditions: [openapi_specification_valid, request_schemas_defined, response_schemas_defined, error_schemas_defined, authentication_rules_defined, authorization_rules_defined, database_impact_documented]
+  - id: api_contract_review
+    name: API Contract Review
+    owner: pm
+    depends_on: [api_contract]
+    required_outputs: [artifacts/pm/api-contract-review.md]
+    completion_conditions: [api_supports_requirements, web_requirements_supported, mobile_requirements_supported, breaking_changes_identified, security_decisions_reviewed]
+  - id: backend_implementation
+    name: Backend Implementation
+    owner: backend
+    target: backend
+    when_affected: backend
+    depends_on: [api_contract_review]
+    required_outputs: [artifacts/backend/implementation-summary.md, "artifacts/backend/{task_id}-delivery-report.yaml"]
+    completion_conditions: [backend_code_complete, backend_build_passed, backend_unit_tests_passed, backend_integration_tests_passed, migrations_validated, api_documentation_updated]
+  - id: web_implementation
+    name: Web Implementation
+    owner: frontend
+    target: web
+    when_affected: web
+    depends_on: [api_contract_review]
+    required_outputs: [artifacts/web/implementation-summary.md, "artifacts/web/{task_id}-delivery-report.yaml"]
+    completion_conditions: [web_code_complete, web_typecheck_passed, web_lint_passed, web_unit_tests_passed, web_build_passed, web_acceptance_states_implemented]
+  - id: mobile_implementation
+    name: Mobile Implementation
+    owner: frontend
+    target: mobile
+    when_affected: mobile
+    depends_on: [api_contract_review]
+    required_outputs: [artifacts/mobile/implementation-summary.md, "artifacts/mobile/{task_id}-delivery-report.yaml"]
+    completion_conditions: [mobile_code_complete, mobile_analysis_passed, mobile_unit_tests_passed, mobile_android_build_passed, mobile_acceptance_states_implemented]
+  - id: integration
+    name: Integration Review
+    owner: pm
+    depends_on: [backend_implementation, web_implementation, mobile_implementation]
+    required_outputs: [artifacts/integration/integration-report.md]
+    completion_conditions: [backend_matches_api_contract, web_matches_api_contract, mobile_matches_api_contract, web_backend_flow_verified, mobile_backend_flow_verified, database_migrations_verified, integration_tests_passed]
+  - id: qc
+    name: Quality Assurance
+    owner: qc
+    depends_on: [integration]
+    required_outputs: [artifacts/qc/test-plan.md, artifacts/qc/test-cases.md, artifacts/qc/execution-results.md, artifacts/qc/requirement-coverage.md, artifacts/qc/defects.md, artifacts/qc/qc-recommendation.md]
+    completion_conditions: [all_acceptance_criteria_tested, web_testing_completed, mobile_testing_completed, api_testing_completed, regression_testing_completed, critical_defects_resolved, qc_recommendation_recorded]
+  - id: product_owner_review
+    name: Product Owner Review
+    owner: pm
+    depends_on: [qc]
+    required_outputs: [final-report.md]
+    completion_conditions: [delivery_summary_complete, requirement_coverage_complete, test_evidence_attached, known_limitations_documented, deferred_items_documented, product_owner_decision_recorded]
+task_statuses: [pending, ready, running, awaiting_review, awaiting_approval, blocked, failed, completed, cancelled]
+run_statuses: [draft, intake, requirements, awaiting_approval, technical_design, implementation, integration, qc, product_owner_review, completed, blocked, failed, cancelled]
+state_transitions:
+  pending: [ready, cancelled]
+  ready: [running, blocked, cancelled]
+  running: [awaiting_review, awaiting_approval, blocked, failed, cancelled]
+  awaiting_review: [completed, running, blocked, failed]
+  awaiting_approval: [running, completed, blocked, cancelled]
+  blocked: [ready, cancelled]
+  failed: [ready, cancelled]
+  completed: []
+  cancelled: []
+rules:
+  - id: dependencies_must_complete
+    description: A task cannot become ready until every dependency is completed.
+  - id: outputs_required
+    description: A task cannot complete without its required outputs.
+  - id: evidence_required
+    description: Implementation tasks require executable evidence before completion.
+  - id: no_silent_failures
+    description: A mandatory failed command blocks its quality gate.
+  - id: approval_required
+    description: High-risk decisions require Product Owner approval.
+  - id: traceability_required
+    description: Requirements, implementations, tests, and defects use stable IDs.
+  - id: critical_defects_block_completion
+    description: A run cannot complete while blocker or critical defects remain unresolved.
+  - id: resume_from_repository
+    description: The run remains resumable from repository files without conversation memory.
