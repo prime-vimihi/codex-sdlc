@@ -1,7 +1,7 @@
 {
   "name": "codex-sdlc",
   "version": "0.4.0",
-  "description": "Run evidence-backed, repository-resumable software delivery workflows with Codex.",
+  "description": "Run evidence-backed software delivery across one or more repositories with Codex.",
   "author": {
     "name": "vimihi",
     "url": "https://github.com/prime-vimihi/codex-sdlc"
@@ -9,12 +9,12 @@
   "homepage": "https://github.com/prime-vimihi/codex-sdlc#readme",
   "repository": "https://github.com/prime-vimihi/codex-sdlc",
   "license": "Apache-2.0",
-  "keywords": ["sdlc", "software-delivery", "requirements", "quality-assurance"],
+  "keywords": ["sdlc", "software-delivery", "multi-repository", "requirements", "quality-assurance"],
   "skills": "./skills/",
   "interface": {
     "displayName": "codex-sdlc",
-    "shortDescription": "Evidence-backed feature delivery with Codex",
-    "longDescription": "Initialize and coordinate repository-resumable delivery through product analysis, implementation, integration, independent quality control, and Product Owner review.",
+    "shortDescription": "Evidence-backed delivery across repositories",
+    "longDescription": "Initialize and coordinate resumable software delivery across one repository or mapped Git checkouts through product analysis, implementation, integration, independent quality control, and Product Owner review.",
     "developerName": "vimihi",
     "category": "Productivity",
     "capabilities": ["Read", "Write"],
@@ -22,9 +22,9 @@
     "privacyPolicyURL": "https://github.com/prime-vimihi/codex-sdlc/blob/main/docs/privacy.md",
     "termsOfServiceURL": "https://github.com/prime-vimihi/codex-sdlc/blob/main/docs/terms.md",
     "defaultPrompt": [
-      "Initialize codex-sdlc in this repository.",
-      "Start a codex-sdlc feature delivery.",
-      "Resume the active codex-sdlc run."
+      "Initialize codex-sdlc for this repository.",
+      "Configure codex-sdlc across these backend, web, and mobile repositories.",
+      "Start or resume a codex-sdlc feature delivery with independent quality control."
     ],
     "brandColor": "#46D7A7",
     "composerIcon": "./assets/brand/codex-sdlc.svg",

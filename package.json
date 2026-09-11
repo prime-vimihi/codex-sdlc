@@ -1,7 +1,7 @@
 {
   "name": "codex-sdlc",
   "version": "0.4.0",
-  "description": "Evidence-backed, repository-resumable SDLC runtime for Codex",
+  "description": "Evidence-backed SDLC runtime for one or more repositories with Codex",
   "type": "module",
   "license": "Apache-2.0",
   "author": "vimihi",
@@ -17,6 +17,7 @@
     "codex",
     "sdlc",
     "software-delivery",
+    "multi-repository",
     "workflow",
     "quality-assurance"
   ],
