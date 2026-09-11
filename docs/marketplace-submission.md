@@ -113,8 +113,8 @@ Prepared 0.4.0 artifacts:
 
 ## Release order
 
-1. Publish the exact 0.4.0 npm tarball so setup workflows resolve the same runtime as the plugin. The public npm registry currently serves 0.3.0.
-2. Tag the reviewed source revision as `v0.4.0` and publish the GitHub release using `docs/releases/0.4.0.md`.
+1. Tag the reviewed source revision as `v0.4.0` and publish the GitHub release using `docs/releases/0.4.0.md`.
+2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.4.0` to npm with provenance, then verify that the public registry serves 0.4.0. Do not submit the plugin while npm still serves 0.3.0.
 3. Create a **Skills only** draft in the OpenAI plugin submission portal and upload the prepared skills bundle and listing logo.
 4. Copy the listing, prompts, tests, availability, and release notes from this document; complete publisher identity and policy attestations.
 5. Submit for review. After approval, explicitly publish the approved version to the universal Plugins Directory.
