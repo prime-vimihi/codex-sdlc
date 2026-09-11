@@ -5,9 +5,9 @@
 <h1 align="center">codex-sdlc</h1>
 
 <p align="center">
-  <strong>Coordinate AI teams. Deliver software with evidence.</strong><br>
-  Turn a feature request into a resumable delivery workflow across one repository or many.<br>
-  Choose models by role. Verify the work. Keep the final decision yours.
+  <strong>One request. A complete delivery workflow.</strong><br>
+  Describe what you want to build. codex-sdlc coordinates the work from requirements to final review.<br>
+  You steer the decisions. The AI team carries the process forward.
 </p>
 
 <p align="center">
@@ -29,23 +29,30 @@
 
 ---
 
-## A delivery process you can pick up again
+## Describe the outcome. Start the workflow.
 
-codex-sdlc combines **seven Codex skills** with a **repository-local CLI**. It coordinates requirements, implementation, integration, independent quality control, and optional AI Product Owner review. Tasks, evidence, and decisions stay in your repository so the next session can continue from recorded state.
+Once your project is set up, give Codex a feature request in plain language. **codex-sdlc leads the delivery process** through requirements, planning, implementation, integration, independent quality control, and a final delivery report. It brings you in for clarifications and material decisions; final acceptance remains yours.
+
+<p align="center">
+  <img src="assets/brand/delivery-overview.svg" alt="Amber YOU stages: describe your request, clarify goals and approve material decisions when needed, then accept the delivery or request changes. Teal AI stages: requirements and planning, implementation and integration, independent QC, and a delivery report with optional AI Product Owner advice. The coordinator records the workflow so it can resume later." width="1080">
+</p>
+
+**Amber / YOU:** provide the request and make decisions. **Teal / AI:** coordinate and carry out the delivery work.
+
+PM coordinates the stages and reviews each handoff. Frontend work follows the reviewed API contract; independent QC follows integration. The optional AI Product Owner offers advice before PM prepares the final package. **Only you accept delivery.**
+
+### A workflow you can resume
+
+Seven Codex skills and a repository-local CLI keep tasks, evidence, blockers, and decisions in your repository. The next session can continue from recorded state.
 
 | What you need | What codex-sdlc provides |
 | --- | --- |
+| Turn a simple request into a delivery workflow | Coordinated requirements, implementation, independent QC, and a final report. |
 | Continue work across sessions | Saved run manifests, task dependencies, blockers, and decisions. |
 | Work across separate codebases | One coordinator with explicit backend, web, and mobile repository mappings. |
 | Choose a model for each role | Per-role model and reasoning settings, explicit fallbacks, and dispatch records. |
 | Know what was actually verified | Independent QC, acceptance coverage, and recorded command evidence. |
 | Stay in control of delivery | Optional AI Product Owner advice followed by your explicit acceptance. |
-
-<p align="center">
-  <img src="assets/brand/delivery-overview.svg" alt="Delivery overview: PM and BA define requirements; backend and frontend implement reviewed contracts; independent QC verifies evidence; optional AI Product Owner review informs the human decision. A coordinator repository stores the delivery record." width="1080">
-</p>
-
-PM coordinates the stages and reviews each handoff. Frontend work follows the reviewed API contract; independent QC follows integration. The optional AI Product Owner recommends readiness for your review. **Only you accept delivery.**
 
 ## Get started
 
