@@ -2,6 +2,13 @@
 
 All notable changes to codex-sdlc are documented here.
 
+## 0.4.3 - 2026-09-11
+
+- Shorten every default prompt to satisfy the Plugins Directory 128-character maximum.
+- Add regression checks for prompt count and per-prompt length in both manifest formats.
+
+No runtime schema or delivery command behavior changes from 0.4.2. Native Linux and Windows qualification remains deferred.
+
 ## 0.4.2 - 2026-09-11
 
 - Limit the plugin manifest to three default prompts so version updates pass Plugins Directory validation.

@@ -11,7 +11,7 @@ Resolve the repository the user selected before running a command. Read its `AGE
 
 For a new setup, explain briefly that the installed plugin supplies Codex skills while the npm CLI creates and operates `.sdlc`. Plugin skills stay in Codex's plugin cache; initialization does not create `.agents/skills` in the project.
 
-Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 0.4.2. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@0.4.2`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
+Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 0.4.3. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@0.4.3`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
 
 Infer the project name, application roots, technologies, and workspace shape from the selected repository. Ask only for missing information that changes repository topology or application ownership. State which checkout will own `.sdlc` before previewing a multi-repository installation.
 

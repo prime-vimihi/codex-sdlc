@@ -14,7 +14,7 @@ codex-sdlc combines a Codex skills plugin with a deterministic npm CLI. The plug
 Open the repository that should own `.sdlc` and start a new Codex task:
 
 ```text
-Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes. If the CLI is unavailable, use codex-sdlc@0.4.2 through npx.
+Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes. If the CLI is unavailable, use codex-sdlc@0.4.3 through npx.
 ```
 
 Tell Codex which applications already exist and where they live. Supported presets are Go for backend, Next.js for web, Flutter for mobile, PostgreSQL for the primary database, and Redis for cache. Codex will inspect the repository, show the proposed files, apply the same command without `--dry-run`, restore the pinned project runtime, and run diagnostics.
@@ -34,7 +34,7 @@ Tell Codex which applications already exist and where they live. Supported prese
 Preview first:
 
 ```sh
-npx --yes codex-sdlc@0.4.2 init --root /absolute/path/to/web --name example-web \
+npx --yes codex-sdlc@0.4.3 init --root /absolute/path/to/web --name example-web \
   --applications web --web-root . --web-preset nextjs --dry-run
 ```
 
@@ -54,7 +54,7 @@ One checkout is the coordinator and owns `.sdlc`. The reserved repository ID `co
 This example uses the frontend checkout as the coordinator and maps a backend elsewhere:
 
 ```sh
-npx --yes codex-sdlc@0.4.2 init \
+npx --yes codex-sdlc@0.4.3 init \
   --root /absolute/path/to/frontend \
   --name example-platform \
   --workspace-mode multi-repository \
@@ -75,9 +75,9 @@ node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-Only the coordinator receives `.sdlc`. The plugin skills remain in each user's Codex plugin cache. Another contributor binds their local checkout paths with `npx --yes codex-sdlc@0.4.2 configure --root <coordinator> --repo <id>=<absolute-path>` and reruns `doctor`.
+Only the coordinator receives `.sdlc`. The plugin skills remain in each user's Codex plugin cache. Another contributor binds their local checkout paths with `npx --yes codex-sdlc@0.4.3 configure --root <coordinator> --repo <id>=<absolute-path>` and reruns `doctor`.
 
-Choose single-repository or multi-repository mode before starting delivery. Version 0.4.2 does not automatically convert an initialized single-repository project to multi-repository mode. Preserve existing runs before changing topology.
+Choose single-repository or multi-repository mode before starting delivery. Version 0.4.3 does not automatically convert an initialized single-repository project to multi-repository mode. Preserve existing runs before changing topology.
 
 ## Start using the framework
 

@@ -18,8 +18,8 @@ Set up and coordinate resumable software delivery across one repository or multi
 
 ## Starter prompts
 
-1. Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes.
-2. Initialize a multi-repository codex-sdlc workspace with this repository as the coordinator and map my backend, web, and mobile checkouts.
+1. Initialize codex-sdlc here. Explain the setup choices and show the dry run before applying changes.
+2. Initialize codex-sdlc across this coordinator and my backend, web, and mobile repositories.
 3. Start or resume a codex-sdlc feature delivery with independent quality control.
 
 ## Positive tests
@@ -43,7 +43,7 @@ Set up and coordinate resumable software delivery across one repository or multi
 - User prompt: `Preview an upgrade of this multi-repository codex-sdlc workspace, apply it, roll it back, rebind the backend checkout to its new local path, and show me the uninstall preview.`
 - Expected behavior: The `sdlc-setup` skill uses dry-run before each mutation, creates an upgrade backup, applies the upgrade, restores it with rollback, verifies the rebound checkout has the declared remote identity, and performs only a dry-run uninstall.
 - Expected result: The report identifies the backup, restored version and checksums, accepted repository mapping, and bounded uninstall changes without deleting project configuration, local mapping, or run history. A checkout with a different remote must be rejected.
-- Fixture: A disposable coordinator plus backend and web Git checkouts initialized by codex-sdlc 0.4.2, with a second clone of the backend remote and one unrelated checkout for the negative rebind check. No account or credentials are required.
+- Fixture: A disposable coordinator plus backend and web Git checkouts initialized by codex-sdlc 0.4.3, with a second clone of the backend remote and one unrelated checkout for the negative rebind check. No account or credentials are required.
 
 ### 4. Produce requirements authority
 
@@ -81,7 +81,7 @@ Set up and coordinate resumable software delivery across one repository or multi
 
 ## Release notes
 
-Version 0.4.2 fixes Plugins Directory upload compatibility by limiting the manifest to three default prompts. It retains the 0.4.1 Getting Started guide, pinned npx setup fallback, and single- and multi-repository onboarding. Runtime schemas and delivery commands are unchanged.
+Version 0.4.3 fixes Plugins Directory upload compatibility by keeping at most three default prompts and limiting each prompt to 128 characters. It retains the Getting Started guide, pinned npx setup fallback, and single- and multi-repository onboarding. Runtime schemas and delivery commands are unchanged.
 
 ## Portal prerequisites
 
@@ -100,19 +100,19 @@ Version 0.4.2 fixes Plugins Directory upload compatibility by limiting the manif
 
 Submit the skills-only plugin from the release source tree. The bundle root contains `plugin.json`, `skills/`, `.codex-plugin/plugin.json`, `README.md`, `docs/getting-started.md`, and the referenced brand assets. It requires no MCP server, authentication configuration, demo credentials, or network allowlist.
 
-Prepared 0.4.2 artifacts:
+Prepared 0.4.3 artifacts:
 
 | Material | File | SHA-256 |
 | --- | --- | --- |
-| Public plugin package | `build/public-submission/0.4.2/codex-sdlc-plugin-0.4.2.zip` | `516b263cc4823584858c781cb83fe18f0d13124e1c2429b56c3fea7d783f21a6` |
-| Skills-only upload | `build/public-submission/0.4.2/codex-sdlc-skills-0.4.2.zip` | `5e86c5ab6e35e6c565ad22f505596fd46fe5ec35e3901fab31f8bae7a8d15166` |
-| Listing logo | `build/public-submission/0.4.2/codex-sdlc-logo-0.4.2.png` | `678361975afc99f1c5bcb5b95a0883922b025d2aab3d2ce88f911a5972ff1825` |
-| npm release tarball | `build/public-submission/0.4.2/codex-sdlc-0.4.2.tgz` | `a2ae15fafa5cbeae7ff8b84cc21f53afbcea659f1c4a0a64e93a248e8c6c228b` |
+| Public plugin package | `build/public-submission/0.4.3/codex-sdlc-plugin-0.4.3.zip` | `aaeab134a62255439a1010c760c7f2d813a5dcfd27bbc432e24b01d1addab889` |
+| Skills-only upload | `build/public-submission/0.4.3/codex-sdlc-skills-0.4.3.zip` | `1f934c064154757b1e59bf07985a7423830bd64cec8c16de45f58852ed983ee8` |
+| Listing logo | `build/public-submission/0.4.3/codex-sdlc-logo-0.4.3.png` | `678361975afc99f1c5bcb5b95a0883922b025d2aab3d2ce88f911a5972ff1825` |
+| npm release tarball | `build/public-submission/0.4.3/codex-sdlc-0.4.3.tgz` | `f4652606a10e6c5e36f602162a2d910919e2688572f93e3596787ee6228c4dbb` |
 
 ## Release order
 
-1. Tag the reviewed source revision as `v0.4.2` and publish the GitHub release using `docs/releases/0.4.2.md`.
-2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.4.2` to npm with provenance, then verify that the public registry serves 0.4.2. Do not submit the plugin update while npm still serves 0.4.1.
+1. Tag the reviewed source revision as `v0.4.3` and publish the GitHub release using `docs/releases/0.4.3.md`.
+2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.4.3` to npm with provenance, then verify that the public registry serves 0.4.3. Do not submit the plugin update while npm still serves 0.4.2.
 3. Open the existing codex-sdlc listing in the OpenAI plugin submission portal, create a version update, keep the type **Skills only**, and upload the prepared skills bundle and listing logo.
 4. Copy the listing, prompts, tests, availability, and release notes from this document; complete publisher identity and policy attestations.
 5. Submit for review. After approval, explicitly publish the approved version to the universal Plugins Directory.
