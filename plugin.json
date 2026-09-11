@@ -28,7 +28,7 @@
           "Configure codex-sdlc across these backend, web, and mobile repositories.",
           "Start or resume a codex-sdlc feature delivery with independent quality control."
         ],
-        "brandColor": "#46D7A7",
+        "brandColor": "#168B67",
         "composerIcon": "./assets/brand/codex-sdlc.svg",
         "logo": "./assets/brand/codex-sdlc.svg"
       }
