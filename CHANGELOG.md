@@ -2,6 +2,13 @@
 
 All notable changes to codex-sdlc are documented here.
 
+## 0.4.2 - 2026-09-11
+
+- Limit the plugin manifest to three default prompts so version updates pass Plugins Directory validation.
+- Add a package regression check for the portal's three-prompt maximum.
+
+No runtime schema or delivery command behavior changes from 0.4.1. Native Linux and Windows qualification remains deferred.
+
 ## 0.4.1 - 2026-09-11
 
 - Add a public Getting Started guide for plugin installation, project initialization, multi-repository setup, verification, and first delivery runs.

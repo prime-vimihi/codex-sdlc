@@ -6,7 +6,7 @@ The framework is distributed as both an npm CLI and a Codex skills plugin. Exist
 
 ## Current status
 
-Version `0.4.1` improves first-use guidance for the public plugin and its npm CLI. Version 0.4.0 introduced single- and multi-repository workspaces, web-only, mobile-only, backend-only, and combined-project initialization, technology presets, reversible installation lifecycle commands, and delivery orchestration. Native Linux and Windows qualification remains deferred.
+Version `0.4.2` makes the public plugin manifest compatible with the Plugins Directory three-prompt limit and includes the first-use guidance introduced in 0.4.1. Version 0.4.0 introduced single- and multi-repository workspaces, web-only, mobile-only, backend-only, and combined-project initialization, technology presets, reversible installation lifecycle commands, and delivery orchestration. Native Linux and Windows qualification remains deferred.
 
 ## Get started with the public plugin
 
@@ -16,7 +16,7 @@ Install **codex-sdlc** from the Codex Plugins Directory, then open an existing r
 Initialize codex-sdlc for this project. Explain the setup choices and show the dry run before applying changes.
 ```
 
-The plugin supplies Codex with the setup and delivery skills. The npm CLI performs deterministic repository changes. The setup skill uses the installed CLI when available and can run the pinned package through `npx --yes codex-sdlc@0.4.1` otherwise. Project initialization creates `.sdlc/` and a managed `AGENTS.md` block; plugin skills remain in Codex's plugin cache and are not copied to a project-level `.agents/skills` directory.
+The plugin supplies Codex with the setup and delivery skills. The npm CLI performs deterministic repository changes. The setup skill uses the installed CLI when available and can run the pinned package through `npx --yes codex-sdlc@0.4.2` otherwise. Project initialization creates `.sdlc/` and a managed `AGENTS.md` block; plugin skills remain in Codex's plugin cache and are not copied to a project-level `.agents/skills` directory.
 
 Read [Getting started](docs/getting-started.md) for web, mobile, backend, combined, and multi-repository examples.
 
@@ -33,7 +33,7 @@ npm pack
 Install the published CLI with:
 
 ```sh
-npm install --global codex-sdlc@0.4.1
+npm install --global codex-sdlc@0.4.2
 ```
 
 ## Project setup modes
@@ -116,9 +116,9 @@ Use the `generic` application preset or `none` database preset when a listed pre
 Install the generated tarball, preview the bounded changes, and then initialize. During local testing, pin the generated repository launcher to the tarball:
 
 ```sh
-npm install --global ./codex-sdlc-0.4.1.tgz
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.1.tgz --dry-run
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.1.tgz
+npm install --global ./codex-sdlc-0.4.2.tgz
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.2.tgz --dry-run
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.2.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 ```
@@ -137,8 +137,8 @@ The installer preserves existing `AGENTS.md` and `.gitignore` content, refuses c
 Preview and apply an upgrade with the new runtime package pinned into the repository:
 
 ```sh
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.1.tgz --dry-run
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.1.tgz
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.2.tgz --dry-run
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.2.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 node .sdlc/runtime.cjs doctor
