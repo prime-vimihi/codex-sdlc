@@ -1,206 +1,215 @@
-# codex-sdlc
+<p align="center">
+  <img src="assets/brand/codex-sdlc.svg" alt="codex-sdlc logo" width="108" height="108">
+</p>
 
-`codex-sdlc` is a repository-resumable software delivery framework for Codex. It packages a deterministic Node.js runtime with seven Codex skills for setup, business analysis, project coordination, backend delivery, frontend delivery, independent quality control, and advisory AI Product Owner review.
+<h1 align="center">codex-sdlc</h1>
 
-The framework is distributed as both an npm CLI and a Codex skills plugin. Existing project installations and saved runs remain unchanged until an explicit upgrade is performed.
+<p align="center">
+  <strong>Coordinate AI teams. Deliver software with evidence.</strong><br>
+  Turn a feature request into a resumable delivery workflow across one repository or many.<br>
+  Choose models by role. Verify the work. Keep the final decision yours.
+</p>
 
-## Current status
+<p align="center">
+  <a href="https://www.npmjs.com/package/codex-sdlc"><img src="https://img.shields.io/npm/v/codex-sdlc?style=flat-square&amp;logo=npm&amp;logoColor=white&amp;labelColor=101820&amp;color=168b67" alt="npm version"></a>
+  <a href="https://github.com/prime-vimihi/codex-sdlc/actions/workflows/verify.yml"><img src="https://img.shields.io/github/actions/workflow/status/prime-vimihi/codex-sdlc/verify.yml?branch=main&amp;style=flat-square&amp;logo=githubactions&amp;logoColor=white&amp;label=verify&amp;labelColor=101820" alt="Verification workflow status"></a>
+  <a href="https://www.npmjs.com/package/codex-sdlc"><img src="https://img.shields.io/node/v/codex-sdlc?style=flat-square&amp;logo=nodedotjs&amp;logoColor=white&amp;labelColor=101820&amp;color=168b67" alt="Required Node.js version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/prime-vimihi/codex-sdlc?style=flat-square&amp;labelColor=101820&amp;color=168b67" alt="Apache-2.0 license"></a>
+</p>
 
-Version `0.5.0` adds configurable models and reasoning efforts for each SDLC role, explicit model fallbacks, dispatch audit records, and optional AI Product Owner review with human acceptance preserved. Version 0.4.0 introduced single- and multi-repository workspaces, web-only, mobile-only, backend-only, and combined-project initialization, technology presets, reversible installation lifecycle commands, and delivery orchestration. Native Linux and Windows qualification remains deferred.
+<p align="center">
+  <a href="https://chatgpt.com/plugins/plugins_6aa375d1f1d48191b6a2a5f95e1b8a64"><strong>Install the plugin</strong></a>
+  &nbsp; · &nbsp;
+  <a href="docs/getting-started.md">Getting started</a>
+  &nbsp; · &nbsp;
+  <a href="docs/agent-models.md">Role models</a>
+  &nbsp; · &nbsp;
+  <a href="https://github.com/prime-vimihi/codex-sdlc/releases">Releases</a>
+</p>
 
-## Get started with the public plugin
+---
 
-Install **codex-sdlc** from the Codex Plugins Directory, then open an existing repository in Codex and ask:
+## A delivery process you can pick up again
+
+codex-sdlc combines **seven Codex skills** with a **repository-local CLI**. It coordinates requirements, implementation, integration, independent quality control, and optional AI Product Owner review. Tasks, evidence, and decisions stay in your repository so the next session can continue from recorded state.
+
+| What you need | What codex-sdlc provides |
+| --- | --- |
+| Continue work across sessions | Saved run manifests, task dependencies, blockers, and decisions. |
+| Work across separate codebases | One coordinator with explicit backend, web, and mobile repository mappings. |
+| Choose a model for each role | Per-role model and reasoning settings, explicit fallbacks, and dispatch records. |
+| Know what was actually verified | Independent QC, acceptance coverage, and recorded command evidence. |
+| Stay in control of delivery | Optional AI Product Owner advice followed by your explicit acceptance. |
+
+<p align="center">
+  <img src="assets/brand/delivery-overview.svg" alt="Delivery overview: PM and BA define requirements; backend and frontend implement reviewed contracts; independent QC verifies evidence; optional AI Product Owner review informs the human decision. A coordinator repository stores the delivery record." width="1080">
+</p>
+
+PM coordinates the stages and reviews each handoff. Frontend work follows the reviewed API contract; independent QC follows integration. The optional AI Product Owner recommends readiness for your review. **Only you accept delivery.**
+
+## Get started
+
+You need **Codex**, **Node.js `>=24.16.0 <25`**, **npm 11**, and an existing application repository. Setup configures your application directories; it does not scaffold application code.
+
+### 1. Install the plugin
+
+Install [codex-sdlc from the Plugins Directory](https://chatgpt.com/plugins/plugins_6aa375d1f1d48191b6a2a5f95e1b8a64), then open your repository in Codex.
+
+### 2. Initialize your project
+
+Ask Codex:
 
 ```text
-Initialize codex-sdlc for this project. Explain the setup choices and show the dry run before applying changes.
+Initialize codex-sdlc for this project. Explain the setup choices
+and show the dry run before applying changes.
 ```
 
-The plugin supplies Codex with the setup and delivery skills. The npm CLI performs deterministic repository changes. The setup skill uses the installed CLI when available and can run the pinned package through `npx --yes codex-sdlc@0.5.0` otherwise. Project initialization creates `.sdlc/` and a managed `AGENTS.md` block; plugin skills remain in Codex's plugin cache and are not copied to a project-level `.agents/skills` directory.
+Tell Codex where your backend, web, or mobile applications live. It previews the setup, creates `.sdlc/` and a managed `AGENTS.md` block, restores the pinned runtime, and checks the configuration.
 
-Read [Getting started](docs/getting-started.md) for web, mobile, backend, combined, and multi-repository examples.
+### 3. Start a feature
 
-## Choose models for your team
+After setup checks pass:
 
-Ask Codex: `Use Astra for frontend, Luna for backend, and Sol for PM and QC. Enable advisory AI Product Owner review.`
-
-Configure models during initialization or later with `configure-agents`. Settings are copied into each new run, unavailable models stop dispatch unless you explicitly configured a fallback, and the AI Product Owner only recommends a decision. Read [Role models and AI Product Owner review](docs/agent-models.md) for commands, supported role keys, inheritance, and audit details.
-
-## Build and test
-
-Requirements: Node.js `>=24.16.0 <25` and npm 11.
-
-```sh
-npm install
-npm run verify
-npm pack
+```text
+Start a codex-sdlc feature delivery for: <describe the outcome you want>.
 ```
 
-Install the published CLI with:
+To continue later, ask Codex to resume the existing run. Its manifest records the current tasks, completed work, and remaining decisions.
+
+**Version note:** Per-role model routing and AI Product Owner review require both the **0.5.0 plugin and runtime**. Check your installed plugin version; updating the plugin does not upgrade an existing project's runtime. See the [upgrade guide](docs/getting-started.md#upgrade-an-existing-project).
+
+<details>
+<summary><strong>Prefer the CLI? Preview a Next.js setup</strong></summary>
+
+Run this against an existing web repository:
 
 ```sh
-npm install --global codex-sdlc@0.5.0
+npx --yes codex-sdlc@0.5.0 init \
+  --root /absolute/path/to/web --name example-web \
+  --applications web --web-root . --web-preset nextjs \
+  --dry-run
 ```
 
-## Project setup modes
-
-The initializer configures an existing repository; it does not generate application source code. Each selected application root must already exist.
-
-Initialize a web-only Next.js project:
+Run the same command without `--dry-run` to apply it, then:
 
 ```sh
-codex-sdlc init --root /path/to/project --name example-web \
-  --applications web --web-root . --web-preset nextjs
-```
-
-Initialize a mobile-only Flutter project:
-
-```sh
-codex-sdlc init --root /path/to/project --name example-mobile \
-  --applications mobile --mobile-root . --mobile-preset flutter
-```
-
-Initialize a combined repository with Go, Next.js, Flutter, PostgreSQL, and Redis:
-
-```sh
-codex-sdlc init --root /path/to/project --name example-platform \
-  --applications backend,web,mobile \
-  --backend-root service --backend-preset go \
-  --web-root web --web-preset nextjs \
-  --mobile-root mobile --mobile-preset flutter \
-  --database-preset postgresql --redis
-```
-
-For one selected application the default root is `.`. For a combined project the default roots are `backend`, `web`, and `mobile`. Application roots in the same repository must be separate and cannot overlap.
-
-### Multi-repository setup
-
-Use one checkout as the coordinator. It owns `.sdlc/`, requests, run manifests, assignments, reports, and evidence. Map every other checkout by a stable repository ID and assign each application or shared resource to one of those IDs:
-
-```sh
-codex-sdlc init --root /work/platform-delivery --name example-platform \
-  --workspace-mode multi-repository \
-  --repo backend=/work/platform-api \
-  --repo web=/work/platform-web \
-  --repo mobile=/work/platform-mobile \
-  --repo docs=/work/platform-docs \
-  --applications backend,web,mobile \
-  --backend-repo backend --backend-root . --backend-preset go \
-  --web-repo web --web-root . --web-preset nextjs \
-  --mobile-repo mobile --mobile-root . --mobile-preset flutter \
-  --docs-repo docs --docs-root . \
-  --contracts-repo backend --contracts-root contracts \
-  --database-preset postgresql --redis
-```
-
-Every mapped path must be the root of a Git checkout with an `origin` remote. The initializer records stable remotes and default branches in committed `.sdlc/project.yaml`. It writes absolute device paths to ignored `.sdlc/local.yaml` and creates committed `.sdlc/local.example.yaml` for other contributors.
-
-After cloning or moving a checkout, update only the local mapping:
-
-```sh
-codex-sdlc configure --root /work/platform-delivery --repo backend=/new/path/platform-api --dry-run
-codex-sdlc configure --root /work/platform-delivery --repo backend=/new/path/platform-api
-codex-sdlc doctor --root /work/platform-delivery
-```
-
-`doctor`, `validate-config`, command evidence, delivery permissions, and changed-file authority verify the mapping before use. Commands run with their declared repository as the process root. Multi-repository changed-file entries use `{ repository, path }`; coordinator run artifacts retain their portable string paths. Existing schema-family 1 single-repository installations continue to work and can be upgraded without adding local mappings.
-
-See [Multi-repository workspace configuration](docs/multi-repository.md) for the complete file formats and runtime behavior.
-
-| Preset | Target | Generated verification commands |
-| --- | --- | --- |
-| `go` | Backend | `go test`, `go vet`, `go build`, and `gofmt` |
-| `nextjs` | Web | npm test, typecheck, lint, and build scripts |
-| `flutter` | Mobile | Flutter test, analyze, Android debug build, and Dart format check |
-| `postgresql` | Data | Marks PostgreSQL as the primary authoritative database |
-| `redis` | Data | Enables Redis in the non-authoritative cache role |
-
-Use the `generic` application preset or `none` database preset when a listed preset does not fit. Generic applications deliberately receive unconfigured `sdlc_test` and `sdlc_typecheck` commands; replace those commands before starting a delivery run.
-
-## Try the local package in an unrelated repository
-
-Install the generated tarball, preview the bounded changes, and then initialize. During local testing, pin the generated repository launcher to the tarball:
-
-```sh
-npm install --global ./codex-sdlc-0.5.0.tgz
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz --dry-run
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz
-cd /path/to/project
+cd /absolute/path/to/web
 node .sdlc/runtime.cjs restore
-```
-
-Then verify the installation:
-
-```sh
 node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-The installer preserves existing `AGENTS.md` and `.gitignore` content, refuses conflicting managed files, and is byte-idempotent for identical inputs. It does not modify a root package manifest or application code. Preset commands assume the conventional tool and script names shown above; adjust `.sdlc/project.yaml` if the repository uses different commands.
+For a global CLI installation, use `npm install --global codex-sdlc@0.5.0`.
 
-## Upgrade, rollback, and uninstall
+</details>
 
-Preview and apply an upgrade with the new runtime package pinned into the repository:
+## Your repositories. Your stack.
 
-```sh
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz --dry-run
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz
-cd /path/to/project
-node .sdlc/runtime.cjs restore
-node .sdlc/runtime.cjs doctor
+Start with a web-only, mobile-only, backend-only, or combined project. Use multi-repository mode when the applications live in separate Git checkouts.
+
+| Layer | Built-in preset |
+| --- | --- |
+| Backend | Go |
+| Web | Next.js |
+| Mobile | Flutter |
+| Primary database | PostgreSQL |
+| Cache | Redis |
+
+Other stacks can use the `generic` application preset with project-specific verification commands. Use `none` when no database preset applies.
+
+**Frontend here, backend elsewhere?** Ask Codex:
+
+```text
+Use this frontend repository as the codex-sdlc coordinator.
+My Go backend is at /absolute/path/to/backend.
+Initialize multi-repository mode with Next.js and Go.
+Show the dry run first.
 ```
 
-Every applied upgrade creates a backup under `.sdlc/backups/<backup-id>/`. Roll back the latest available backup, or select the ID printed by `upgrade`:
+The coordinator owns `.sdlc/`. Each mapped checkout must be a Git root with an `origin` remote. Shared configuration records repository identity; ignored `.sdlc/local.yaml` records paths on your machine.
 
-```sh
-codex-sdlc rollback --root /path/to/project --dry-run
-codex-sdlc rollback --root /path/to/project --backup <backup-id>
-cd /path/to/project
-node .sdlc/runtime.cjs restore
+→ [Project setup examples](docs/getting-started.md#common-project-shapes) · [Multi-repository guide](docs/multi-repository.md)
+
+## Choose the team behind the work
+
+Keep Codex's inherited models, or configure a model and reasoning effort for each delivery role.
+
+| Skill | Responsibility |
+| --- | --- |
+| `sdlc-setup` | Initialize, diagnose, configure, upgrade, roll back, and uninstall. |
+| `sdlc-pm` | Coordinate delivery, review handoffs, and prepare the final package. |
+| `sdlc-ba` | Define requirements, acceptance criteria, and traceability. |
+| `sdlc-backend` | Own API contracts, backend implementation, and data changes. |
+| `sdlc-frontend` | Implement the affected web or mobile experience. |
+| `sdlc-qc` | Independently verify acceptance coverage, defects, and retests. |
+| `sdlc-po` | Provide an optional advisory Product Owner review after QC. |
+
+For example, with a compatible 0.5.0 plugin and runtime:
+
+```text
+Use Astra for frontend, Luna for backend, and Sol for PM and QC.
+Enable advisory AI Product Owner review with Sol.
+Keep other roles inherited and preview the settings first.
 ```
 
-Rollback verifies that managed files still match the state produced by the original operation. It refuses to overwrite later edits.
+Selections must be available on your Codex host. New runs snapshot the settings; existing runs keep theirs. An unavailable model stops dispatch unless you configured an explicit fallback. Actual model metadata stays unknown when the host does not report it.
 
-Preview and apply an uninstall:
+→ [Model configuration, fallbacks, and AI Product Owner review](docs/agent-models.md)
 
-```sh
-codex-sdlc uninstall --root /path/to/project --dry-run
-codex-sdlc uninstall --root /path/to/project
+## What stays in your repository
+
+```text
+your-coordinator/
+├── AGENTS.md                # Managed Codex guidance
+└── .sdlc/
+    ├── project.yaml         # Project, repositories, presets, role settings
+    ├── local.yaml           # Local checkout paths in multi-repo mode (ignored)
+    ├── framework.lock.yaml  # Pinned framework installation
+    ├── runtime.cjs          # Repository command launcher
+    ├── requests/            # Feature requests
+    └── runs/                # Manifests, artifacts, decisions, and evidence
 ```
 
-Uninstall removes the managed framework, launcher, tooling, policy, schema, workflow, template, and preset files. It removes only the marked `AGENTS.md` block and `.gitignore` entries recorded as framework-added. Project configuration, requests, runs, evidence, application code, and lifecycle backups remain available. The global `codex-sdlc rollback` command can restore an uninstall backup.
+This is the key-file view; setup also installs the framework's policies, schemas, workflows, and templates. Plugin skills stay in Codex's plugin cache, so a plugin-based setup does not need a project `.agents/skills` folder.
 
-## Package boundaries
+codex-sdlc does not operate a hosted service or send repository content to a codex-sdlc server. Codex and any tools you run have their own data handling. Command evidence is stored locally; configure secret redaction as described in the [security guidance](SECURITY.md) and [privacy policy](docs/privacy.md).
 
-- `src/` contains the CLI and deterministic runtime.
-- `assets/` contains managed schemas, workflows, policies, presets, and templates.
-- `skills/` is the Codex plugin skill bundle.
-- `compatibility/legacy-v1/` retains private source material for future migration engineering and is excluded from the npm package.
-- `plugin.json` is the portable Agent Plugins manifest; `.codex-plugin/plugin.json` is the supported Codex compatibility overlay.
+## Upgrade with a way back
 
-## Data and security
-
-The runtime reads and writes repository files only. It does not operate a remote service or send repository content to a codex-sdlc server. Command evidence, including captured standard output and standard error, is stored locally under `.sdlc/runs/`. Configure secret environment-variable names in the installed policy so evidence redaction can remove their values. See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md) for reporting and retention details.
-
-## Support and contribution
-
-Use [GitHub Discussions](https://github.com/prime-vimihi/codex-sdlc/discussions) for usage help, [GitHub Issues](https://github.com/prime-vimihi/codex-sdlc/issues) for reproducible defects, and the private process in [SECURITY.md](SECURITY.md) for vulnerabilities. Contributions follow [CONTRIBUTING.md](CONTRIBUTING.md). This project is licensed under Apache-2.0.
-
-The portable project command is `node .sdlc/runtime.cjs ...`. Run records remain under `.sdlc/runs/`; the manifest is the authority for an active delivery.
-
-## Local Codex plugin marketplace
-
-Build a self-contained local marketplace directory:
+Preview a project upgrade before applying it:
 
 ```sh
-npm run build:marketplace
+npx --yes codex-sdlc@0.5.0 upgrade \
+  --root /absolute/path/to/coordinator --dry-run
 ```
 
-The command writes `build/marketplace/.agents/plugins/marketplace.json` and `build/marketplace/plugins/codex-sdlc/`. Install it with:
+Applied upgrades create backups. Rollback checks managed-file integrity before restoring them. Uninstall preserves project configuration, requests, run history, and application code.
+
+→ [Upgrade an existing project](docs/getting-started.md#upgrade-an-existing-project) · [CLI setup and lifecycle reference](docs/cli-reference.md)
+
+## Explore the documentation
+
+| Start here | Go deeper |
+| --- | --- |
+| [Getting started](docs/getting-started.md) | [CLI setup and lifecycle reference](docs/cli-reference.md) |
+| [Multi-repository workspaces](docs/multi-repository.md) | [Role models and dispatch records](docs/agent-models.md) |
+| [What's new in 0.5.0](docs/releases/0.5.0.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
+| [Support](SUPPORT.md) | [Contributing](CONTRIBUTING.md) |
+
+Current verification includes macOS CI, the automated runtime tests, plugin and skill validation, and a live PM dispatch smoke test. Native Linux/Windows qualification and a complete delivery test spanning multiple models remain pending. See the [0.5.0 validation notes](docs/releases/0.5.0.md#validation).
+
+## Build with us
+
+Try codex-sdlc on a project, [report a reproducible issue](https://github.com/prime-vimihi/codex-sdlc/issues), or [contribute an improvement](CONTRIBUTING.md). For security reports, follow [SECURITY.md](SECURITY.md).
 
 ```sh
-codex plugin marketplace add ./build/marketplace
-codex plugin add codex-sdlc@codex-sdlc-local
+npm ci
+npm run verify
 ```
 
-These commands change the user's Codex configuration, so they remain separate from building and validating the source package. Open a fresh Codex session after installation so the seven skills are discovered from the installed plugin bytes.
+See the [contributor reference](docs/cli-reference.md#local-codex-plugin-marketplace) for building and testing a local plugin marketplace. Licensed under [Apache-2.0](LICENSE).
+
+<p align="center">
+  <strong>Start with one feature. Keep the evidence for the next session.</strong><br>
+  <a href="docs/getting-started.md">Get started with codex-sdlc →</a>
+</p>

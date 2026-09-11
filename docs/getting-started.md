@@ -105,4 +105,4 @@ Start a codex-sdlc feature delivery for <describe the requested outcome>.
 
 Codex uses the PM, BA, backend, frontend, QC, and optional AI Product Owner skills as the work requires. Configuration, approvals, run manifests, reports, defects, and evidence remain under `.sdlc/` in the coordinator repository.
 
-Use [GitHub Discussions](https://github.com/prime-vimihi/codex-sdlc/discussions) for usage help and [GitHub Issues](https://github.com/prime-vimihi/codex-sdlc/issues) for reproducible defects.
+Use [GitHub Issues](https://github.com/prime-vimihi/codex-sdlc/issues) for usage questions and reproducible defects.
