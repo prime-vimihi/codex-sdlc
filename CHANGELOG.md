@@ -2,6 +2,15 @@
 
 All notable changes to codex-sdlc are documented here.
 
+## 0.4.1 - 2026-09-11
+
+- Add a public Getting Started guide for plugin installation, project initialization, multi-repository setup, verification, and first delivery runs.
+- Explain the plugin and npm CLI boundary, including where installed skills live and why project initialization does not create `.agents/skills`.
+- Let the setup skill use the pinned CLI through `npx` when no global executable is available.
+- Improve plugin descriptions and starter prompts for first-time setup and diagnostics.
+
+No runtime schema or command behavior changes from 0.4.0. Native Linux and Windows qualification remains deferred.
+
 ## 0.4.0 - 2026-09-11
 
 - Add schema-family 2 multi-repository workspaces with a coordinator repository and stable repository IDs.

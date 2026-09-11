@@ -1,6 +1,6 @@
 {
   "name": "codex-sdlc",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Evidence-backed SDLC runtime for one or more repositories with Codex",
   "type": "module",
   "license": "Apache-2.0",
@@ -37,7 +37,8 @@
     "skills",
     "plugin.json",
     ".codex-plugin/plugin.json",
-    "README.md"
+    "README.md",
+    "docs/getting-started.md"
   ],
   "publishConfig": {
     "access": "public",

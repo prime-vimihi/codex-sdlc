@@ -1,6 +1,6 @@
 {
   "name": "codex-sdlc",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Run evidence-backed software delivery across one or more repositories with Codex.",
   "author": {
     "name": "vimihi",
@@ -9,21 +9,31 @@
   "homepage": "https://github.com/prime-vimihi/codex-sdlc#readme",
   "repository": "https://github.com/prime-vimihi/codex-sdlc",
   "license": "Apache-2.0",
-  "keywords": ["sdlc", "software-delivery", "multi-repository", "requirements", "quality-assurance"],
+  "keywords": [
+    "sdlc",
+    "software-delivery",
+    "multi-repository",
+    "requirements",
+    "quality-assurance"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "codex-sdlc",
-    "shortDescription": "Evidence-backed delivery across repositories",
-    "longDescription": "Initialize and coordinate resumable software delivery across one repository or mapped Git checkouts through product analysis, implementation, integration, independent quality control, and Product Owner review.",
+    "shortDescription": "Run evidence-backed SDLC",
+    "longDescription": "Set up and coordinate resumable software delivery across one repository or multiple Git checkouts, from requirements through implementation, independent quality control, and Product Owner review.",
     "developerName": "vimihi",
     "category": "Productivity",
-    "capabilities": ["Read", "Write"],
-    "websiteURL": "https://github.com/prime-vimihi/codex-sdlc",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/prime-vimihi/codex-sdlc/blob/main/docs/getting-started.md",
     "privacyPolicyURL": "https://github.com/prime-vimihi/codex-sdlc/blob/main/docs/privacy.md",
     "termsOfServiceURL": "https://github.com/prime-vimihi/codex-sdlc/blob/main/docs/terms.md",
     "defaultPrompt": [
-      "Initialize codex-sdlc for this repository.",
-      "Configure codex-sdlc across these backend, web, and mobile repositories.",
+      "Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes.",
+      "Initialize a multi-repository codex-sdlc workspace with this repository as the coordinator and map my backend, web, and mobile checkouts.",
+      "Diagnose this codex-sdlc installation and tell me whether it is ready for a feature run.",
       "Start or resume a codex-sdlc feature delivery with independent quality control."
     ],
     "brandColor": "#168B67",

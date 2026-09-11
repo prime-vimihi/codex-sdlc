@@ -1,4 +1,4 @@
 interface:
   display_name: "codex-sdlc Setup"
-  short_description: "Manage the codex-sdlc installation lifecycle"
-  default_prompt: "Use $sdlc-setup to initialize codex-sdlc in this repository."
+  short_description: "Set up and maintain codex-sdlc"
+  default_prompt: "Use $sdlc-setup to initialize codex-sdlc here, explain the setup choices, and show the dry run before applying changes."

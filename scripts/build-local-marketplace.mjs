@@ -14,6 +14,8 @@ await cp(resolve(root, ".codex-plugin"), resolve(plugin, ".codex-plugin"), { rec
 await cp(resolve(root, "skills"), resolve(plugin, "skills"), { recursive: true });
 await cp(resolve(root, "assets/brand"), resolve(plugin, "assets/brand"), { recursive: true });
 await writeFile(resolve(plugin, "README.md"), await readFile(resolve(root, "README.md"), "utf8"), "utf8");
+await mkdir(resolve(plugin, "docs"), { recursive: true });
+await writeFile(resolve(plugin, "docs/getting-started.md"), await readFile(resolve(root, "docs/getting-started.md"), "utf8"), "utf8");
 await mkdir(dirname(marketplaceManifest), { recursive: true });
 await writeFile(marketplaceManifest, `${JSON.stringify({
   name: "codex-sdlc-local",
