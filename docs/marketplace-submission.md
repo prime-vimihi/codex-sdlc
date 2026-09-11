@@ -106,8 +106,8 @@ Prepared 0.4.0 artifacts:
 
 | Material | File | SHA-256 |
 | --- | --- | --- |
-| Public plugin package | `build/public-submission/0.4.0/codex-sdlc-plugin-0.4.0.zip` | `0be5ff482093780986c8c9e51d31b4bf87cf31f01ac6b40a7895861976257bc8` |
-| Skills-only upload | `build/public-submission/0.4.0/codex-sdlc-skills-0.4.0.zip` | `f2c35b53691ec2bfb51df5f0163cdbb3f8758d3f3d4367c3ee005f78dd6d2eb4` |
+| Public plugin package | `build/public-submission/0.4.0/codex-sdlc-plugin-0.4.0.zip` | `7d4bab30aebb9baf0317b17aa1c9c71988b746b87f81b53bb8f49afa08cb7580` |
+| Skills-only upload | `build/public-submission/0.4.0/codex-sdlc-skills-0.4.0.zip` | `cf16b1ca50c900c260db177485006e6709322c3bed74dfc1dcebb8f4d4ee4bd3` |
 | Listing logo | `build/public-submission/0.4.0/codex-sdlc-logo-0.4.0.png` | `678361975afc99f1c5bcb5b95a0883922b025d2aab3d2ce88f911a5972ff1825` |
 | npm release tarball | `build/public-submission/0.4.0/codex-sdlc-0.4.0.tgz` | `1f9180d2d2335da1c6c386b3c17e93960bc6632541131a51ee906b46e1e2e914` |
 
