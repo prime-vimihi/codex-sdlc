@@ -1,12 +1,12 @@
 # codex-sdlc
 
-`codex-sdlc` is a repository-resumable software delivery framework for Codex. It packages a deterministic Node.js runtime with six Codex skills for setup, business analysis, project coordination, backend delivery, frontend delivery, and independent quality control.
+`codex-sdlc` is a repository-resumable software delivery framework for Codex. It packages a deterministic Node.js runtime with seven Codex skills for setup, business analysis, project coordination, backend delivery, frontend delivery, independent quality control, and advisory AI Product Owner review.
 
 The framework is distributed as both an npm CLI and a Codex skills plugin. Existing project installations and saved runs remain unchanged until an explicit upgrade is performed.
 
 ## Current status
 
-Version `0.4.3` makes the public plugin prompts compatible with the Plugins Directory count and 128-character limits and includes the first-use guidance introduced in 0.4.1. Version 0.4.0 introduced single- and multi-repository workspaces, web-only, mobile-only, backend-only, and combined-project initialization, technology presets, reversible installation lifecycle commands, and delivery orchestration. Native Linux and Windows qualification remains deferred.
+Version `0.5.0` adds configurable models and reasoning efforts for each SDLC role, explicit model fallbacks, dispatch audit records, and optional AI Product Owner review with human acceptance preserved. Version 0.4.0 introduced single- and multi-repository workspaces, web-only, mobile-only, backend-only, and combined-project initialization, technology presets, reversible installation lifecycle commands, and delivery orchestration. Native Linux and Windows qualification remains deferred.
 
 ## Get started with the public plugin
 
@@ -16,9 +16,15 @@ Install **codex-sdlc** from the Codex Plugins Directory, then open an existing r
 Initialize codex-sdlc for this project. Explain the setup choices and show the dry run before applying changes.
 ```
 
-The plugin supplies Codex with the setup and delivery skills. The npm CLI performs deterministic repository changes. The setup skill uses the installed CLI when available and can run the pinned package through `npx --yes codex-sdlc@0.4.3` otherwise. Project initialization creates `.sdlc/` and a managed `AGENTS.md` block; plugin skills remain in Codex's plugin cache and are not copied to a project-level `.agents/skills` directory.
+The plugin supplies Codex with the setup and delivery skills. The npm CLI performs deterministic repository changes. The setup skill uses the installed CLI when available and can run the pinned package through `npx --yes codex-sdlc@0.5.0` otherwise. Project initialization creates `.sdlc/` and a managed `AGENTS.md` block; plugin skills remain in Codex's plugin cache and are not copied to a project-level `.agents/skills` directory.
 
 Read [Getting started](docs/getting-started.md) for web, mobile, backend, combined, and multi-repository examples.
+
+## Choose models for your team
+
+Ask Codex: `Use Astra for frontend, Luna for backend, and Sol for PM and QC. Enable advisory AI Product Owner review.`
+
+Configure models during initialization or later with `configure-agents`. Settings are copied into each new run, unavailable models stop dispatch unless you explicitly configured a fallback, and the AI Product Owner only recommends a decision. Read [Role models and AI Product Owner review](docs/agent-models.md) for commands, supported role keys, inheritance, and audit details.
 
 ## Build and test
 
@@ -33,7 +39,7 @@ npm pack
 Install the published CLI with:
 
 ```sh
-npm install --global codex-sdlc@0.4.3
+npm install --global codex-sdlc@0.5.0
 ```
 
 ## Project setup modes
@@ -116,9 +122,9 @@ Use the `generic` application preset or `none` database preset when a listed pre
 Install the generated tarball, preview the bounded changes, and then initialize. During local testing, pin the generated repository launcher to the tarball:
 
 ```sh
-npm install --global ./codex-sdlc-0.4.3.tgz
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.3.tgz --dry-run
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.4.3.tgz
+npm install --global ./codex-sdlc-0.5.0.tgz
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz --dry-run
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 ```
@@ -137,8 +143,8 @@ The installer preserves existing `AGENTS.md` and `.gitignore` content, refuses c
 Preview and apply an upgrade with the new runtime package pinned into the repository:
 
 ```sh
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.3.tgz --dry-run
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.4.3.tgz
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz --dry-run
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 node .sdlc/runtime.cjs doctor
@@ -197,4 +203,4 @@ codex plugin marketplace add ./build/marketplace
 codex plugin add codex-sdlc@codex-sdlc-local
 ```
 
-These commands change the user's Codex configuration, so they remain separate from building and validating the source package. Open a fresh Codex session after installation so the six skills are discovered from the installed plugin bytes.
+These commands change the user's Codex configuration, so they remain separate from building and validating the source package. Open a fresh Codex session after installation so the seven skills are discovered from the installed plugin bytes.

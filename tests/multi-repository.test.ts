@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { parse, stringify } from "yaml";
 import { describe, expect, test, vi } from "vitest";
 
+import { configureAgents, updateAgentPolicy } from "../src/agents.js";
 import { canonicalizeCommandDeclaration } from "../src/command-provenance.js";
 import { loadProject } from "../src/config.js";
 import { executeConfiguredCommand } from "../src/evidence.js";
@@ -40,6 +41,7 @@ describe("multi-repository workspaces", () => {
     await initializeProject({
       root: fixture.coordinator,
       projectName: "Distributed Example",
+      agents: updateAgentPolicy(undefined, { models: ["backend=gpt-5.6-luna", "frontend=gpt-6-astra"] }),
       applications: ["backend", "web"],
       workspaceMode: "multi-repository",
       repositories: { backend: fixture.backend, web: fixture.web, docs: fixture.docs },
@@ -63,6 +65,11 @@ describe("multi-repository workspaces", () => {
     const projectSource = await readFile(resolve(fixture.coordinator, ".sdlc/project.yaml"), "utf8");
     const projectDocument = parse(projectSource) as Record<string, any>;
     expect(projectDocument.schema_version).toBe(2);
+    expect(projectDocument.agents.roles.frontend.model).toBe("gpt-6-astra");
+    const localBefore = await readFile(resolve(fixture.coordinator, ".sdlc/local.yaml"), "utf8");
+    await configureAgents({ root: fixture.coordinator, models: ["pm=gpt-5.6-sol"] });
+    expect((await loadProject(fixture.coordinator)).agents?.roles.pm?.model).toBe("gpt-5.6-sol");
+    expect(await readFile(resolve(fixture.coordinator, ".sdlc/local.yaml"), "utf8")).toBe(localBefore);
     expect(projectDocument.workspace).toEqual({ mode: "multi-repository", coordinator: "coordinator" });
     expect(projectDocument.applications.backend.repository).toBe("backend");
     expect(projectDocument.applications.web.repository).toBe("web");

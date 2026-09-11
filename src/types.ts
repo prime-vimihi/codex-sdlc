@@ -1,3 +1,5 @@
+import type { AgentPolicy, AgentDispatch } from "./agents.js";
+
 export type ApplicationLifecycle = "planned" | "scaffolded" | "active";
 
 export type TaskStatus =
@@ -70,6 +72,7 @@ export interface LocalConfig {
 }
 
 export interface ProjectConfig {
+  agents?: AgentPolicy;
   schema_version: 1 | 2;
   framework: {
     name: "codex-sdlc";
@@ -146,7 +149,7 @@ export class SdlcValidationError extends Error {
   }
 }
 
-export type TaskRole = "pm" | "ba" | "backend" | "frontend" | "qc";
+export type TaskRole = "pm" | "ba" | "backend" | "frontend" | "qc" | "po";
 
 export type TaskTarget = "backend" | "web" | "mobile" | "integration" | "qc" | null;
 
@@ -161,7 +164,8 @@ export type TaskStage =
   | "mobile_implementation"
   | "integration"
   | "qc"
-  | "product_owner_review";
+  | "product_owner_review"
+  | "product_owner_advisory";
 
 export interface TaskTransition {
   from: TaskStatus | null;
@@ -172,6 +176,7 @@ export interface TaskTransition {
 }
 
 export interface Task {
+  agent_dispatches?: AgentDispatch[];
   id: string;
   title: string;
   stage: TaskStage;
@@ -259,6 +264,7 @@ export interface WorkflowConfig {
     name: string;
     owner: TaskRole;
     target?: Exclude<TaskTarget, "integration" | "qc" | null>;
+    when_agent_review?: "advisory";
     when_affected?: "backend" | "web" | "mobile";
     depends_on: TaskStage[];
     required_outputs: string[];
@@ -275,6 +281,7 @@ export interface SdlcBlocker {
 }
 
 export interface RunManifest {
+  agent_policy?: AgentPolicy;
   schema_version: 1;
   run: {
     id: string;

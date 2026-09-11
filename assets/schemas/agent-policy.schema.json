@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/agent-policy.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "roles",
+    "product_owner_review"
+  ],
+  "properties": {
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "pm": {
+          "$ref": "#/$defs/role"
+        },
+        "ba": {
+          "$ref": "#/$defs/role"
+        },
+        "backend": {
+          "$ref": "#/$defs/role"
+        },
+        "frontend": {
+          "$ref": "#/$defs/role"
+        },
+        "qc": {
+          "$ref": "#/$defs/role"
+        },
+        "po": {
+          "$ref": "#/$defs/role"
+        }
+      }
+    },
+    "product_owner_review": {
+      "enum": [
+        "disabled",
+        "advisory"
+      ]
+    }
+  },
+  "$defs": {
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$"
+        },
+        "reasoning_effort": {
+          "enum": [
+            "none",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ]
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$"
+        },
+        "reasoning_effort": {
+          "enum": [
+            "none",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ]
+        },
+        "fallbacks": {
+          "type": "array",
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/selection"
+          }
+        }
+      }
+    }
+  }
+}

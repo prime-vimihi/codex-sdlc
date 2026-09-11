@@ -1,3 +1,5 @@
+import { assertTaskAgentDispatch } from "./agents.js";
+import { assertProductOwnerAdvisory } from "./product-owner.js";
 import { createHash } from "node:crypto";
 import { loadProject } from "./config.js";
 import { assertEvidenceReference } from "./evidence-validation.js";
@@ -74,6 +76,7 @@ export async function prepareTransitionContext(
   const task = manifest.tasks.find((candidate) => candidate.id === request.taskId);
   if (task === undefined) throw new SdlcTransitionError(`Task ${request.taskId} does not exist`);
   assertPreparationOptions(task.status, request.to, options);
+  if (task.role === "po" && ["awaiting_review", "completed"].includes(request.to)) await assertProductOwnerAdvisory(root, runId, manifest);
 
   const references = [...new Set([...task.required_inputs, ...task.required_outputs, ...task.outputs, ...task.evidence])];
   const existingOutputPaths: string[] = [];
@@ -183,6 +186,7 @@ export function transitionTask(
     throw new SdlcTransitionError(`Task ${request.taskId} does not exist`);
   }
   const sourceStatus = task.status;
+  if (["running", "awaiting_review", "completed"].includes(request.to)) assertTaskAgentDispatch(result, task);
   assertTransitionIsLegal(task, request, result.tasks);
   assertTransitionConditions(task, request, result, context);
   const auditReason = sourceStatus === "failed" && request.to === "ready"

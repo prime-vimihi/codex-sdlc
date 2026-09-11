@@ -1,3 +1,4 @@
+import { advisoryPath, validateAdvisorySource } from "./product-owner.js";
 import { createHash, randomUUID } from "node:crypto";
 import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
@@ -321,6 +322,10 @@ async function validatePublicationSource(
   if (identity.endsWith(".yaml") || identity.endsWith(".yml")) {
     const value = parseStrictYamlDocument(source);
     if (!isRecord(value)) throw new Error(`${path} must contain a YAML mapping`);
+    if (identity === advisoryPath) {
+      await validateAdvisorySource(root, runId, manifest, source);
+      return;
+    }
     if (identity === "facts.yaml") {
       assertSchema("facts", value, "facts publication");
       if (value.run_id !== runId || value.producer !== "pm") throw new Error(`facts publication identity does not match run ${runId}`);

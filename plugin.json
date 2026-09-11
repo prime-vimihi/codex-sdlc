@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codex-sdlc",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Run evidence-backed software delivery across one or more repositories with Codex.",
   "author": {
     "name": "vimihi",
@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "codex-sdlc",
         "shortDescription": "Run evidence-backed SDLC",
-        "longDescription": "Set up and coordinate resumable software delivery across one repository or multiple Git checkouts, from requirements through implementation, independent quality control, and Product Owner review.",
+        "longDescription": "Set up resumable software delivery across Git repositories, choose models for each delivery role, and coordinate requirements, implementation, independent quality control, and advisory AI Product Owner review with final human acceptance.",
         "developerName": "vimihi",
         "category": "Productivity",
         "capabilities": [

@@ -75,6 +75,13 @@ stages:
     depends_on: [integration]
     required_outputs: [artifacts/qc/test-plan.md, artifacts/qc/test-cases.md, artifacts/qc/execution-results.md, artifacts/qc/requirement-coverage.md, artifacts/qc/defects.md, artifacts/qc/qc-recommendation.md]
     completion_conditions: [all_acceptance_criteria_tested, web_testing_completed, mobile_testing_completed, api_testing_completed, regression_testing_completed, critical_defects_resolved, qc_recommendation_recorded]
+  - id: product_owner_advisory
+    name: AI Product Owner Advisory Review
+    owner: po
+    when_agent_review: advisory
+    depends_on: [qc]
+    required_outputs: [artifacts/po/advisory-review.yaml]
+    completion_conditions: [business_value_reviewed, acceptance_coverage_reviewed, advisory_recommendation_recorded, human_acceptance_preserved]
   - id: product_owner_review
     name: Product Owner Review
     owner: pm

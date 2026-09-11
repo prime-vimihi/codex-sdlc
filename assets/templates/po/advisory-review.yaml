@@ -1,0 +1,13 @@
+schema_version: 1
+run_id: "{{run_id}}"
+task_id: PO-001
+producer: po
+advisory_only: true
+recommendation: changes_recommended
+summary: "{{evidence_based_review_summary}}"
+acceptance_coverage:
+  - acceptance_criteria_id: "{{acceptance_criterion_id}}"
+    requirement_id: "{{requirement_id}}"
+    assessment: unverified
+    sources: [artifacts/ba/acceptance-criteria.md, artifacts/qc/requirement-coverage.md]
+findings: []

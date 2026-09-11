@@ -1,3 +1,4 @@
+import { assertProductOwnerAdvisory } from "./product-owner.js";
 import { createHash } from "node:crypto";
 
 import { loadProject } from "./config.js";
@@ -12,6 +13,7 @@ export async function finalizeRun(root: string, runId: string, actor: string, no
   const transaction = await mutateRunManifest(root, runId, async (manifest) => {
     normalizeLegacyInapplicableGates(manifest);
     assertReadyForProductOwnerReview(manifest);
+    if (manifest.agent_policy?.product_owner_review === "advisory") await assertProductOwnerAdvisory(root, runId, manifest);
     await assertReferencedFilesExist(root, runId, manifest);
     await assertEvidencePassed(root, runId, manifest);
 

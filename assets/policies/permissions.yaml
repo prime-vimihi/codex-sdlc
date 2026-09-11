@@ -41,6 +41,11 @@ roles:
       - applications/mobile/tests/**
       - .sdlc/runs/*/artifacts/qc/**
     initial_product_repair: prohibited
+  po:
+    read_paths: ["**"]
+    write_paths: [.sdlc/runs/*/artifacts/po/**]
+    product_code_changes: prohibited
+    human_decisions: prohibited
   runtime_collector:
     read_paths: ["**"]
     write_paths: [.sdlc/runs/*/evidence/diffs/changed-files.json]

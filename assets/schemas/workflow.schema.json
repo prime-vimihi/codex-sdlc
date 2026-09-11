@@ -29,23 +29,93 @@
       }
     },
     "stages": {
-      "type": "array",
-      "minItems": 11,
-      "maxItems": 11,
-      "prefixItems": [
-        { "$ref": "#/$defs/intakeStage" },
-        { "$ref": "#/$defs/requirementsStage" },
-        { "$ref": "#/$defs/requirementsReviewStage" },
-        { "$ref": "#/$defs/apiContractStage" },
-        { "$ref": "#/$defs/apiContractReviewStage" },
-        { "$ref": "#/$defs/backendImplementationStage" },
-        { "$ref": "#/$defs/webImplementationStage" },
-        { "$ref": "#/$defs/mobileImplementationStage" },
-        { "$ref": "#/$defs/integrationStage" },
-        { "$ref": "#/$defs/qcStage" },
-        { "$ref": "#/$defs/productOwnerReviewStage" }
-      ],
-      "items": false
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/intakeStage"
+            },
+            {
+              "$ref": "#/$defs/requirementsStage"
+            },
+            {
+              "$ref": "#/$defs/requirementsReviewStage"
+            },
+            {
+              "$ref": "#/$defs/apiContractStage"
+            },
+            {
+              "$ref": "#/$defs/apiContractReviewStage"
+            },
+            {
+              "$ref": "#/$defs/backendImplementationStage"
+            },
+            {
+              "$ref": "#/$defs/webImplementationStage"
+            },
+            {
+              "$ref": "#/$defs/mobileImplementationStage"
+            },
+            {
+              "$ref": "#/$defs/integrationStage"
+            },
+            {
+              "$ref": "#/$defs/qcStage"
+            },
+            {
+              "$ref": "#/$defs/productOwnerReviewStage"
+            }
+          ],
+          "items": false
+        },
+        {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/intakeStage"
+            },
+            {
+              "$ref": "#/$defs/requirementsStage"
+            },
+            {
+              "$ref": "#/$defs/requirementsReviewStage"
+            },
+            {
+              "$ref": "#/$defs/apiContractStage"
+            },
+            {
+              "$ref": "#/$defs/apiContractReviewStage"
+            },
+            {
+              "$ref": "#/$defs/backendImplementationStage"
+            },
+            {
+              "$ref": "#/$defs/webImplementationStage"
+            },
+            {
+              "$ref": "#/$defs/mobileImplementationStage"
+            },
+            {
+              "$ref": "#/$defs/integrationStage"
+            },
+            {
+              "$ref": "#/$defs/qcStage"
+            },
+            {
+              "$ref": "#/$defs/productOwnerAdvisoryStage"
+            },
+            {
+              "$ref": "#/$defs/productOwnerReviewStage"
+            }
+          ],
+          "items": false
+        }
+      ]
     },
     "task_statuses": { "const": ["pending", "ready", "running", "awaiting_review", "awaiting_approval", "blocked", "failed", "completed", "cancelled"] },
     "run_statuses": { "const": ["draft", "intake", "requirements", "awaiting_approval", "technical_design", "implementation", "integration", "qc", "product_owner_review", "completed", "blocked", "failed", "cancelled"] },
@@ -84,16 +154,18 @@
       "additionalProperties": false,
       "required": ["id", "name", "owner", "depends_on", "required_outputs", "completion_conditions"],
       "properties": {
-        "id": { "type": "string", "enum": ["intake", "requirements", "requirements_review", "api_contract", "api_contract_review", "backend_implementation", "web_implementation", "mobile_implementation", "integration", "qc", "product_owner_review"] },
+        "id": { "type": "string", "enum": ["intake", "requirements", "requirements_review", "api_contract", "api_contract_review", "backend_implementation", "web_implementation", "mobile_implementation", "integration", "qc", "product_owner_review", "product_owner_advisory"] },
         "name": { "type": "string", "minLength": 1 },
-        "owner": { "enum": ["pm", "ba", "backend", "frontend", "qc"] },
+        "owner": { "enum": ["pm", "ba", "backend", "frontend", "qc", "po"] },
         "target": { "enum": ["backend", "web", "mobile"] },
+        "when_agent_review": { "const": "advisory" },
         "when_affected": { "enum": ["backend", "web", "mobile"] },
         "depends_on": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "required_outputs": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
         "completion_conditions": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true }
       }
     },
+    "productOwnerAdvisoryStage": {"allOf": [{"$ref": "#/$defs/stage"}, {"type": "object", "required": ["when_agent_review"], "properties": {"id": {"const": "product_owner_advisory"}, "owner": {"const": "po"}, "when_agent_review": {"const": "advisory"}, "depends_on": {"const": ["qc"]}, "required_outputs": {"const": ["artifacts/po/advisory-review.yaml"]}, "completion_conditions": {"const": ["business_value_reviewed", "acceptance_coverage_reviewed", "advisory_recommendation_recorded", "human_acceptance_preserved"]}}}]},
     "intakeStage": {
       "allOf": [{ "$ref": "#/$defs/stage" }, { "$ref": "#/$defs/nonImplementationStage" }, { "type": "object", "properties": { "id": { "const": "intake" }, "owner": { "const": "pm" }, "depends_on": { "const": [] }, "required_outputs": { "const": ["request.md", "manifest.yaml", "scope.md", "assumptions.md", "facts.yaml", "artifacts/pm/discovery-report.md"] }, "completion_conditions": { "const": ["original_request_recorded", "affected_applications_identified", "initial_scope_defined", "risks_identified"] } } }]
     },

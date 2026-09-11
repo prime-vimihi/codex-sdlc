@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { parse, stringify } from "yaml";
 import { describe, expect, test } from "vitest";
 
+import { updateAgentPolicy } from "../src/agents.js";
 import { FRAMEWORK_VERSION } from "../src/constants.js";
 import { initializeProject, inspectProject } from "../src/install.js";
 import { rollbackProject, uninstallProject, upgradeProject } from "../src/installation-lifecycle.js";
@@ -41,6 +42,7 @@ describe("installation lifecycle", () => {
     framework.framework.version = "0.1.0";
     project.framework.version = "0.1.0";
     project.commands.web_test.args = ["run", "test:ci"];
+    project.agents = updateAgentPolicy(undefined, { models: ["pm=gpt-5.6-sol"], reasoning: ["pm=high"], productOwnerReview: "advisory" });
     lock.version = "0.1.0";
     await writeFile(frameworkPath, stringify(framework), "utf8");
     await writeFile(projectPath, stringify(project), "utf8");
@@ -65,6 +67,9 @@ describe("installation lifecycle", () => {
     const upgradedProject = parse(await readFile(projectPath, "utf8")) as Record<string, any>;
     expect(upgradedProject.framework.version).toBe(FRAMEWORK_VERSION);
     expect(upgradedProject.commands.web_test.args).toEqual(["run", "test:ci"]);
+    expect(upgradedProject.agents).toEqual(project.agents);
+    const upgradedPermissions = parse(await readFile(resolve(root, ".sdlc/policies/permissions.yaml"), "utf8"));
+    expect(upgradedPermissions.roles.po.write_paths).toEqual([".sdlc/runs/*/artifacts/po/**"]);
     expect(await readFile(blockerPath, "utf8")).not.toBe(before.blocker);
     expect((await inspectProject(root)).valid).toBe(true);
 

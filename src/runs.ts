@@ -4,6 +4,8 @@ import { dirname, join, relative } from "node:path";
 
 import { parseDocument, stringify } from "yaml";
 
+import { agentPolicyDiagnostics, assertTaskAgentDispatch, type AgentPolicy } from "./agents.js";
+import { assertProductOwnerAdvisory } from "./product-owner.js";
 import { assertAcyclic } from "./graph.js";
 import { loadProject, loadWorkflow } from "./config.js";
 import { FRAMEWORK_VERSION } from "./constants.js";
@@ -58,7 +60,8 @@ export async function startRun(root: string, input: StartRunInput, options: Star
   if (!input.affectedApplications.backend && !input.affectedApplications.web && !input.affectedApplications.mobile) {
     throw new Error("at least one of backend, web, or mobile must be affected in v0.1");
   }
-  await resolveWorkspace(root, await loadProject(root));
+  const project = await loadProject(root);
+  await resolveWorkspace(root, project);
   const runsDirectory = await resolvePathInsideRoot(root, ".sdlc/runs", { mustExist: true });
   const requestSource = await resolvePathInsideRoot(root, input.requestFile, { mustExist: true });
   const templatePath = await resolvePathInsideRoot(root, ".sdlc/templates/run-manifest.yaml", { mustExist: true });
@@ -78,7 +81,7 @@ export async function startRun(root: string, input: StartRunInput, options: Star
     const manifestPath = join(temporaryDirectory, "manifest.yaml");
     const requestDestination = join(temporaryDirectory, "request.md");
     const template = await readFile(templatePath, "utf8");
-    const manifest = renderManifest(template, input, await loadWorkflow(root));
+    const manifest = renderManifest(template, input, await loadWorkflow(root), project.agents);
     const validation = await validateManifest(manifest, root, input.id);
     if (!validation.valid) {
       throw new Error(`rendered run manifest is invalid:\n${validation.diagnostics.join("\n")}`);
@@ -193,12 +196,16 @@ export async function validateRunSnapshotUnderLock(
   diagnostics.push(...(await validateManifest(manifest, root, runId)).diagnostics);
   if (structuredDelivery && diagnostics.length === 0) {
     diagnostics.push(...(await validateRepositoryStructuredDelivery(root, runId, snapshot, lock)).diagnostics);
+    const advisory = manifest.tasks.find((task) => task.id === "PO-001");
+    if (advisory !== undefined && ["awaiting_review", "completed"].includes(advisory.status)) {
+      try { await assertProductOwnerAdvisory(root, runId, manifest); } catch (error) { diagnostics.push(errorMessage(error)); }
+    }
   }
   return { valid: diagnostics.length === 0, diagnostics };
 }
 
-function renderManifest(template: string, input: StartRunInput, workflow: WorkflowConfig): RunManifest {
-  const tasks = createTasks(input, workflow);
+function renderManifest(template: string, input: StartRunInput, workflow: WorkflowConfig, agents?: AgentPolicy): RunManifest {
+  const tasks = createTasks(input, workflow, agents);
   const replacements: Record<string, string> = {
     run_id: input.id,
     title: yamlScalar(input.title),
@@ -221,10 +228,12 @@ function renderManifest(template: string, input: StartRunInput, workflow: Workfl
   if (/{{[^}]+}}/.test(rendered)) {
     throw new Error("run manifest template contains unresolved token");
   }
-  return parseManifest(rendered);
+  const manifest = parseManifest(rendered);
+  if (agents !== undefined) manifest.agent_policy = structuredClone(agents);
+  return manifest;
 }
 
-function createTasks(input: StartRunInput, workflow: WorkflowConfig): Task[] {
+function createTasks(input: StartRunInput, workflow: WorkflowConfig, agents?: AgentPolicy): Task[] {
   const outputsByStage = new Map(workflow.stages.map((stage) => [stage.id, stage.required_outputs]));
   const tasks: Task[] = [
     createTask("PM-001", "Intake and discovery", "intake", "pm", null, [], outputsByStage, input.now, "ready"),
@@ -253,11 +262,21 @@ function createTasks(input: StartRunInput, workflow: WorkflowConfig): Task[] {
   tasks.push(
     createTask("INT-001", "Integration review", "integration", "pm", "integration", implementationTasks.map((task) => task.id), outputsByStage, input.now),
     createTask("QC-001", "Independent QC", "qc", "qc", "qc", ["INT-001"], outputsByStage, input.now),
-    createTask("PM-004", "Product Owner delivery package", "product_owner_review", "pm", null, ["QC-001"], outputsByStage, input.now),
   );
+  if (agents?.product_owner_review === "advisory") {
+    if (!outputsByStage.has("product_owner_advisory")) throw new Error("upgrade the installed workflow before enabling AI Product Owner review");
+    tasks.push(createTask("PO-001", "AI Product Owner advisory review", "product_owner_advisory", "po", null, ["QC-001"], outputsByStage, input.now));
+  }
+  tasks.push(createTask("PM-004", "Product Owner delivery package", "product_owner_review", "pm", null, [agents?.product_owner_review === "advisory" ? "PO-001" : "QC-001"], outputsByStage, input.now));
   const byId = new Map(tasks.map((task) => [task.id, task]));
   for (const task of tasks) {
     task.required_inputs = [...new Set(task.dependencies.flatMap((id) => byId.get(id)?.required_outputs ?? []))];
+    if (task.id === "PM-004" && agents?.product_owner_review === "advisory") {
+      task.required_inputs = [...new Set([...task.required_inputs, ...(byId.get("QC-001")?.required_outputs ?? [])])];
+    }
+    if (task.role === "po") {
+      task.required_inputs = [...new Set([...task.required_inputs, "request.md", "facts.yaml", ...(byId.get("BA-001")?.required_outputs ?? [])])];
+    }
     if (task.role === "backend" || task.role === "frontend") {
       task.required_inputs.push(`tasks/${task.id}.assignment.yaml`);
     }
@@ -311,7 +330,15 @@ async function validateManifest(manifest: unknown, root: string, runId: string):
   if (!manifest.tasks.every(isRuntimeSafeTask)) {
     return { valid: false, diagnostics: [...diagnostics, ...(await manifestPathDiagnostics(manifest, root, runId))] };
   }
+  if (manifest.agent_policy !== undefined) diagnostics.push(...agentPolicyDiagnostics(manifest.agent_policy));
   const tasks = manifest.tasks;
+  if (diagnostics.length === 0) {
+    for (const task of tasks) {
+      if (["running", "awaiting_review", "awaiting_approval", "completed"].includes(task.status)) {
+        try { assertTaskAgentDispatch(manifest as unknown as RunManifest, task); } catch (error) { diagnostics.push(errorMessage(error)); }
+      }
+    }
+  }
   const taskIds = new Set<string>();
   for (const task of tasks) {
     if (taskIds.has(task.id)) {
@@ -408,7 +435,7 @@ function canonicalGraphDiagnostics(manifest: Record<string, unknown>, tasks: Tas
     requestFile: "request.md",
     affectedApplications: affected,
     now: "1970-01-01T00:00:00.000Z",
-  }, workflow);
+  }, workflow, manifest.agent_policy as AgentPolicy | undefined);
   const expectedById = new Map(expectedTasks.map((task) => [task.id, task]));
   const actualById = new Map(tasks.map((task) => [task.id, task]));
   const diagnostics: string[] = [];

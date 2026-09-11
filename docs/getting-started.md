@@ -14,7 +14,7 @@ codex-sdlc combines a Codex skills plugin with a deterministic npm CLI. The plug
 Open the repository that should own `.sdlc` and start a new Codex task:
 
 ```text
-Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes. If the CLI is unavailable, use codex-sdlc@0.4.3 through npx.
+Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes. If the CLI is unavailable, use codex-sdlc@0.5.0 through npx.
 ```
 
 Tell Codex which applications already exist and where they live. Supported presets are Go for backend, Next.js for web, Flutter for mobile, PostgreSQL for the primary database, and Redis for cache. Codex will inspect the repository, show the proposed files, apply the same command without `--dry-run`, restore the pinned project runtime, and run diagnostics.
@@ -34,7 +34,7 @@ Tell Codex which applications already exist and where they live. Supported prese
 Preview first:
 
 ```sh
-npx --yes codex-sdlc@0.4.3 init --root /absolute/path/to/web --name example-web \
+npx --yes codex-sdlc@0.5.0 init --root /absolute/path/to/web --name example-web \
   --applications web --web-root . --web-preset nextjs --dry-run
 ```
 
@@ -54,7 +54,7 @@ One checkout is the coordinator and owns `.sdlc`. The reserved repository ID `co
 This example uses the frontend checkout as the coordinator and maps a backend elsewhere:
 
 ```sh
-npx --yes codex-sdlc@0.4.3 init \
+npx --yes codex-sdlc@0.5.0 init \
   --root /absolute/path/to/frontend \
   --name example-platform \
   --workspace-mode multi-repository \
@@ -75,9 +75,25 @@ node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-Only the coordinator receives `.sdlc`. The plugin skills remain in each user's Codex plugin cache. Another contributor binds their local checkout paths with `npx --yes codex-sdlc@0.4.3 configure --root <coordinator> --repo <id>=<absolute-path>` and reruns `doctor`.
+Only the coordinator receives `.sdlc`. The plugin skills remain in each user's Codex plugin cache. Another contributor binds their local checkout paths with `npx --yes codex-sdlc@0.5.0 configure --root <coordinator> --repo <id>=<absolute-path>` and reruns `doctor`.
 
-Choose single-repository or multi-repository mode before starting delivery. Version 0.4.3 does not automatically convert an initialized single-repository project to multi-repository mode. Preserve existing runs before changing topology.
+Choose single-repository or multi-repository mode before starting delivery. Version 0.5.0 does not automatically convert an initialized single-repository project to multi-repository mode. Preserve existing runs before changing topology.
+
+## Choose agent models (optional)
+
+Ask Codex: `Configure frontend to use Astra, backend to use Luna, and PM and QC to use Sol.` The setup skill maps your choices to model IDs supported by your Codex host and stores them in the coordinator’s `.sdlc/project.yaml`. Unspecified roles inherit from Codex.
+
+You can also ask: `Enable an advisory AI Product Owner review using Sol.` The review runs after QC; final acceptance remains your decision. See [Choose a model for each role](agent-models.md) for exact commands, explicit fallbacks, and resetting settings. These options require the 0.5.0 plugin and runtime. Existing runs keep their original model settings.
+
+## Upgrade an existing project
+
+After installing the new plugin version, preview the project runtime upgrade:
+
+```sh
+npx --yes codex-sdlc@0.5.0 upgrade --root /absolute/path/to/coordinator --dry-run
+```
+
+Run the same command without `--dry-run`, then run `node .sdlc/runtime.cjs restore`, `doctor`, and `validate-config` from the coordinator. The plugin update supplies skills; the project upgrade supplies commands and schemas.
 
 ## Start using the framework
 
@@ -87,6 +103,6 @@ After diagnostics pass, ask Codex:
 Start a codex-sdlc feature delivery for <describe the requested outcome>.
 ```
 
-Codex uses the PM, BA, backend, frontend, and QC skills as the work requires. Configuration, approvals, run manifests, reports, defects, and evidence remain under `.sdlc/` in the coordinator repository.
+Codex uses the PM, BA, backend, frontend, QC, and optional AI Product Owner skills as the work requires. Configuration, approvals, run manifests, reports, defects, and evidence remain under `.sdlc/` in the coordinator repository.
 
 Use [GitHub Discussions](https://github.com/prime-vimihi/codex-sdlc/discussions) for usage help and [GitHub Issues](https://github.com/prime-vimihi/codex-sdlc/issues) for reproducible defects.

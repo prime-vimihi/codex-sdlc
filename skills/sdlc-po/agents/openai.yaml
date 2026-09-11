@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDLC AI Product Owner"
+  short_description: "Review delivery before human acceptance"
+  default_prompt: "Use $sdlc-po to review the assigned delivery against acceptance criteria and give an advisory recommendation."

@@ -3,6 +3,7 @@ import { relative } from "node:path";
 
 import { Command, CommanderError } from "commander";
 
+import { configureAgents, updateAgentPolicy, planAgent, recordAgentDispatch, type AgentCapabilities, type AgentDispatchInput } from "./agents.js";
 import { loadFramework, loadProject } from "./config.js";
 import { validateCliArguments } from "./cli-grammar.js";
 import { executeConfiguredCommand } from "./evidence.js";
@@ -53,7 +54,15 @@ interface StartOptions {
   applications: string;
 }
 
-interface InitOptions {
+interface AgentOptions {
+  agentModel: string[];
+  agentReasoning: string[];
+  agentFallback: string[];
+  resetRole?: string[];
+  poReview?: string;
+}
+
+interface InitOptions extends AgentOptions {
   root?: string;
   name: string;
   applications?: string;
@@ -112,7 +121,7 @@ interface ApprovalDecisionOptions { approver: string; decision: string }
 interface ProductOwnerDecisionOptions extends ActorOptions { comments: string }
 interface AuthorityPublicationOptions extends ActorOptions { expectedVersion: string }
 
-type PublicationActor = "pm" | "ba" | "backend" | "frontend" | "qc" | "runtime_collector";
+type PublicationActor = "pm" | "ba" | "backend" | "frontend" | "qc" | "po" | "runtime_collector";
 
 interface AffectedApplications {
   backend: boolean;
@@ -173,6 +182,10 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
     .option("--web-preset <id>", "generic or nextjs", "generic")
     .option("--mobile-preset <id>", "generic or flutter", "generic")
     .option("--database-preset <id>", "none or postgresql", "none")
+    .option("--agent-model <role=model>", "model for pm, ba, backend, frontend, qc, or po; repeatable", collectOption, [])
+    .option("--agent-reasoning <role=effort>", "reasoning effort for a configured role; repeatable", collectOption, [])
+    .option("--agent-fallback <role=model[:effort]>", "explicit fallback for a role; repeatable", collectOption, [])
+    .option("--po-review <mode>", "advisory or disabled; configuring po enables advisory review")
     .option("--redis", "enable the Redis cache preset")
     .option("--runtime-spec <npm-spec>", "exact npm dependency spec for the project runtime")
     .option("--dry-run", "show the installation plan without writing")
@@ -182,6 +195,7 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
       const result = await initializeProject({
         root: options.root ?? ".",
         projectName: options.name,
+        agents: hasAgentOptions(options) ? updateAgentPolicy(undefined, agentOptions(options)) : undefined,
         applications: parseConfiguredApplications(options.applications ?? "backend"),
         backendRoot: options.backendRoot,
         webRoot: options.webRoot,
@@ -221,6 +235,40 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
       emit("configure", result, result.dry_run
         ? `planned mappings for ${result.repositories.join(", ")}`
         : `updated ${result.file} for ${result.repositories.join(", ")}`);
+    });
+
+  program.command("configure-agents")
+    .option("--root <path>", "coordinator repository root", ".")
+    .option("--agent-model <role=model>", "set a role model; repeatable", collectOption, [])
+    .option("--agent-reasoning <role=effort>", "set a role reasoning effort; repeatable", collectOption, [])
+    .option("--agent-fallback <role=model[:effort]>", "set an explicit fallback, or role=none to clear it", collectOption, [])
+    .option("--reset-role <role>", "restore a role to inherited model behavior; repeatable", collectOption, [])
+    .option("--po-review <mode>", "advisory or disabled")
+    .option("--dry-run", "show settings without writing")
+    .action(async (options: AgentOptions & RootOptions & { dryRun?: boolean }) => {
+      executed = true;
+      activeCommand = "configure-agents";
+      if (!hasAgentOptions(options)) throw new CliFailure(exitCodes.usage, { code: "USAGE", message: "at least one agent setting is required" });
+      const result = await configureAgents({ root: options.root ?? ".", ...agentOptions(options), dryRun: options.dryRun });
+      emit("configure-agents", result, `${result.dry_run ? "planned" : "saved"} role models in ${result.file}; applies to new runs`);
+    });
+
+  program.command("agent-plan <run-id> <task-id>")
+    .description("resolve a spawn plan using host capabilities supplied as JSON on standard input")
+    .action(async (runId: string, taskId: string) => {
+      executed = true;
+      activeCommand = "agent-plan";
+      const result = await planAgent(root, runId, taskId, await readJsonInput() as AgentCapabilities);
+      emit("agent-plan", result, `${taskId}: ${result.selected?.model ?? "inherit"}; ${result.context} spawn${result.fallback_used ? " (explicit fallback)" : ""}; use --json for the full plan`);
+    });
+
+  program.command("agent-dispatch <run-id> <task-id>")
+    .description("record the returned agent ID and model observations from a strict JSON input package")
+    .action(async (runId: string, taskId: string) => {
+      executed = true;
+      activeCommand = "agent-dispatch";
+      const result = await recordAgentDispatch(root, runId, taskId, await readJsonInput() as AgentDispatchInput, now);
+      emit("agent-dispatch", result, `recorded ${result.agent_id} for ${taskId}; actual model ${result.actual_model ?? "unreported"}`);
     });
 
   program.command("doctor")
@@ -479,6 +527,26 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
   }
 }
 
+function hasAgentOptions(options: AgentOptions): boolean {
+  return options.agentModel.length + options.agentReasoning.length + options.agentFallback.length + (options.resetRole?.length ?? 0) > 0 || options.poReview !== undefined;
+}
+
+function agentOptions(options: AgentOptions) {
+  return { models: options.agentModel, reasoning: options.agentReasoning, fallbacks: options.agentFallback, resetRoles: options.resetRole, productOwnerReview: options.poReview };
+}
+
+async function readJsonInput(): Promise<unknown> {
+  const source = await readStandardInput();
+  try {
+    const strict = parseStrictYamlDocument(source);
+    const value = JSON.parse(source);
+    if (JSON.stringify(strict) !== JSON.stringify(value)) throw new Error("ambiguous input");
+    return value;
+  } catch {
+    throw new CliFailure(exitCodes.usage, { code: "USAGE", message: "standard input must contain strict JSON without duplicate keys" });
+  }
+}
+
 function parseApplications(value: string): AffectedApplications {
   const allowed = new Set(["backend", "web", "mobile", "database", "shared-packages"]);
   const values = value.split(",").map((entry) => entry.trim()).filter((entry) => entry !== "");
@@ -535,7 +603,7 @@ function parseRepositoryMappings(values: string[]): Record<string, string> {
 }
 
 function assertPublicationActor(value: string): PublicationActor {
-  const actors: readonly PublicationActor[] = ["pm", "ba", "backend", "frontend", "qc", "runtime_collector"];
+  const actors: readonly PublicationActor[] = ["pm", "ba", "backend", "frontend", "qc", "po", "runtime_collector"];
   if (!actors.includes(value as PublicationActor)) {
     throw new CliFailure(exitCodes.usage, { code: "USAGE", message: `unknown authority publication actor: ${value}` });
   }

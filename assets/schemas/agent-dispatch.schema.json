@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/agent-dispatch.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "plan",
+    "agent_id",
+    "actual_model",
+    "actual_reasoning_effort",
+    "observation_source",
+    "recorded_at"
+  ],
+  "properties": {
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "run_id",
+        "task_id",
+        "role",
+        "task_revision",
+        "activation",
+        "policy_sha256",
+        "requested",
+        "selected",
+        "fallback_used",
+        "skill",
+        "execution",
+        "context",
+        "capabilities"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "role": {
+          "enum": [
+            "pm",
+            "ba",
+            "backend",
+            "frontend",
+            "qc",
+            "po"
+          ]
+        },
+        "task_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "policy_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "requested": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "agent-policy.schema.json#/$defs/selection"
+            }
+          ]
+        },
+        "selected": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "agent-policy.schema.json#/$defs/selection"
+            }
+          ]
+        },
+        "fallback_used": {
+          "type": "boolean"
+        },
+        "skill": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "execution": {
+          "const": "spawn"
+        },
+        "context": {
+          "const": "task-only"
+        },
+        "capabilities": {
+          "$ref": "agent-capabilities.schema.json"
+        }
+      }
+    },
+    "agent_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "actual_model": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$"
+        }
+      ]
+    },
+    "actual_reasoning_effort": {
+      "enum": [
+        null,
+        "none",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    "observation_source": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      ]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { agentPolicyDiagnostics } from "./agents.js";
 import { readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 
@@ -63,6 +64,7 @@ async function loadConfiguration<T>(root: string, relativePath: string, schemaNa
       diagnostics.push(...unsafeCommandDiagnostics(value));
       diagnostics.push(...applicationRootDiagnostics(value));
       diagnostics.push(...workspaceDiagnostics(value));
+      if (value !== null && typeof value === "object" && "agents" in value) diagnostics.push(...agentPolicyDiagnostics(value.agents));
     }
   }
 

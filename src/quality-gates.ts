@@ -18,6 +18,7 @@ export const taskStageContracts = {
   mobile_implementation: { role: "frontend", target: "mobile", qualityGate: "mobile", collectorEvidence: true },
   integration: { role: "pm", target: "integration", qualityGate: "integration", collectorEvidence: true },
   qc: { role: "qc", target: "qc", qualityGate: "qc", collectorEvidence: false },
+  product_owner_advisory: { role: "po", target: null, collectorEvidence: false },
   product_owner_review: { role: "pm", target: null, collectorEvidence: false },
 } as const satisfies Record<TaskStage, TaskStageContract>;
 

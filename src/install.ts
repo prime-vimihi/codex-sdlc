@@ -1,3 +1,4 @@
+import { assertAgentPolicy, type AgentPolicy } from "./agents.js";
 import { cp, lstat, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,6 +25,7 @@ export interface RepositoryEditRecord {
 export interface InitializeProjectOptions {
   root: string;
   projectName: string;
+  agents?: AgentPolicy;
   applications?: Array<"backend" | "web" | "mobile">;
   backendRoot?: string;
   webRoot?: string;
@@ -74,6 +76,7 @@ export interface ProjectInspection {
 }
 
 export async function initializeProject(options: InitializeProjectOptions): Promise<InitializeProjectResult> {
+  if (options.agents !== undefined) assertAgentPolicy(options.agents);
   const root = resolve(options.root);
   const rootStat = await lstat(root);
   if (!rootStat.isDirectory()) throw new Error(`repository root is not a directory: ${root}`);
@@ -141,6 +144,11 @@ export async function initializeProject(options: InitializeProjectOptions): Prom
     [".sdlc/tooling/package.json", toolingPackageSource(runtimeSpec)],
     [".sdlc/policies/permissions.yaml", permissionsSource(roots, applicationRepositories, workspace.coordinator, resources)],
   ]);
+  if (options.agents !== undefined) {
+    const project = parse(content.get(".sdlc/project.yaml")!);
+    project.agents = options.agents;
+    content.set(".sdlc/project.yaml", stringify(project));
+  }
   if (workspaceMode === "multi-repository") {
     content.set(".sdlc/local.yaml", localSource(workspace.local));
     content.set(".sdlc/local.example.yaml", localExampleSource(Object.keys(workspace.repositories)));
@@ -547,6 +555,7 @@ export function permissionsSource(roots: ApplicationRoots, repositories: Applica
       backend: { read_paths: ["**"], write_paths: [...backendWrites, ".sdlc/runs/*/artifacts/backend/**"], write_locations: [locations.backend, contractLocation].filter((value) => value !== undefined), prohibited_product_paths: backendProhibited },
       frontend: { read_paths: ["**"], write_paths: [...frontendWrites, ".sdlc/runs/*/artifacts/web/**", ".sdlc/runs/*/artifacts/mobile/**"], write_locations: [locations.web, locations.mobile].filter((value) => value !== undefined), prohibited_product_paths: frontendProhibited },
       qc: { read_paths: ["**"], write_paths: [...backendWrites, ...frontendWrites, ".sdlc/runs/*/artifacts/qc/**"], write_locations: [locations.backend, locations.web, locations.mobile].filter((value) => value !== undefined), initial_product_repair: "prohibited" },
+      po: { read_paths: ["**"], write_paths: [".sdlc/runs/*/artifacts/po/**"], product_code_changes: "prohibited", human_decisions: "prohibited" },
       runtime_collector: { read_paths: ["**"], write_paths: [".sdlc/runs/*/evidence/diffs/changed-files.json"] },
     },
     evidence_capture: { writer: "deterministic_runtime", command: "sdlc evidence", path_pattern: ".sdlc/runs/*/evidence/commands/*/evidence.json", direct_role_writes: "prohibited" },
@@ -570,7 +579,7 @@ export function permissionsSource(roots: ApplicationRoots, repositories: Applica
       ],
       authority_reconciliation: "required",
     },
-  });
+  }, { aliasDuplicateObjects: false });
 }
 
 function localSource(repositories: Record<string, string>): string {

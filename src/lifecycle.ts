@@ -92,6 +92,7 @@ export async function decideApproval(
   at: string,
 ): Promise<RunManifest> {
   assertAuditFields(approver, decisionText, at);
+  if (["po", "sdlc-po", "product-owner-ai", "product-owner-reviewer"].includes(approver.trim().toLowerCase())) throw new Error("the advisory AI Product Owner cannot issue human approvals");
   const transaction = await mutateRunManifest(root, runId, (manifest) => {
     const decision = manifest.decisions?.find((candidate) => candidate.id === decisionId);
     if (decision === undefined) throw new Error(`decision does not exist: ${decisionId}`);
@@ -114,6 +115,9 @@ export async function recordProductOwnerDecision(
   at: string,
 ): Promise<RunManifest> {
   assertAuditFields(actor, comments, at);
+  if (["pm", "ba", "backend", "frontend", "qc", "po", "sdlc-po", "product-owner-ai", "product-owner-reviewer"].includes(actor.trim().toLowerCase())) {
+    throw new Error("AI roles cannot record the human Product Owner decision; record the user’s explicit decision with the human actor");
+  }
   const transaction = await mutateRunManifest(root, runId, (manifest) => {
     if (manifest.run.status !== "product_owner_review" || manifest.product_owner_review?.status !== "ready" || manifest.final_result?.status !== "ready") {
       throw new Error("run is not ready for a Product Owner decision");

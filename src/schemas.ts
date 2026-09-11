@@ -10,6 +10,10 @@ import { evidencePathsForId } from "./evidence-identifiers.js";
 import type { ValidationResult } from "./types.js";
 
 const schemaFileNames = {
+  agentPolicy: "agent-policy.schema.json",
+  agentCapabilities: "agent-capabilities.schema.json",
+  agentDispatch: "agent-dispatch.schema.json",
+  productOwnerAdvisory: "product-owner-advisory.schema.json",
   framework: "framework.schema.json",
   project: "project.schema.json",
   local: "local.schema.json",

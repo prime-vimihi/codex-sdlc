@@ -7,3 +7,7 @@ Render `final-report.md` from the repository template. The Product Owner package
 Then run `node .sdlc/runtime.cjs finalize <run-id> --actor pm`; the command prepares—not completes—the Product Owner review. The Product Owner records the outcome with `node .sdlc/runtime.cjs product-owner-decision <run-id> <decision> --actor product-owner --comments <comments>`. Do not claim product completion unless that operation records `accepted` or `accepted_with_limitations` and the manifest reaches `completed`.
 
 `deferred` is resumable, not terminal: keep the run and current stage at `product_owner_review`, keep Product Owner review and final result ready, retain comments/timestamp/history, and allow a later recorded Product Owner decision. Accepted outcomes complete; changes requested or rejection keep their existing terminal failed result unless a separately approved reopen workflow exists.
+
+## Optional AI Product Owner input
+
+For runs with `PO-001`, include `artifacts/po/advisory-review.yaml` in the delivery package. Report its recommendation and every unresolved finding without turning an advisory recommendation into a test result, approval, or rejection by the human. Finalization validates the advisory artifact but leaves final acceptance pending. The human decides even if the AI recommends changes.

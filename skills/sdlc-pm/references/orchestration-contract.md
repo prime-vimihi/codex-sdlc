@@ -88,3 +88,7 @@ Use `--resolve-blocker <blocker-id>` only for `blocked -> ready`, `--retry-reaso
 ## Defect loop
 
 QC result → PM records/validates defect route → responsible implementation role repairs in permitted scope → collector evidence → PM integration recheck → independent QC retest → updated QC recommendation. A blocker or critical defect stays open until state proves otherwise.
+
+## Configured models and advisory review
+
+When `manifest.agent_policy` exists, apply [agent model routing](agent-model-routing.md). Include `execution_mode: task-only`, the unchanged agent plan, coordinator root, and activation instructions in the orchestration envelope. These fields belong to the dispatch envelope, not the strict backend/frontend assignment schema. Complete the spawn and dispatch record before the task becomes running, then refresh any authority snapshot after the transition. A configured PM model requires task-only PM children for PM-owned work. The dispatcher relays their conclusions. If `PO-001` exists, it depends on QC and the PM delivery package depends on it. Its `po` role publishes only the advisory artifact; human approval authority is unchanged.

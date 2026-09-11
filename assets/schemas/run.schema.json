@@ -7,6 +7,7 @@
   "required": ["schema_version", "run", "request", "scope", "affected_applications", "design", "assumptions", "open_questions", "decisions", "blockers", "tasks", "quality_gates", "defects", "product_owner_review", "final_result"],
   "properties": {
     "schema_version": { "const": 1 },
+    "agent_policy": { "$ref": "agent-policy.schema.json" },
     "run": { "$ref": "#/$defs/run" },
     "request": {
       "type": "object",

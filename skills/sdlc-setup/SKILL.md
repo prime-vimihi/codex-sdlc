@@ -11,7 +11,7 @@ Resolve the repository the user selected before running a command. Read its `AGE
 
 For a new setup, explain briefly that the installed plugin supplies Codex skills while the npm CLI creates and operates `.sdlc`. Plugin skills stay in Codex's plugin cache; initialization does not create `.agents/skills` in the project.
 
-Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 0.4.3. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@0.4.3`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
+Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 0.5.0. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@0.5.0`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
 
 Infer the project name, application roots, technologies, and workspace shape from the selected repository. Ask only for missing information that changes repository topology or application ownership. State which checkout will own `.sdlc` before previewing a multi-repository installation.
 
@@ -34,6 +34,16 @@ For multi-repository installations, commit `.sdlc/project.yaml` and `.sdlc/local
 Initialization owns only the managed `.sdlc` assets, launcher/tooling files, the marked `AGENTS.md` block, and its exact `.gitignore` entries. Preserve application files, root package manifests, existing instructions, run history, and user-edited configuration. A second invocation with identical inputs should make no changes.
 
 Report the selected shape, coordinator, mapped repositories, created files, runtime restoration, and both diagnostic results. Give the user one suitable starter request for beginning a feature delivery.
+
+## Role models
+
+When the user asks to choose agent models, use `configure-agents` after initialization or pass the same `--agent-model`, `--agent-reasoning`, `--agent-fallback`, and `--po-review` settings during `init`. Canonical roles are `pm`, `ba`, `backend`, `frontend`, `qc`, and `po`; translate FE/BE/Product Owner to `frontend`/`backend`/`po`. The frontend setting covers web and mobile. Use exact model IDs exposed by the current host and preserve the user’s selected models. Do not choose a model for an unspecified role.
+
+Example: `node .sdlc/runtime.cjs configure-agents --agent-model frontend=gpt-6-astra --agent-model backend=gpt-5.6-luna --agent-model qc=gpt-5.6-sol --agent-model pm=gpt-5.6-sol --dry-run`. Run it without `--dry-run` when the preview matches the authorized choices. `--po-review advisory` enables an inherited-model AI Product Owner; `--agent-model po=<model-id>` also enables it. Final acceptance stays human.
+
+Use `--agent-reasoning pm=high` for an explicit effort. `--agent-fallback backend=gpt-5.6-sol:low` authorizes that fallback only. Omit fallback unless the user chose one. `--reset-role frontend` restores model inheritance. Changing a model clears its previous effort and fallback; restate them if wanted. To disable AI Product Owner review and remove its override, use `--reset-role po --po-review disabled`.
+
+Settings are stored in coordinator `.sdlc/project.yaml` and copied into new run manifests. Existing runs keep their snapshot. Configuration validates syntax; model access and supported reasoning are checked by the host adapter at dispatch. No `.codex/agents` files or API keys are needed: the PM skill sends explicit model parameters to Codex’s subagent tools. A configured PM model runs through task-only PM children. Do not claim to change the current conversation model. If the installed runtime predates these commands, upgrade it before applying settings.
 
 ## Diagnose and lifecycle operations
 

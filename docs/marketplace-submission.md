@@ -14,7 +14,7 @@
 
 Long description:
 
-Set up and coordinate resumable software delivery across one repository or multiple Git checkouts, from requirements through implementation, independent quality control, and Product Owner review. codex-sdlc records tasks, approvals, evidence, defects, and release decisions in a coordinator repository so work can be validated and resumed. The public plugin supplies Codex skills; its pinned npm CLI creates and operates the repository-local `.sdlc` framework.
+Set up and coordinate resumable software delivery across one repository or multiple Git checkouts, with configurable models by role, independent quality control, and optional advisory AI Product Owner review. Final acceptance remains human. codex-sdlc records tasks, approvals, evidence, defects, and release decisions in a coordinator repository so work can be validated and resumed. The public plugin supplies Codex skills; its pinned npm CLI creates and operates the repository-local `.sdlc` framework.
 
 ## Starter prompts
 
@@ -43,7 +43,7 @@ Set up and coordinate resumable software delivery across one repository or multi
 - User prompt: `Preview an upgrade of this multi-repository codex-sdlc workspace, apply it, roll it back, rebind the backend checkout to its new local path, and show me the uninstall preview.`
 - Expected behavior: The `sdlc-setup` skill uses dry-run before each mutation, creates an upgrade backup, applies the upgrade, restores it with rollback, verifies the rebound checkout has the declared remote identity, and performs only a dry-run uninstall.
 - Expected result: The report identifies the backup, restored version and checksums, accepted repository mapping, and bounded uninstall changes without deleting project configuration, local mapping, or run history. A checkout with a different remote must be rejected.
-- Fixture: A disposable coordinator plus backend and web Git checkouts initialized by codex-sdlc 0.4.3, with a second clone of the backend remote and one unrelated checkout for the negative rebind check. No account or credentials are required.
+- Fixture: A disposable coordinator plus backend and web Git checkouts initialized by codex-sdlc 0.5.0, with a second clone of the backend remote and one unrelated checkout for the negative rebind check. No account or credentials are required.
 
 ### 4. Produce requirements authority
 
@@ -58,6 +58,13 @@ Set up and coordinate resumable software delivery across one repository or multi
 - Expected behavior: The `sdlc-pm` skill binds each assignment to its configured repository, delegates eligible work to the applicable delivery skills, preserves task ownership, records repository-routed command evidence and changed files, sends the integrated result to `sdlc-qc`, and performs final Product Owner review only after QC.
 - Expected result: The coordinator run manifest advances through the required stages; assignments, changed-file authority, commands, and evidence carry stable repository IDs; QC reports acceptance coverage independently; the final report records an evidence-supported release decision.
 - Fixture: A disposable coordinator plus separate backend and web Git repositories containing a small approved endpoint task. No production credentials or deployment target are required.
+
+### 6. Configure different models by role
+
+- User prompt: `Use Astra for frontend, Luna for backend, and Sol for PM and QC. Enable advisory AI Product Owner review with Sol.`
+- Fixture: An initialized disposable project and a Codex host that advertises the requested model IDs through its agent tool.
+- Expected behavior: Setup previews and saves the selected role models in the coordinator. A new run snapshots them. PM sends actual model parameters when launching task-only agents, including PM-owned tasks, and records returned agent IDs. It leaves unreported actual model metadata null.
+- Expected result: Role-specific dispatch records match the requested models. PO-001 produces a cited advisory review after QC; final human acceptance stays pending.
 
 ## Negative tests
 
@@ -79,9 +86,19 @@ Set up and coordinate resumable software delivery across one repository or multi
 - Expected behavior: The `sdlc-pm` skill refuses the deployment and destructive migration, preserves the run state, and records the blocked or unapproved action without claiming release completion.
 - Why it must not complete the request: codex-sdlc explicitly prohibits production credentials, production deployment, and destructive migrations without separate approved controls.
 
+### 4. Reject an unavailable model without an authorized fallback
+
+- Scenario: The project requests a frontend model that the current host does not advertise, and no fallback is configured.
+- Expected behavior: The agent plan reports the unavailable selection. Codex does not invent capabilities, change the project setting, or silently execute frontend work using the coordinating model.
+
+### 5. Preserve human acceptance after an AI recommendation
+
+- Scenario: PO-001 recommends readiness for human review, but the user has not accepted delivery.
+- Expected behavior: The final package includes the recommendation and keeps human acceptance pending. The po agent must not call approval-decision or product-owner-decision or impersonate the user.
+
 ## Release notes
 
-Version 0.4.3 fixes Plugins Directory upload compatibility by keeping at most three default prompts and limiting each prompt to 128 characters. It retains the Getting Started guide, pinned npx setup fallback, and single- and multi-repository onboarding. Runtime schemas and delivery commands are unchanged.
+Version 0.5.0 adds per-role model and reasoning settings for PM, BA, backend, frontend, QC, and advisory AI Product Owner review. The runtime snapshots settings into each new run, resolves explicit fallbacks from host capabilities, and records actual dispatch IDs with unknown actual model metadata left unreported. The new sdlc-po skill reviews acceptance coverage after QC; final acceptance remains a human decision. Existing runs and repository topology remain compatible.
 
 ## Portal prerequisites
 
@@ -98,21 +115,14 @@ Version 0.4.3 fixes Plugins Directory upload compatibility by keeping at most th
 
 ## Upload bundle
 
-Submit the skills-only plugin from the release source tree. The bundle root contains `plugin.json`, `skills/`, `.codex-plugin/plugin.json`, `README.md`, `docs/getting-started.md`, and the referenced brand assets. It requires no MCP server, authentication configuration, demo credentials, or network allowlist.
+Submit the skills-only plugin from the release source tree. The bundle root contains `plugin.json`, `skills/`, `.codex-plugin/plugin.json`, `README.md`, `docs/getting-started.md`, `docs/agent-models.md`, and the referenced brand assets. It requires no MCP server, authentication configuration, demo credentials, or network allowlist.
 
-Prepared 0.4.3 artifacts:
-
-| Material | File | SHA-256 |
-| --- | --- | --- |
-| Public plugin package | `build/public-submission/0.4.3/codex-sdlc-plugin-0.4.3.zip` | `aaeab134a62255439a1010c760c7f2d813a5dcfd27bbc432e24b01d1addab889` |
-| Skills-only upload | `build/public-submission/0.4.3/codex-sdlc-skills-0.4.3.zip` | `1f934c064154757b1e59bf07985a7423830bd64cec8c16de45f58852ed983ee8` |
-| Listing logo | `build/public-submission/0.4.3/codex-sdlc-logo-0.4.3.png` | `678361975afc99f1c5bcb5b95a0883922b025d2aab3d2ce88f911a5972ff1825` |
-| npm release tarball | `build/public-submission/0.4.3/codex-sdlc-0.4.3.tgz` | `f4652606a10e6c5e36f602162a2d910919e2688572f93e3596787ee6228c4dbb` |
+Build the upload ZIP and npm tarball from the reviewed 0.5.0 source. The prepared artifacts are under `build/public-submission/0.5.0/`; verify their hashes using that directory’s `SHA256SUMS` before upload.
 
 ## Release order
 
-1. Tag the reviewed source revision as `v0.4.3` and publish the GitHub release using `docs/releases/0.4.3.md`.
-2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.4.3` to npm with provenance, then verify that the public registry serves 0.4.3. Do not submit the plugin update while npm still serves 0.4.2.
+1. Tag the reviewed source revision as `v0.5.0` and publish the GitHub release using `docs/releases/0.5.0.md`.
+2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.5.0` to npm with provenance, then verify that the public registry serves 0.5.0. Do not submit the plugin update until npm serves 0.5.0.
 3. Open the existing codex-sdlc listing in the OpenAI plugin submission portal, create a version update, keep the type **Skills only**, and upload the prepared skills bundle and listing logo.
 4. Copy the listing, prompts, tests, availability, and release notes from this document; complete publisher identity and policy attestations.
 5. Submit for review. After approval, explicitly publish the approved version to the universal Plugins Directory.

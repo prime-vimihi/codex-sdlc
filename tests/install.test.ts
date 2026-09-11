@@ -4,7 +4,9 @@ import { resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
 
-import { initializeProject, inspectProject } from "../src/install.js";
+import { initializeProject, inspectProject, permissionsSource } from "../src/install.js";
+
+import { parseStrictYamlDocument } from "../src/semantic-contracts.js";
 
 async function fixture(): Promise<string> {
   const root = await mkdtemp(resolve(tmpdir(), "codex-sdlc-test-"));
@@ -31,6 +33,12 @@ async function snapshot(root: string): Promise<Record<string, string>> {
 }
 
 describe("project initialization", () => {
+  test.each([{ web: "web" }, { backend: "service" }, { backend: "service", web: "web", mobile: "mobile" }])("generated permissions support the strict CLI publisher: %j", (roots) => {
+    const policy = parseStrictYamlDocument(permissionsSource(roots)) as { roles: Record<string, { write_paths: string[] }> };
+    expect(policy.roles.pm.write_paths).toContain(".sdlc/runs/*/facts.yaml");
+    expect(policy.roles.po.write_paths).toEqual([".sdlc/runs/*/artifacts/po/**"]);
+  });
+
   test("dry-run reports its bounded plan without writing", async () => {
     const root = await fixture();
     const before = await snapshot(root);

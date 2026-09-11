@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/product-owner-advisory.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "task_id",
+    "producer",
+    "advisory_only",
+    "recommendation",
+    "summary",
+    "acceptance_coverage",
+    "findings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "task_id": {
+      "const": "PO-001"
+    },
+    "producer": {
+      "const": "po"
+    },
+    "advisory_only": {
+      "const": true
+    },
+    "recommendation": {
+      "enum": [
+        "ready_for_human_review",
+        "changes_recommended"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "acceptance_coverage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "acceptance_criteria_id",
+          "requirement_id",
+          "assessment",
+          "sources"
+        ],
+        "properties": {
+          "requirement_id": {
+            "type": "string",
+            "pattern": "^REQ-[A-Za-z0-9-]+$"
+          },
+          "assessment": {
+            "enum": [
+              "supported",
+              "gap",
+              "unverified"
+            ]
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "acceptance_criteria_id": {
+            "type": "string",
+            "pattern": "^AC-[A-Za-z0-9-]+$"
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "sources"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          }
+        }
+      }
+    }
+  }
+}

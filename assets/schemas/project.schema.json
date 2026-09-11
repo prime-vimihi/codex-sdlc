@@ -6,6 +6,7 @@
   "required": ["schema_version", "framework", "project", "applications", "data", "security", "commands"],
   "properties": {
     "schema_version": { "enum": [1, 2] },
+    "agents": { "$ref": "agent-policy.schema.json" },
     "framework": {
       "type": "object",
       "additionalProperties": false,
