@@ -1,61 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="430" viewBox="0 0 1080 430" role="img" aria-labelledby="title desc">
-  <title id="title">From feature request to human acceptance</title>
-  <desc id="desc">Four delivery stages: define requirements with PM and BA, build through backend and frontend roles, verify with independent QC, and decide with optional AI Product Owner advice and final human acceptance. A coordinator repository stores requirements, tasks, evidence, and decisions.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="570" viewBox="0 0 1080 570" role="img" aria-labelledby="title desc">
+  <title id="title">One request. A complete delivery workflow.</title>
+  <desc id="desc">Amber cards labeled YOU show the user's feature request and final acceptance. Four teal cards labeled AI show requirements and planning, implementation and integration, independent quality checks, and the delivery report with optional AI Product Owner advice. The user also clarifies goals and approves material decisions when needed. The coordinator's .sdlc folder stores the resumable delivery record.</desc>
   <defs>
     <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#101e27"/>
       <stop offset="1" stop-color="#101820"/>
     </linearGradient>
   </defs>
-  <rect x="1" y="1" width="1078" height="428" rx="22" fill="url(#background)" stroke="#2a3c46" stroke-width="2"/>
+  <rect x="1" y="1" width="1078" height="568" rx="22" fill="url(#background)" stroke="#2a3c46" stroke-width="2"/>
   <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif">
-    <text x="44" y="45" fill="#63dfb5" font-size="13" font-weight="700" letter-spacing="2">THE DELIVERY LOOP</text>
-    <text x="44" y="84" fill="#f5f7fa" font-size="30" font-weight="700">One request. A traceable delivery.</text>
-    <text x="44" y="111" fill="#b4c4cc" font-size="17">One repository or many. Clear roles at every stage.</text>
+    <text x="36" y="43" fill="#b4c4cc" font-size="13" font-weight="700" letter-spacing="2">FROM REQUEST TO FINAL REVIEW</text>
+    <text x="36" y="83" fill="#f5f7fa" font-size="30" font-weight="700">One request. A complete delivery workflow.</text>
+    <text x="36" y="112" fill="#c7d6dd" font-size="17">AI coordinates the process. You steer the decisions.</text>
 
-    <g fill="none" stroke="#46d7a7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M273 232h27m-7-6 7 6-7 6M527 232h27m-7-6 7 6-7 6M781 232h27m-7-6 7 6-7 6"/>
-    </g>
-    <g fill="#16252e" stroke="#314752">
-      <rect x="44" y="144" width="224" height="173" rx="14"/>
-      <rect x="298" y="144" width="224" height="173" rx="14"/>
-      <rect x="552" y="144" width="224" height="173" rx="14"/>
-      <rect x="806" y="144" width="230" height="173" rx="14" stroke="#46d7a7"/>
-    </g>
+    <circle cx="44" cy="149" r="7" fill="#ffd08a"/>
+    <text x="61" y="154" fill="#ffd08a" font-size="15" font-weight="600">YOU · input and decisions</text>
+    <path d="m345 141 8 8-8 8-8-8Z" fill="#69e2b8"/>
+    <text x="363" y="154" fill="#69e2b8" font-size="15" font-weight="600">AI · coordinated delivery work</text>
 
-    <g fill="#63dfb5" font-size="13" font-weight="700" letter-spacing="1.5">
-      <text x="64" y="174">01 / DEFINE</text>
-      <text x="318" y="174">02 / BUILD</text>
-      <text x="572" y="174">03 / VERIFY</text>
-      <text x="826" y="174">04 / DECIDE</text>
+    <g fill="none" stroke="#b4c4cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M187 279h17m-6-5 6 5-6 5M359 279h17m-6-5 6 5-6 5M531 279h17m-6-5 6 5-6 5M703 279h17m-6-5 6 5-6 5M875 279h17m-6-5 6 5-6 5"/>
     </g>
-    <g fill="#f5f7fa" font-size="20" font-weight="650">
-      <text x="64" y="211">Define the outcome</text>
-      <text x="318" y="211">Build within scope</text>
-      <text x="572" y="211">Verify the result</text>
-      <text x="826" y="211">Make the decision</text>
+    <g fill="#31291d" stroke="#e8ac4a" stroke-width="1.5">
+      <rect x="36" y="186" width="148" height="188" rx="13"/>
+      <rect x="896" y="186" width="148" height="188" rx="13"/>
     </g>
-    <g fill="#b4c4cc" font-size="16">
-      <text x="64" y="243">PM + business analysis</text>
-      <text x="64" y="268">Requirements and criteria</text>
-      <text x="318" y="243">Backend + frontend</text>
-      <text x="318" y="268">Reviewed API contracts</text>
-      <text x="572" y="243">Independent QC</text>
-      <text x="572" y="268">Coverage, defects, retests</text>
-      <text x="826" y="243">AI PO advice is optional</text>
-      <text x="826" y="268">Human acceptance is final</text>
-    </g>
-    <g fill="#dbe8ee" font-size="13">
-      <text x="64" y="297">PM reviews the handoff</text>
-      <text x="318" y="297">PM integrates the work</text>
-      <text x="572" y="297">Results recorded in the run</text>
-      <text x="826" y="297">PM prepares the final package</text>
+    <g fill="#142b2a" stroke="#368d77" stroke-width="1.5">
+      <rect x="208" y="186" width="148" height="188" rx="13"/>
+      <rect x="380" y="186" width="148" height="188" rx="13"/>
+      <rect x="552" y="186" width="148" height="188" rx="13"/>
+      <rect x="724" y="186" width="148" height="188" rx="13"/>
     </g>
 
-    <path d="M44 343h992" stroke="#314752"/>
-    <rect x="44" y="362" width="79" height="32" rx="7" fill="#203e38"/>
-    <text x="83.5" y="384" text-anchor="middle" fill="#80e6c2" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">.sdlc/</text>
-    <text x="139" y="382" fill="#f5f7fa" font-size="17" font-weight="600">Your coordinator keeps the record.</text>
-    <text x="635" y="382" fill="#b4c4cc" font-size="16">Requirements · tasks · evidence · decisions</text>
+    <g fill="#ffd08a" font-size="12" font-weight="700" letter-spacing="1.5">
+      <text x="50" y="215">YOU</text>
+      <text x="910" y="215">YOU</text>
+    </g>
+    <g fill="#69e2b8" font-size="12" font-weight="700" letter-spacing="1.5">
+      <text x="222" y="215">AI</text>
+      <text x="394" y="215">AI</text>
+      <text x="566" y="215">AI</text>
+      <text x="738" y="215">AI</text>
+    </g>
+    <g fill="#f5f7fa" font-size="18" font-weight="650">
+      <text x="50" y="250">Your</text>
+      <text x="50" y="275">request</text>
+      <text x="222" y="250">Requirements</text>
+      <text x="222" y="275">and plan</text>
+      <text x="394" y="250">Build and</text>
+      <text x="394" y="275">integrate</text>
+      <text x="566" y="250">Independent</text>
+      <text x="566" y="275">quality checks</text>
+      <text x="738" y="250">Delivery</text>
+      <text x="738" y="275">report</text>
+      <text x="910" y="250">Your</text>
+      <text x="910" y="275">acceptance</text>
+    </g>
+    <g fill="#c7d6dd" font-size="12">
+      <text x="50" y="312">Describe the outcome</text>
+      <text x="50" y="333">in plain language</text>
+      <text x="222" y="312">PM + business analysis</text>
+      <text x="222" y="333">Acceptance criteria</text>
+      <text x="394" y="312">Backend + frontend</text>
+      <text x="394" y="333">PM integration</text>
+      <text x="566" y="312">Independent QC</text>
+      <text x="566" y="333">Coverage + retests</text>
+      <text x="738" y="312">AI PO (optional)</text>
+      <text x="738" y="333">PM report + evidence</text>
+      <text x="910" y="312">Accept or request</text>
+      <text x="910" y="333">changes</text>
+    </g>
+
+    <rect x="36" y="401" width="1008" height="70" rx="11" fill="#25241e" stroke="#a9844d" stroke-dasharray="5 5"/>
+    <circle cx="59" cy="427" r="6" fill="#ffd08a"/>
+    <text x="77" y="431" fill="#ffd08a" font-size="12" font-weight="700" letter-spacing="1.3">YOU STAY IN THE LOOP</text>
+    <text x="77" y="454" fill="#e7ddcb" font-size="16">Clarify goals and approve material decisions when needed.</text>
+
+    <path d="M36 493h1008" stroke="#314752"/>
+    <rect x="36" y="514" width="79" height="32" rx="7" fill="#203e38"/>
+    <text x="75.5" y="536" text-anchor="middle" fill="#80e6c2" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">.sdlc/</text>
+    <text x="131" y="535" fill="#f5f7fa" font-size="16" font-weight="600">Your coordinator keeps the record.</text>
+    <text x="639" y="535" fill="#b4c4cc" font-size="15">Requirements · tasks · evidence · decisions</text>
   </g>
 </svg>
