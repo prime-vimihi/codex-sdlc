@@ -1,6 +1,6 @@
 # Support
 
-- Usage questions: [GitHub Discussions](https://github.com/prime-vimihi/codex-sdlc/discussions)
+- Usage questions: [GitHub Issues](https://github.com/prime-vimihi/codex-sdlc/issues)
 - Reproducible bugs: [GitHub Issues](https://github.com/prime-vimihi/codex-sdlc/issues)
 - Security reports: follow [SECURITY.md](SECURITY.md)
 
