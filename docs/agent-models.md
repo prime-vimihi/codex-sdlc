@@ -1,6 +1,49 @@
 # Choose a model for each SDLC role
 
-Available in codex-sdlc 0.5.0. Both the plugin and the repository runtime must support this version. Updating the plugin does not upgrade existing projects; upgrade the runtime first as described in the [getting started guide](getting-started.md).
+Custom role settings are available in codex-sdlc 0.5.0. The project mode shortcuts below require both the 0.6.0 plugin and runtime. Updating the plugin does not upgrade existing projects; upgrade the runtime as described in the [getting started guide](getting-started.md).
+
+## Project model modes
+
+In your initialized project's Codex task, send:
+
+```text
+/sdlc --save-my-token
+```
+
+The new `sdlc` skill interprets this chat shorthand and saves the following project configuration:
+
+| Role | Model | Reasoning |
+| --- | --- | --- |
+| PM | Inherited | Inherited |
+| BA | `gpt-6-sol` | `high` |
+| Backend | `gpt-6-luna` | `xhigh` (extra-high) |
+| Frontend, including web and mobile | `gpt-6-luna` | `xhigh` (extra-high) |
+| QC | `gpt-6-luna` | `xhigh` (extra-high) |
+
+To restore normal inherited models:
+
+```text
+/sdlc --normal
+```
+
+Normal mode removes model, reasoning, and fallback overrides for PM, BA, backend, frontend, and QC. It does not restore custom models that existed before token-saving mode. Both commands preserve optional AI Product Owner configuration and all other project settings.
+
+Each selection is stored in the coordinator's `.sdlc/project.yaml` and applies to **every new run** until you change it. Other projects and existing runs are unaffected. A mode-only request does not start a feature run. In a multi-repository workspace, run it in the coordinator to cover its mapped applications. An uninitialized project needs setup first.
+
+Codex's explicit skill syntax is `$sdlc --save-my-token` or `$sdlc --normal`; use it if your client reserves slash commands for built-in actions. The plugin handles `/sdlc` as prompt shorthand rather than registering a native slash command. See [official skill invocation guidance](https://learn.chatgpt.com/docs/build-skills).
+
+The equivalent runtime commands, from the coordinator, are:
+
+```sh
+node .sdlc/runtime.cjs configure-agents --save-my-token
+node .sdlc/runtime.cjs configure-agents --normal
+```
+
+Add `--dry-run --json` to preview without saving. Use `--root /absolute/path/to/coordinator` to select a project explicitly. The two modes are mutually exclusive and cannot be combined with individual role or PO configuration flags; make custom changes in a separate invocation. Applying the same preset again keeps the same settings.
+
+The presets require `gpt-6-sol/high` and `gpt-6-luna/xhigh` support on the user's host. Configuration saves the requested policy; dispatch still validates availability. No fallback is added, and an unavailable model or effort stops dispatch. Token-saving mode selects these models; actual token usage depends on the work.
+
+## Custom role settings
 
 Ask Codex:
 

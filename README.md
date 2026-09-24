@@ -43,7 +43,7 @@ PM coordinates the stages and reviews each handoff. Frontend work follows the re
 
 ### A workflow you can resume
 
-Seven Codex skills and a repository-local CLI keep tasks, evidence, blockers, and decisions in your repository. The next session can continue from recorded state.
+Eight Codex skills and a repository-local CLI keep tasks, evidence, blockers, and decisions in your repository. The next session can continue from recorded state.
 
 | What you need | What codex-sdlc provides |
 | --- | --- |
@@ -83,7 +83,7 @@ Start a codex-sdlc feature delivery for: <describe the outcome you want>.
 
 To continue later, ask Codex to resume the existing run. Its manifest records the current tasks, completed work, and remaining decisions.
 
-**Version note:** Per-role model routing and AI Product Owner review require both the **0.5.0 plugin and runtime**. Check your installed plugin version; updating the plugin does not upgrade an existing project's runtime. See the [upgrade guide](docs/getting-started.md#upgrade-an-existing-project).
+**Version note:** Project model modes require both the **0.6.0 plugin and runtime**. Per-role routing and AI Product Owner review remain available from 0.5.0. Check your installed plugin version; updating the plugin does not upgrade an existing project's runtime. See the [upgrade guide](docs/getting-started.md#upgrade-an-existing-project).
 
 <details>
 <summary><strong>Prefer the CLI? Preview a Next.js setup</strong></summary>
@@ -91,7 +91,7 @@ To continue later, ask Codex to resume the existing run. Its manifest records th
 Run this against an existing web repository:
 
 ```sh
-npx --yes codex-sdlc@0.5.0 init \
+npx --yes codex-sdlc@0.6.0 init \
   --root /absolute/path/to/web --name example-web \
   --applications web --web-root . --web-preset nextjs \
   --dry-run
@@ -106,7 +106,7 @@ node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-For a global CLI installation, use `npm install --global codex-sdlc@0.5.0`.
+For a global CLI installation, use `npm install --global codex-sdlc@0.6.0`.
 
 </details>
 
@@ -143,6 +143,7 @@ Keep Codex's inherited models, or configure a model and reasoning effort for eac
 
 | Skill | Responsibility |
 | --- | --- |
+| `sdlc` | Apply project model modes and route feature requests to PM. |
 | `sdlc-setup` | Initialize, diagnose, configure, upgrade, roll back, and uninstall. |
 | `sdlc-pm` | Coordinate delivery, review handoffs, and prepare the final package. |
 | `sdlc-ba` | Define requirements, acceptance criteria, and traceability. |
@@ -151,7 +152,7 @@ Keep Codex's inherited models, or configure a model and reasoning effort for eac
 | `sdlc-qc` | Independently verify acceptance coverage, defects, and retests. |
 | `sdlc-po` | Provide an optional advisory Product Owner review after QC. |
 
-For example, with a compatible 0.5.0 plugin and runtime:
+For example, with a compatible plugin and runtime:
 
 ```text
 Use Astra for frontend, Luna for backend, and Sol for PM and QC.
@@ -162,6 +163,19 @@ Keep other roles inherited and preview the settings first.
 Selections must be available on your Codex host. New runs snapshot the settings; existing runs keep theirs. An unavailable model stops dispatch unless you configured an explicit fallback. Actual model metadata stays unknown when the host does not report it.
 
 → [Model configuration, fallbacks, and AI Product Owner review](docs/agent-models.md)
+
+### Project model modes
+
+Version 0.6.0 adds these chat shortcuts:
+
+```text
+/sdlc --save-my-token
+/sdlc --normal
+```
+
+Token-saving mode keeps PM inherited, uses Sol (`gpt-6-sol`) with high reasoning for BA, and Luna (`gpt-6-luna`) with extra-high reasoning for backend, web/mobile frontend, and QC. Normal mode restores inheritance for those roles. Both save to the current project's `.sdlc/project.yaml` for every new run; existing runs and optional AI Product Owner settings are preserved.
+
+These are skill-handled chat shortcuts. In clients that reject custom slash commands, invoke `$sdlc --save-my-token` or `$sdlc --normal`. Both plugin and runtime must be 0.6.0 or newer. See [project mode details and CLI equivalents](docs/agent-models.md#project-model-modes).
 
 ## What stays in your repository
 
@@ -186,7 +200,7 @@ codex-sdlc does not operate a hosted service or send repository content to a cod
 Preview a project upgrade before applying it:
 
 ```sh
-npx --yes codex-sdlc@0.5.0 upgrade \
+npx --yes codex-sdlc@0.6.0 upgrade \
   --root /absolute/path/to/coordinator --dry-run
 ```
 
@@ -200,10 +214,10 @@ Applied upgrades create backups. Rollback checks managed-file integrity before r
 | --- | --- |
 | [Getting started](docs/getting-started.md) | [CLI setup and lifecycle reference](docs/cli-reference.md) |
 | [Multi-repository workspaces](docs/multi-repository.md) | [Role models and dispatch records](docs/agent-models.md) |
-| [What's new in 0.5.0](docs/releases/0.5.0.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
+| [What's new in 0.6.0](docs/releases/0.6.0.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
 | [Support](SUPPORT.md) | [Contributing](CONTRIBUTING.md) |
 
-Current verification includes macOS CI, the automated runtime tests, plugin and skill validation, and a live PM dispatch smoke test. Native Linux/Windows qualification and a complete delivery test spanning multiple models remain pending. See the [0.5.0 validation notes](docs/releases/0.5.0.md#validation).
+Current verification includes automated runtime tests, plugin and skill validation, and independent built-CLI checks. Native Linux/Windows qualification and a complete delivery test spanning multiple models remain pending. See the [0.6.0 validation notes](docs/releases/0.6.0.md#validation).
 
 ## Build with us
 

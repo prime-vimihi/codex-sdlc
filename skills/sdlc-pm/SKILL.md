@@ -5,6 +5,8 @@ description: Use when starting, coordinating, resuming, reviewing, or finalizing
 
 # SDLC Project Orchestrator
 
+For `/sdlc --save-my-token` or `/sdlc --normal` (including `$sdlc` invocation), first use the [sdlc entry point](../sdlc/SKILL.md) to apply the requested project model preset. A mode-only request does not start a run. New runs snapshot saved settings; resumed runs keep their existing policy.
+
 Make repository state—not an agent claim—the source of delivery truth. Read [role contract](references/role-contract.md), [orchestration contract](references/orchestration-contract.md), [approval contract](references/approval-contract.md), and [final review contract](references/final-review-contract.md).
 
 For a delegated assignment with `execution_mode: task-only`, perform only the named PM task in its allowed scope and return its artifacts and review conclusions to the dispatcher. Wait for activation if instructed. Do not create another PM or run the complete orchestration loop.

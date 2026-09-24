@@ -66,6 +66,14 @@ Set up and coordinate resumable software delivery across one repository or multi
 - Expected behavior: Setup previews and saves the selected role models in the coordinator. A new run snapshots them. PM sends actual model parameters when launching task-only agents, including PM-owned tasks, and records returned agent IDs. It leaves unreported actual model metadata null.
 - Expected result: Role-specific dispatch records match the requested models. PO-001 produces a cited advisory review after QC; final human acceptance stays pending.
 
+### 7. Save and reset project model modes
+
+- User prompt: `$sdlc --save-my-token` in an initialized disposable project.
+- Expected behavior: Preview and save inherited PM, `gpt-6-sol/high` for BA, and `gpt-6-luna/xhigh` for backend, web/mobile frontend, and QC in `.sdlc/project.yaml`. Preserve PO settings. A mode-only request does not start a feature run; every subsequently started run snapshots the preset.
+- User prompt: `$sdlc --normal` in the same project.
+- Expected behavior: Remove model, effort, and fallback overrides for the five delivery roles. Preserve existing run snapshots and optional PO settings. New runs inherit their delivery-role models.
+- Fixture: A disposable initialized project using plugin/runtime 0.6.0. The host must advertise the requested models and efforts to exercise actual dispatch; saving and previewing configuration need no model dispatch.
+
 ## Negative tests
 
 ### 1. Reject an out-of-authority write
@@ -96,9 +104,14 @@ Set up and coordinate resumable software delivery across one repository or multi
 - Scenario: PO-001 recommends readiness for human review, but the user has not accepted delivery.
 - Expected behavior: The final package includes the recommendation and keeps human acceptance pending. The po agent must not call approval-decision or product-owner-decision or impersonate the user.
 
+### 6. Reject conflicting project modes
+
+- User prompt: `$sdlc --save-my-token --normal`.
+- Expected behavior: Explain that the flags conflict and leave project configuration unchanged. The equivalent runtime command fails before writing.
+
 ## Release notes
 
-Version 0.5.0 adds per-role model and reasoning settings for PM, BA, backend, frontend, QC, and advisory AI Product Owner review. The runtime snapshots settings into each new run, resolves explicit fallbacks from host capabilities, and records actual dispatch IDs with unknown actual model metadata left unreported. The new sdlc-po skill reviews acceptance coverage after QC; final acceptance remains a human decision. Existing runs and repository topology remain compatible.
+Version 0.6.0 adds the sdlc entry skill and persistent project model presets. `/sdlc --save-my-token` inherits PM, selects Sol/high for BA, and Luna/extra-high for backend, web/mobile frontend, and QC. `/sdlc --normal` restores inherited models for those roles. Explicit `$sdlc` invocation is supported when a client reserves slash commands. Settings apply to every new run while preserving existing run policies, optional AI Product Owner settings, and other projects. Both CLI presets support dry-run previews and reject conflicting settings. Final acceptance remains human.
 
 ## Portal prerequisites
 
@@ -117,12 +130,12 @@ Version 0.5.0 adds per-role model and reasoning settings for PM, BA, backend, fr
 
 Submit the skills-only plugin from the release source tree. The bundle root contains `plugin.json`, `skills/`, `.codex-plugin/plugin.json`, `README.md`, `docs/getting-started.md`, `docs/agent-models.md`, and the referenced brand assets. It requires no MCP server, authentication configuration, demo credentials, or network allowlist.
 
-Build the upload ZIP and npm tarball from the reviewed 0.5.0 source. The prepared artifacts are under `build/public-submission/0.5.0/`; verify their hashes using that directory’s `SHA256SUMS` before upload.
+Build the upload ZIP and npm tarball from the reviewed 0.6.0 source. The prepared artifacts are under `build/public-submission/0.6.0/`; verify their hashes using that directory’s `SHA256SUMS` before upload.
 
 ## Release order
 
-1. Tag the reviewed source revision as `v0.5.0` and publish the GitHub release using `docs/releases/0.5.0.md`.
-2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.5.0` to npm with provenance, then verify that the public registry serves 0.5.0. Do not submit the plugin update until npm serves 0.5.0.
+1. Tag the reviewed source revision as `v0.6.0` and publish the GitHub release using `docs/releases/0.6.0.md`.
+2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.6.0` to npm with provenance, then verify that the public registry serves 0.6.0. Do not submit the plugin update until npm serves 0.6.0.
 3. Open the existing codex-sdlc listing in the OpenAI plugin submission portal, create a version update, keep the type **Skills only**, and upload the prepared skills bundle and listing logo.
 4. Copy the listing, prompts, tests, availability, and release notes from this document; complete publisher identity and policy attestations.
 5. Submit for review. After approval, explicitly publish the approved version to the universal Plugins Directory.

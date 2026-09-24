@@ -1,6 +1,6 @@
 {
   "name": "codex-sdlc",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Run evidence-backed software delivery across one or more repositories with Codex.",
   "author": {
     "name": "vimihi",

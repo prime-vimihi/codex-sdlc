@@ -89,6 +89,8 @@ export function agentPolicyDiagnostics(value: unknown): string[] {
 
 export interface ConfigureAgentsOptions {
   root: string;
+  saveMyToken?: boolean;
+  normal?: boolean;
   models?: string[];
   reasoning?: string[];
   fallbacks?: string[];
@@ -99,7 +101,24 @@ export interface ConfigureAgentsOptions {
 
 /** A model replacement clears the old effort/fallbacks, which may be incompatible. */
 export function updateAgentPolicy(current: AgentPolicy | undefined, options: Omit<ConfigureAgentsOptions, "root">): AgentPolicy {
+  if (options.saveMyToken && options.normal) throw new Error("--save-my-token and --normal are mutually exclusive");
+  const preset = options.saveMyToken || options.normal;
+  if (preset && ((options.models?.length ?? 0) + (options.reasoning?.length ?? 0)
+    + (options.fallbacks?.length ?? 0) + (options.resetRoles?.length ?? 0) > 0 || options.productOwnerReview !== undefined)) {
+    throw new Error("agent presets cannot be combined with --agent-model, --agent-reasoning, --agent-fallback, --reset-role, or --po-review");
+  }
   const result: AgentPolicy = structuredClone(current ?? { roles: {}, product_owner_review: "disabled" });
+  if (preset) {
+    for (const role of ["pm", "ba", "backend", "frontend", "qc"] as const) delete result.roles[role];
+    if (options.saveMyToken) {
+      result.roles.ba = { model: "gpt-6-sol", reasoning_effort: "high" };
+      for (const role of ["backend", "frontend", "qc"] as const) {
+        result.roles[role] = { model: "gpt-6-luna", reasoning_effort: "xhigh" };
+      }
+    }
+    assertAgentPolicy(result);
+    return result;
+  }
   const resets = (options.resetRoles ?? []).map(parseRole);
   if (new Set(resets).size !== resets.length) throw new Error("duplicate reset role");
   for (const role of resets) delete result.roles[role];
