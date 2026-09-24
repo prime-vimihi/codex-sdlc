@@ -15,10 +15,24 @@ npm pack
 Install the published CLI with:
 
 ```sh
-npm install --global codex-sdlc@0.5.0
+npm install --global codex-sdlc@0.6.0
 ```
 
 ## Project setup modes
+
+### Project model modes
+
+After initialization, the 0.6.0 runtime accepts:
+
+```sh
+node .sdlc/runtime.cjs configure-agents --save-my-token --dry-run --json
+node .sdlc/runtime.cjs configure-agents --save-my-token
+node .sdlc/runtime.cjs configure-agents --normal
+```
+
+Both commands accept `--root <coordinator>`. Token-saving mode uses inherited PM, `gpt-6-sol/high` for BA, and `gpt-6-luna/xhigh` for backend, web/mobile frontend, and QC. Normal mode removes those five roles' overrides. Optional PO configuration is preserved. The choice persists for new runs in this project; existing runs keep their policies. Mode flags cannot be combined with one another or individual agent/PO settings, and are supported on `configure-agents`, not `init` or `start`. See [model modes](agent-models.md#project-model-modes) for chat invocation and compatibility.
+
+### Application setup
 
 The initializer configures an existing repository; it does not generate application source code. Each selected application root must already exist.
 
@@ -98,9 +112,9 @@ Use the `generic` application preset or `none` database preset when a listed pre
 Install the generated tarball, preview the bounded changes, and then initialize. During local testing, pin the generated repository launcher to the tarball:
 
 ```sh
-npm install --global ./codex-sdlc-0.5.0.tgz
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz --dry-run
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz
+npm install --global ./codex-sdlc-0.6.0.tgz
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz --dry-run
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 ```
@@ -119,8 +133,8 @@ The installer preserves existing `AGENTS.md` and `.gitignore` content, refuses c
 Preview and apply an upgrade with the new runtime package pinned into the repository:
 
 ```sh
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz --dry-run
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.5.0.tgz
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz --dry-run
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 node .sdlc/runtime.cjs doctor

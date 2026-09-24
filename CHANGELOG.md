@@ -2,6 +2,12 @@
 
 All notable changes to codex-sdlc are documented here.
 
+## 0.6.0 - 2026-09-24
+
+- Add the `sdlc` entry skill for `/sdlc --save-my-token` and `/sdlc --normal` chat shorthand, with explicit `$sdlc` invocation support.
+- Add project presets through `configure-agents --save-my-token` and `--normal`. Token-saving mode inherits PM, selects `gpt-6-sol/high` for BA, and `gpt-6-luna/xhigh` for backend, web/mobile frontend, and QC. Normal mode restores inheritance for those delivery roles.
+- Persist presets for future runs while preserving existing run snapshots, optional AI Product Owner settings, and unrelated project configuration. Support dry-run previews and reject conflicting mode/custom settings.
+
 ## 0.4.3 - 2026-09-11
 
 - Shorten every default prompt to satisfy the Plugins Directory 128-character maximum.

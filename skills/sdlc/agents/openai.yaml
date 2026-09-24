@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDLC"
+  short_description: "Set project modes and start SDLC delivery"
+  default_prompt: "Use $sdlc to configure this project’s model mode or start a feature delivery."

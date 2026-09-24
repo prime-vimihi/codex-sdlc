@@ -239,17 +239,19 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
 
   program.command("configure-agents")
     .option("--root <path>", "coordinator repository root", ".")
+    .option("--save-my-token", "save project role models: BA Sol high, backend/frontend/QC Luna xhigh, PM inherited")
+    .option("--normal", "restore inherited models for PM, BA, backend, frontend, and QC")
     .option("--agent-model <role=model>", "set a role model; repeatable", collectOption, [])
     .option("--agent-reasoning <role=effort>", "set a role reasoning effort; repeatable", collectOption, [])
     .option("--agent-fallback <role=model[:effort]>", "set an explicit fallback, or role=none to clear it", collectOption, [])
     .option("--reset-role <role>", "restore a role to inherited model behavior; repeatable", collectOption, [])
     .option("--po-review <mode>", "advisory or disabled")
     .option("--dry-run", "show settings without writing")
-    .action(async (options: AgentOptions & RootOptions & { dryRun?: boolean }) => {
+    .action(async (options: AgentOptions & RootOptions & { dryRun?: boolean; saveMyToken?: boolean; normal?: boolean }) => {
       executed = true;
       activeCommand = "configure-agents";
-      if (!hasAgentOptions(options)) throw new CliFailure(exitCodes.usage, { code: "USAGE", message: "at least one agent setting is required" });
-      const result = await configureAgents({ root: options.root ?? ".", ...agentOptions(options), dryRun: options.dryRun });
+      if (!hasAgentOptions(options) && !options.saveMyToken && !options.normal) throw new CliFailure(exitCodes.usage, { code: "USAGE", message: "at least one agent setting is required" });
+      const result = await configureAgents({ root: options.root ?? ".", ...agentOptions(options), saveMyToken: options.saveMyToken, normal: options.normal, dryRun: options.dryRun });
       emit("configure-agents", result, `${result.dry_run ? "planned" : "saved"} role models in ${result.file}; applies to new runs`);
     });
 

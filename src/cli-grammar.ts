@@ -17,7 +17,7 @@ export const cliGrammar: Readonly<Record<string, CommandGrammar>> = {
     flagOptions: ["--redis", "--dry-run"],
   },
   configure: { positionals: 0, requiredOptions: ["--repo"], optionalOptions: ["--root"], repeatableOptions: ["--repo"], flagOptions: ["--dry-run"] },
-  "configure-agents": { positionals: 0, requiredOptions: [], optionalOptions: ["--root", "--po-review"], repeatableOptions: ["--agent-model", "--agent-reasoning", "--agent-fallback", "--reset-role"], flagOptions: ["--dry-run"] },
+  "configure-agents": { positionals: 0, requiredOptions: [], optionalOptions: ["--root", "--po-review"], repeatableOptions: ["--agent-model", "--agent-reasoning", "--agent-fallback", "--reset-role"], flagOptions: ["--dry-run", "--save-my-token", "--normal"] },
   "agent-plan": { positionals: 2, requiredOptions: [] },
   "agent-dispatch": { positionals: 2, requiredOptions: [] },
   doctor: { positionals: 0, requiredOptions: [], optionalOptions: ["--root"] },
@@ -92,5 +92,12 @@ export function validateCliArguments(arguments_: readonly string[]): CliGrammarD
     index += 2;
   }
   for (const option of required) if (!seen.has(option)) diagnostics.push({ message: `${commandName} missing required option ${option}` });
+  if (commandName === "configure-agents") {
+    if (seen.has("--save-my-token") && seen.has("--normal")) diagnostics.push({ message: "--save-my-token and --normal are mutually exclusive" });
+    if ((seen.has("--save-my-token") || seen.has("--normal"))
+      && ["--agent-model", "--agent-reasoning", "--agent-fallback", "--reset-role", "--po-review"].some((option) => seen.has(option))) {
+      diagnostics.push({ message: "agent presets cannot be combined with --agent-model, --agent-reasoning, --agent-fallback, --reset-role, or --po-review" });
+    }
+  }
   return diagnostics;
 }
