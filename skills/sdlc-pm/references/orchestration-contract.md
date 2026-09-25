@@ -1,5 +1,7 @@
 # Orchestration contract
 
+The graph and artifact inventory below describe Full/legacy delivery. For a saved Compact run, use the [frozen Compact workflow](compact-workflow.md); do not insert omitted Full stages or convert the profile during resume.
+
 ## Dependency graph
 
 `PM-001 → BA-001 → PM-002 → BE-001 → PM-003 → {BE-002, WEB-001, MOBILE-001 as affected} → INT-001 → QC-001 → PM-004`.

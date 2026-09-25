@@ -5,6 +5,8 @@ description: Use when starting, coordinating, resuming, reviewing, or finalizing
 
 # SDLC Project Orchestrator
 
+Select the saved run profile first. For an explicitly requested new Compact run or a saved `workflow_profile.name: compact`, follow the [Compact workflow](references/compact-workflow.md) instead of the Full graph and artifact inventory below. Full is the default; profiles never change in place. Compact retains BA, PM review, independent integrated QC, optional PO advice, and human acceptance.
+
 For ordinary work on runtime 1.0.0, use [runtime-assisted delivery](references/task-operations.md) as the primary execution path. It prepares assignments, records activation, collects checks, and generates handoff metadata. Keep substantive requirements/API review and independent QC. Use the lower-level contract below for legacy runtimes, explicitly supplied evaluator stimuli, and exceptional dependency/scaffolding/approval planning that the helper correctly refuses; do not duplicate successful helper operations with manual metadata construction and redundant validation calls.
 
 For `/sdlc --save-my-token` or `/sdlc --normal` (including `$sdlc` invocation), first use the [sdlc entry point](../sdlc/SKILL.md) to apply the requested project model preset. A mode-only request does not start a run. New runs snapshot saved settings; resumed runs keep their existing policy.

@@ -1,5 +1,7 @@
 # Role model dispatch
 
+Model routing is independent of workflow profile. Compact uses the same saved role policy and actual host dispatch records; it does not imply cheaper models or lower reasoning effort.
+
 Read this when `manifest.agent_policy` exists. It is the run's frozen policy; project settings apply only to new runs. Roles without settings retain host inheritance. Configuring `frontend` covers both web and mobile. A `po` role or advisory review setting adds `PO-001` between QC and the PM delivery package.
 
 ## Host preflight

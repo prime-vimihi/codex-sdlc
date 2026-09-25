@@ -1,5 +1,7 @@
 # Final Product Owner review contract
 
+For Compact runs, the requirements gate binds the reviewed canonical specification and its generated views; it does not need a substitute command result. Integration and QC both require the current independent QC collector evidence and complete per-criterion verification. Follow the saved profile's required tasks and outputs rather than adding omitted Full-mode tasks.
+
 Before finalization, confirm from the manifest that every mandatory task is completed, every affected quality gate is `passed` with collector evidence, all required outputs exist, Product Owner review/final result remain pending, and no open blocker or blocker/critical defect remains.
 
 Render `final-report.md` from the repository template. The Product Owner package includes delivered scope and REQ coverage, affected applications, commits, command and quality-gate evidence, defects and disposition, known limitations/deferred items with `DEC-*` references, material decisions, and the next Product Owner action.

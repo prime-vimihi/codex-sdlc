@@ -17,6 +17,7 @@ import { loadRunSnapshotUnderLock, validateRunSnapshotUnderLock } from "./runs.j
 import { parseStrictYamlDocument, structuredDocumentRevision } from "./semantic-contracts.js";
 import { validateDocument } from "./schemas.js";
 import type { RunManifest } from "./types.js";
+import { assertFrozenWorkflowProfile } from "./workflow-profile.js";
 
 export interface ManifestTransactionOptions extends RunAuthorityLockOptions {
   /** Internal compound operations restore their staged files before rollback validation, under the run lock. */
@@ -86,6 +87,7 @@ async function mutateRunManifestInternal<T>(
     const snapshot = await loadRunSnapshotUnderLock(root, runId, true, lock);
     const manifest = structuredClone(snapshot.manifest);
     const value = await mutate(manifest);
+    assertFrozenWorkflowProfile(snapshot.manifest, manifest);
     const validation = validateDocument("run", manifest);
     if (!validation.valid) {
       throw new Error(`updated manifest is invalid: ${validation.diagnostics.join("; ")}`);

@@ -22,6 +22,24 @@ npm install --global codex-sdlc@1.0.0
 
 ## Project setup modes
 
+### Opt-in Compact runs
+
+Full remains the default. To start a new Compact run, provide a complete project-local JSON risk assessment as described in the [Compact guide](../skills/sdlc-pm/references/compact-workflow.md):
+
+```sh
+node .sdlc/runtime.cjs start --id CHANGE-001 --title "Requested change" \
+  --request .sdlc/requests/change.md --applications web \
+  --profile compact --assessment .sdlc/requests/change-assessment.json --json
+node .sdlc/runtime.cjs compact-spec CHANGE-001 --json < specification-input.json
+node .sdlc/runtime.cjs compact-qc CHANGE-001 --json < qc-input.json
+```
+
+`compact-spec` runs only while BA-001 is running, and `compact-qc` only while QC-001 is running. Both consume strict JSON semantic inputs, derive metadata/views, support `--dry-run` and `--expected-version`, and leave transitions/gates for the appropriate reviewer. The commands shown above occur at different workflow stages, not consecutively without the intervening implementation and reviews.
+
+An assessment is valid only with `--profile compact`. It must confirm bounded scope and existing patterns and explicitly exclude migrations, breaking APIs, authorization changes, new sensitive-data exposure, and unresolved cross-system risk. Unknown risk fails selection. A saved profile and reviewed specification binding are immutable; changed scope needs a new run. Existing runs and model presets are unchanged.
+
+Compact requires both integration and QC gates, with integration performed inside QC. Approved or handed-off verification cannot be rerun silently: reopen an uncompleted QC review and reset both gates before executing further checks, then regenerate the verification record. Product fixes use the existing repair cycle. See [benchmark methodology](workflow-benchmark.md) for reproducible framework-only measurements.
+
 ### Runtime-assisted delivery (1.0.0)
 
 Run these from the initialized coordinator. The workflow, permitted paths, configured commands, actual model dispatch, and independent review remain authoritative.

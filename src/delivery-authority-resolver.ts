@@ -41,6 +41,7 @@ import {
   type RunAuthorityLockOptions,
 } from "./run-authority-lock.js";
 import type { EvidenceRecord, ProjectConfig, RunManifest, SdlcDecision, Task, TaskRole, ValidationResult } from "./types.js";
+import { assertCompactDeliveryControls } from "./workflow-profile.js";
 
 const assignmentPathPattern = /^\.sdlc\/runs\/([A-Z][A-Z0-9]*-[0-9]+)\/tasks\/([A-Z][A-Z0-9]*-[0-9]+)\.assignment\.yaml$/;
 const changedFilesPath = "evidence/diffs/changed-files.json";
@@ -111,6 +112,7 @@ async function resolveRepositoryDeliveryAuthorityUnderLock(
   }
   assertSchema("run", manifestValue, `${runId} run manifest`);
   const manifest = manifestValue as RunManifest;
+  assertCompactDeliveryControls(manifest, assignment.controls);
   if (manifest.run.id !== runId) throw new Error(`delivery assignment path run ${runId} does not match manifest run ${manifest.run.id}`);
   const task = manifest.tasks.find((candidate) => candidate.id === taskId);
   if (task === undefined) throw new Error(`delivery assignment task ${taskId} does not exist in run ${runId}`);

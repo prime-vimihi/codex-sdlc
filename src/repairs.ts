@@ -5,7 +5,7 @@ import { stringify } from "yaml";
 
 import { mutateRunManifest, readAuthorityVersion, writeAuthorityVersion, type ManifestTransactionOptions } from "./manifest-transaction.js";
 import { isPortableRepositoryPath, resolvePathInsideRoot } from "./paths.js";
-import { qualityGateForTask } from "./quality-gates.js";
+import { qualityGatesForTask } from "./quality-gates.js";
 import { acquireRunAuthorityLock, releaseRunAuthorityLock } from "./run-authority-lock.js";
 import { loadRun, parseManifest } from "./runs.js";
 import { synchronizeRunState } from "./transitions.js";
@@ -124,8 +124,7 @@ export function planRepair(current: RunManifest, taskId: string, options: Pick<R
     tasks: structuredClone(current.tasks.filter((task) => affected.has(task.id))), quality_gates: {}, archives: [],
   };
   for (const task of manifest.tasks.filter((task) => affected.has(task.id))) {
-    const gateId = qualityGateForTask(task);
-    if (gateId !== undefined && manifest.quality_gates[gateId] !== undefined) {
+    for (const gateId of qualityGatesForTask(task, manifest)) if (manifest.quality_gates[gateId] !== undefined) {
       record.quality_gates[gateId] = structuredClone(manifest.quality_gates[gateId]);
       const gate = manifest.quality_gates[gateId];
       gate.status = "pending"; gate.evidence = [];

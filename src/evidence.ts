@@ -13,6 +13,7 @@ import { configuredSecretValues, redactText } from "./redaction.js";
 import { loadRun } from "./runs.js";
 import { validateDocument } from "./schemas.js";
 import type { EvidenceRecord } from "./types.js";
+import { isCompactRun } from "./workflow-profile.js";
 
 export async function executeConfiguredCommand(
   root: string,
@@ -33,8 +34,15 @@ export async function executeConfiguredCommand(
     const canonicalCommand = await canonicalizeCommandDeclaration(root, command, secrets, project);
 
     const manifest = await loadRun(root, runId);
-    if (!manifest.tasks.some((task) => task.id === taskId)) {
+    const task = manifest.tasks.find((task) => task.id === taskId);
+    if (task === undefined) {
       throw new Error(`task does not exist in run ${runId}: ${taskId}`);
+    }
+    if (isCompactRun(manifest)) {
+      if (task.status !== "running") throw new Error("Compact evidence requires a running task; reopen review or repair before collecting new evidence");
+      if (task.id === "QC-001" && [manifest.quality_gates.integration?.status, manifest.quality_gates.qc?.status].includes("passed")) {
+        throw new Error("Compact QC verification is already approved; reopen review and reset integration/QC gates before rerunning checks");
+      }
     }
     const runRoot = await resolvePathInsideRoot(root, `.sdlc/runs/${runId}`, { mustExist: true });
     const commandsRelative = `.sdlc/runs/${runId}/evidence/commands`;

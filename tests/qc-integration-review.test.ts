@@ -1,7 +1,9 @@
-import { readFile, rm, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, resolve } from 'node:path';
+import { createRequire } from 'node:module';
 import { parse, stringify } from 'yaml';
-import { expect, test } from 'vitest';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 import { createDeliveryFixture, activateFixture, writeFixtureOutputs, collectFixtureEvidence } from './helpers/delivery-fixture.js';
 import { prepareTask, handoffTask } from '../src/task-operations.js';
 
@@ -55,9 +57,25 @@ test('independent repro: committed repair recovery must advance authority versio
 });
 
 import { spawnSync } from 'node:child_process';
+let cliFixtureRoot: string;
+beforeAll(async () => {
+  const repositoryRoot = resolve(import.meta.dirname, '..');
+  cliFixtureRoot = await mkdtemp(resolve(tmpdir(), 'sdlc-independent-cli-build-'));
+  await Promise.all([
+    symlink(resolve(repositoryRoot, 'node_modules'), resolve(cliFixtureRoot, 'node_modules'), 'junction'),
+    symlink(resolve(repositoryRoot, 'assets'), resolve(cliFixtureRoot, 'assets'), 'junction'),
+    writeFile(resolve(cliFixtureRoot, 'package.json'), JSON.stringify({ type: 'module' })),
+  ]);
+  const compilerPackage = createRequire(import.meta.url).resolve('typescript/package.json');
+  const compilerMetadata = JSON.parse(await readFile(compilerPackage, 'utf8'));
+  const compiler = resolve(dirname(compilerPackage), compilerMetadata.bin.tsc ?? compilerMetadata.bin.tsc6);
+  const built = spawnSync(process.execPath, [compiler, '-p', resolve(repositoryRoot, 'tsconfig.json'), '--outDir', resolve(cliFixtureRoot, 'dist')], { encoding: 'utf8' });
+  expect(built.status, built.stdout + built.stderr).toBe(0);
+}, 30000);
+afterAll(async () => { if (cliFixtureRoot) await rm(cliFixtureRoot, { recursive: true, force: true }); });
 test('independent built CLI: prepare, plan, activate, failed/passed checks, and handoff', async () => {
   const fixture=await createDeliveryFixture();
-  const cli=resolve('dist/bin.js');
+  const cli=resolve(cliFixtureRoot, 'dist/bin.js');
   const call=(args:string[],input?:unknown)=>{
     const result=spawnSync(process.execPath,[cli,...args,'--json'],{cwd:fixture.root,input:input===undefined?undefined:JSON.stringify(input),encoding:'utf8',env:{...process.env,CODEX_SDLC_NETWORK_POLICY:'disabled'}});
     return {code:result.status,body:JSON.parse(result.stdout)};

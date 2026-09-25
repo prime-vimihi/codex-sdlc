@@ -4,11 +4,14 @@ All notable changes to codex-sdlc are documented here.
 
 ## 1.0.0 - Unreleased
 
+- Add opt-in, assessed Compact runs with a frozen revisioned graph, one canonical BA specification, generated compatibility views, and one independent integrated QC record. Full remains the default; saved model settings and existing runs retain their meaning.
+- Bind Compact review to exact facts/specification bytes and require every acceptance criterion's declared evidence, current QC checks, PM-reviewed completion, and final human acceptance. Higher-risk work requires Full.
+- Add a matched scripted framework benchmark with identical permission, pagination, and mapping defects; report its limits separately from actual agent speed.
 - Add local readiness preflight, generated task assignments and handoffs, recorded activation, ordered command collection, and lifecycle timing.
 - Add explicit archived repair cycles for completed implementations and rejected handoffs, downstream gate invalidation, stale-authority rejection, and interruption recovery.
 - Fix ownership for configured application roots and unify portable path handling across assignments, command working directories, and permission patterns.
 - Allow multiple technical capabilities to reference one business requirement while preserving exact capability/report mapping.
-- Keep independent review, QC, human acceptance, existing model presets, and unrepaired legacy runs. Compact profiles, parallel scheduling, and evidence caching remain deferred.
+- Keep independent review, QC, human acceptance, existing model presets, and unrepaired legacy runs. Parallel scheduling and evidence caching remain deferred.
 
 ## 0.6.0 - 2026-09-24
 

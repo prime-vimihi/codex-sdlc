@@ -4,6 +4,8 @@ codex-sdlc combines a Codex skills plugin with a deterministic npm CLI. The plug
 
 ## Requirements
 
+The unreleased 1.0.0 branch includes opt-in Compact delivery. Use a locally built Compact-capable package until publication; existing Full-mode runs and model presets are preserved.
+
 - Codex with the public **codex-sdlc** plugin installed.
 - Node.js `>=24.16.0 <25` and npm 11.
 - One or more existing application directories. The initializer configures applications; it does not scaffold product code.
@@ -20,6 +22,8 @@ Initialize codex-sdlc for this existing repository. Explain the setup choices an
 Tell Codex which applications already exist and where they live. Supported presets are Go for backend, Next.js for web, Flutter for mobile, PostgreSQL for the primary database, and Redis for cache. Codex will inspect the repository, show the proposed files, apply the same command without `--dry-run`, restore the pinned project runtime, and run diagnostics.
 
 ## Common project shapes
+
+For a new bounded feature using established patterns, ask `$sdlc --compact <describe the feature>`. Codex assesses eligibility before selecting Compact. Full remains the default and is required for migrations, breaking APIs, permission changes, new sensitive-data exposure, or unresolved risk. Compact is per run and does not change the project's model preset. See the [Compact workflow](../skills/sdlc-pm/references/compact-workflow.md).
 
 | Shape | Example request |
 | --- | --- |

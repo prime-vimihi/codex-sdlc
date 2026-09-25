@@ -11,6 +11,8 @@ import { evidencePathsForId } from "./evidence-identifiers.js";
 import type { ValidationResult } from "./types.js";
 
 const schemaFileNames = {
+  compactSpecification: "compact-specification.schema.json",
+  compactQc: "compact-qc.schema.json",
   agentPolicy: "agent-policy.schema.json",
   agentCapabilities: "agent-capabilities.schema.json",
   agentDispatch: "agent-dispatch.schema.json",

@@ -1,5 +1,7 @@
 # Runtime-assisted delivery (1.0.0)
 
+This helper flow supports both Full and Compact implementations. Select the saved profile first; [Compact](compact-workflow.md) has a different BA/QC artifact inventory and combines integration with independent QC. The assignment scenario `full_task` names an implementation contract and does not select the Full workflow profile.
+
 Use this path for ordinary delivery on a 1.0.0 runtime. It preserves the existing task graph and independent review, while the runtime constructs mechanical authority metadata. Helpers serve eligible concrete tasks. Use the existing lower-level planning/hold workflow for missing dependencies, application scaffolding, or material approvals that preparation refuses; a refused helper call never authorizes a pending action. Legacy evaluator stimuli keep their specified response envelopes; do not use an evaluator envelope as the normal user-facing workflow.
 
 ## Readiness and scope

@@ -1,6 +1,6 @@
 ---
 name: sdlc
-description: Handle /sdlc or $sdlc requests, including --save-my-token and --normal to persist delivery-role model presets for new runs in the selected project, or route a feature request to sdlc-pm.
+description: Handle /sdlc or $sdlc feature requests, including opt-in --compact delivery and --save-my-token or --normal project model presets, and route work to sdlc-pm.
 ---
 
 # SDLC entry point
@@ -38,5 +38,7 @@ Treat `/sdlc --save-my-token` and `/sdlc --normal` as chat shorthand for this sk
 `xhigh` means extra-high reasoning. Both presets replace these five roles' previous models, efforts, and fallbacks. Normal mode restores inheritance rather than restoring earlier custom models. Both preserve optional AI Product Owner settings. No fallback is added. Dispatch still checks the host's model and reasoning capabilities; report an unavailable selection instead of silently substituting another model. The preset is a model configuration, not a guarantee about token usage.
 
 ## Delivery requests
+
+For `$sdlc --compact <feature>` or `/sdlc --compact <feature>`, follow the [Compact workflow](../sdlc-pm/references/compact-workflow.md). Compact applies only to that new run and requires a complete low-risk assessment. Full remains the default. An existing run retains its saved profile; do not convert it during resume. If Compact is unsuitable, explain why Full is required before starting a new Full run. A standalone `--compact` without a feature does not start work or change project configuration. If an explicitly requested model preset accompanies the feature, save it first and then apply the independently selected workflow profile.
 
 For a feature request or explicit resume without either mode flag, use [sdlc-pm](../sdlc-pm/SKILL.md) and preserve the saved project mode. A bare `/sdlc` or `$sdlc` explains the two mode commands and asks what feature to start or run to resume; it does not reset models or start unspecified work.

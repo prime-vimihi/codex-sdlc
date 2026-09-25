@@ -26,6 +26,8 @@ import { prepareTask, handoffTask, type PrepareTaskInput, type HandoffTaskInput 
 import { activateTask } from "./task-activation.js";
 import { collectTaskChecks } from "./task-checks.js";
 import { repairTask, recoverRepair } from "./repairs.js";
+import { resolveWorkflowProfile, type CompactAssessment } from "./workflow-profile.js";
+import { publishCompactSpecification, publishCompactQc, type CompactSpecificationInput, type CompactQcInput } from "./compact-artifacts.js";
 
 const exitCodes = {
   success: 0,
@@ -58,6 +60,8 @@ interface StartOptions {
   title: string;
   request: string;
   applications: string;
+  profile?: "full" | "compact";
+  assessment?: string;
 }
 
 interface AgentOptions {
@@ -307,6 +311,26 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
       emit("preflight", result, result.ready ? "local preflight ready; live services and acceptance data remain unchecked" : "local preflight blocked", result.diagnostics.map((message) => ({ code: "PREFLIGHT", message })), result.ready ? exitCodes.success : exitCodes.failure);
     });
 
+  program.command("compact-spec <run-id>")
+    .description("publish one Compact specification and derive claim/acceptance views from JSON stdin")
+    .option("--dry-run", "validate and preview without writing")
+    .option("--expected-version <version>", "require the observed run authority version")
+    .action(async (runId: string, options: { dryRun?: boolean; expectedVersion?: string }) => {
+      executed = true; activeCommand = "compact-spec";
+      const result = await publishCompactSpecification(root, runId, await readJsonInput() as CompactSpecificationInput, { dryRun: options.dryRun, expectedVersion: options.expectedVersion === undefined ? undefined : parseAuthorityVersion(options.expectedVersion) });
+      emit("compact-spec", result, `${result.dryRun ? "previewed" : "saved"} Compact specification and generated views; PM review remains required`);
+    });
+
+  program.command("compact-qc <run-id>")
+    .description("publish independent Compact verification and its generated summary from JSON stdin")
+    .option("--dry-run", "validate and preview without writing")
+    .option("--expected-version <version>", "require the observed run authority version")
+    .action(async (runId: string, options: { dryRun?: boolean; expectedVersion?: string }) => {
+      executed = true; activeCommand = "compact-qc";
+      const result = await publishCompactQc(root, runId, await readJsonInput() as CompactQcInput, { dryRun: options.dryRun, expectedVersion: options.expectedVersion === undefined ? undefined : parseAuthorityVersion(options.expectedVersion) });
+      emit("compact-qc", result, `${result.dryRun ? "previewed" : "saved"} Compact verification; inspect coverage before recording gates and PM review`);
+    });
+
   program.command("prepare-task <run-id> <task-id>")
     .description("derive and publish an assignment from semantic controls supplied as JSON on stdin")
     .option("--dry-run", "derive the task packet without writing")
@@ -446,9 +470,23 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
     .requiredOption("--title <title>")
     .requiredOption("--request <path>")
     .requiredOption("--applications <applications>")
+    .option("--profile <profile>", "full (default) or opt-in compact", "full")
+    .option("--assessment <path>", "project-local JSON eligibility assessment required for compact")
     .action(async (options: StartOptions) => {
       executed = true;
       activeCommand = "start";
+      let assessment: CompactAssessment | undefined;
+      if (options.assessment !== undefined) {
+        const path = await resolvePathInsideRoot(root, options.assessment, { mustExist: true });
+        const source = await readFile(path, "utf8");
+        try {
+          const strict = parseStrictYamlDocument(source);
+          const json = JSON.parse(source);
+          if (JSON.stringify(strict) !== JSON.stringify(json)) throw new Error("ambiguous input");
+          assessment = json as CompactAssessment;
+        } catch { throw new CliFailure(exitCodes.usage, { code: "USAGE", message: "compact assessment must be strict JSON without duplicate keys" }); }
+      }
+      resolveWorkflowProfile(options.profile, assessment);
       const inspection = await inspectProject(root);
       if (!inspection.ready) {
         throw new SdlcValidationError(["project is not ready", ...inspection.diagnostics]);
@@ -465,10 +503,12 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
         title: options.title,
         requestFile: options.request,
         affectedApplications,
+        profile: options.profile,
+        assessment,
         now,
       });
       const manifestPath = relative(root, `${runDirectory}/manifest.yaml`).replaceAll("\\", "/");
-      emit("start", { run_id: options.id, manifest_path: manifestPath }, `created ${manifestPath}`);
+      emit("start", { run_id: options.id, manifest_path: manifestPath, profile: options.profile ?? "full" }, `created ${manifestPath} (${options.profile ?? "full"} workflow)`);
     });
 
   program.command("ready <run-id>").action(async (runId: string) => {

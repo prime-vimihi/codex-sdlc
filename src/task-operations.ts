@@ -21,6 +21,7 @@ import { parseStrictYamlDocument, reconcileDeliveryAssignmentAuthority, reposito
 import { prepareTransitionContext, transitionTask } from "./transitions.js";
 import type { EvidenceRecord, ProjectConfig, RunManifest, Task } from "./types.js";
 import { resolveWorkspace, resolveWorkspacePath } from "./workspace.js";
+import { assertCompactDeliveryControls } from "./workflow-profile.js";
 
 export interface PrepareTaskInput {
   /** Substantive requirements and decisions, supplied by PM; no mechanical assignment metadata. */
@@ -227,6 +228,7 @@ async function buildAssignment(context: Context, input: PrepareTaskInput, previo
 
 function assertEligible(context: Context, controls: PrepareTaskInput["controls"]): void {
   const { task, snapshot } = context;
+  assertCompactDeliveryControls(snapshot.manifest, controls);
   if (task.dependencies.some((id) => snapshot.manifest.tasks.find((entry) => entry.id === id)?.status !== "completed")) throw new Error("task has incomplete dependencies");
   if (snapshot.manifest.blockers.some((entry) => entry.task_id === task.id && entry.status === "open")) throw new Error("task has an unresolved blocker");
   if (snapshot.manifest.decisions?.some((entry) => entry.affected_tasks.includes(task.id) && ["pending", "rejected", "deferred"].includes(entry.status))) throw new Error("task has an unresolved approval");

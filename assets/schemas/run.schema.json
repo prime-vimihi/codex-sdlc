@@ -6,6 +6,8 @@
   "additionalProperties": false,
   "required": ["schema_version", "run", "request", "scope", "affected_applications", "design", "assumptions", "open_questions", "decisions", "blockers", "tasks", "quality_gates", "defects", "product_owner_review", "final_result"],
   "properties": {
+    "workflow_profile": {"type": "object", "additionalProperties": false, "required": ["name", "revision", "assessment"], "properties": {"name": {"const": "compact"}, "revision": {"const": 1}, "assessment": {"type": "object", "additionalProperties": false, "required": ["bounded_scope", "existing_patterns", "migrations", "breaking_api", "authorization_changes", "sensitive_data_exposure", "cross_system_uncertainty", "rationale"], "properties": {"bounded_scope": {"const": true}, "existing_patterns": {"const": true}, "migrations": {"const": false}, "breaking_api": {"const": false}, "authorization_changes": {"const": false}, "sensitive_data_exposure": {"const": false}, "cross_system_uncertainty": {"const": false}, "rationale": {"type": "string", "pattern": "\\S"}}}}},
+    "compact_review": {"type": "object", "additionalProperties": false, "required": ["specification_revision", "specification_sha256", "facts_sha256", "semantic_claims_sha256", "acceptance_criteria_sha256"], "properties": {"specification_revision": {"type": "integer", "minimum": 1}, "specification_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "facts_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "semantic_claims_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "acceptance_criteria_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}},
     "repair_history": { "type": "array", "items": { "$ref": "#/$defs/repair" } },
     "schema_version": { "const": 1 },
     "agent_policy": { "$ref": "agent-policy.schema.json" },
@@ -200,11 +202,11 @@
         "title": { "type": "string", "minLength": 1 },
         "workflow": { "const": "feature-development" },
         "status": { "enum": ["draft", "intake", "requirements", "awaiting_approval", "technical_design", "implementation", "integration", "qc", "product_owner_review", "completed", "blocked", "failed", "cancelled"] },
-        "current_stage": { "enum": ["intake", "requirements", "requirements_review", "api_contract", "api_contract_review", "backend_implementation", "web_implementation", "mobile_implementation", "integration", "qc", "product_owner_review"] },
+        "current_stage": { "enum": ["intake", "requirements", "requirements_review", "api_contract", "api_contract_review", "backend_implementation", "web_implementation", "mobile_implementation", "integration", "qc", "product_owner_advisory", "product_owner_review"] },
         "created_at": { "type": ["string", "null"], "format": "date-time" },
         "updated_at": { "type": ["string", "null"], "format": "date-time" },
         "created_by": { "type": "string", "minLength": 1 },
-        "current_owner": { "enum": ["product-owner", "pm", "ba", "backend", "frontend", "qc"] },
+        "current_owner": { "enum": ["product-owner", "pm", "ba", "backend", "frontend", "qc", "po"] },
         "branch": { "type": ["string", "null"] },
         "framework_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
       }

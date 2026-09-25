@@ -1,4 +1,5 @@
 import type { AgentPolicy, AgentDispatch } from "./agents.js";
+import type { WorkflowProfile } from "./workflow-profile.js";
 
 export type ApplicationLifecycle = "planned" | "scaffolded" | "active";
 
@@ -295,7 +296,17 @@ export interface RepairRecord {
   archives: Array<{ path: string; archive_path: string; sha256: string }>;
 }
 
+export interface CompactReview {
+  specification_revision: number;
+  specification_sha256: string;
+  facts_sha256: string;
+  semantic_claims_sha256: string;
+  acceptance_criteria_sha256: string;
+}
+
 export interface RunManifest {
+  workflow_profile?: WorkflowProfile;
+  compact_review?: CompactReview;
   repair_history?: RepairRecord[];
   agent_policy?: AgentPolicy;
   schema_version: 1;
