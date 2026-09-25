@@ -2,7 +2,7 @@
 
 All notable changes to codex-sdlc are documented here.
 
-## 1.0.0 - Unreleased
+## 1.0.0 - 2026-09-25
 
 - Add opt-in, assessed Compact runs with a frozen revisioned graph, one canonical BA specification, generated compatibility views, and one independent integrated QC record. Full remains the default; saved model settings and existing runs retain their meaning.
 - Bind Compact review to exact facts/specification bytes and require every acceptance criterion's declared evidence, current QC checks, PM-reviewed completion, and final human acceptance. Higher-risk work requires Full.

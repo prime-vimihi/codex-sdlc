@@ -4,7 +4,7 @@ codex-sdlc combines a Codex skills plugin with a deterministic npm CLI. The plug
 
 ## Requirements
 
-The unreleased 1.0.0 branch includes opt-in Compact delivery. Use a locally built Compact-capable package until publication; existing Full-mode runs and model presets are preserved.
+Version 1.0.0 includes opt-in Compact delivery and runtime-assisted task operations. Update both the plugin and project runtime to use them; existing Full-mode runs and model presets are preserved.
 
 - Codex with the public **codex-sdlc** plugin installed.
 - Node.js `>=24.16.0 <25` and npm 11.
@@ -81,7 +81,7 @@ node .sdlc/runtime.cjs validate-config
 
 Only the coordinator receives `.sdlc`. The plugin skills remain in each user's Codex plugin cache. Another contributor binds their local checkout paths with `npx --yes codex-sdlc@1.0.0 configure --root <coordinator> --repo <id>=<absolute-path>` and reruns `doctor`.
 
-Choose single-repository or multi-repository mode before starting delivery. Version 0.6.0 does not automatically convert an initialized single-repository project to multi-repository mode. Preserve existing runs before changing topology.
+Choose single-repository or multi-repository mode before starting delivery. Version 1.0.0 does not automatically convert an initialized single-repository project to multi-repository mode. Preserve existing runs before changing topology.
 
 ## Choose agent models (optional)
 

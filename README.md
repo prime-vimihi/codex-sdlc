@@ -56,7 +56,7 @@ Eight Codex skills and a repository-local CLI keep tasks, evidence, blockers, an
 
 ## Get started
 
-**1.0.0 development:** This branch adds runtime-assisted delivery. Until 1.0.0 is published, test its local package using the [contributor guide](docs/cli-reference.md#try-the-local-package-in-an-unrelated-repository). The public 0.6.0 package does not contain these new operations.
+**New in 1.0.0:** Runtime-assisted delivery reduces manual task bookkeeping, and eligible bounded features can use opt-in Compact mode. See the [release notes](docs/releases/1.0.0.md) for changes and upgrade guidance.
 
 You need **Codex**, **Node.js `>=24.16.0 <25`**, **npm 11**, and an existing application repository. Setup configures your application directories; it does not scaffold application code.
 
@@ -85,7 +85,7 @@ Start a codex-sdlc feature delivery for: <describe the outcome you want>.
 
 To continue later, ask Codex to resume the existing run. Its manifest records the current tasks, completed work, and remaining decisions.
 
-**Version note:** Project model modes require both the **0.6.0 plugin and runtime**. Per-role routing and AI Product Owner review remain available from 0.5.0. Check your installed plugin version; updating the plugin does not upgrade an existing project's runtime. See the [upgrade guide](docs/getting-started.md#upgrade-an-existing-project).
+**Version note:** Compact mode and the new task helpers require both the **1.0.0 plugin and runtime**. Check your installed plugin version; updating the plugin does not upgrade an existing project's runtime. See the [upgrade guide](docs/getting-started.md#upgrade-an-existing-project).
 
 <details>
 <summary><strong>Prefer the CLI? Preview a Next.js setup</strong></summary>
@@ -93,7 +93,7 @@ To continue later, ask Codex to resume the existing run. Its manifest records th
 Run this against an existing web repository:
 
 ```sh
-npx --yes codex-sdlc@0.6.0 init \
+npx --yes codex-sdlc@1.0.0 init \
   --root /absolute/path/to/web --name example-web \
   --applications web --web-root . --web-preset nextjs \
   --dry-run
@@ -108,7 +108,7 @@ node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-For a global CLI installation, use `npm install --global codex-sdlc@0.6.0`.
+For a global CLI installation, use `npm install --global codex-sdlc@1.0.0`.
 
 </details>
 
@@ -192,7 +192,7 @@ Selections must be available on your Codex host. New runs snapshot the settings;
 
 ### Project model modes
 
-Version 0.6.0 adds these chat shortcuts:
+These chat shortcuts, introduced in 0.6.0, remain available:
 
 ```text
 /sdlc --save-my-token
@@ -226,7 +226,7 @@ codex-sdlc does not operate a hosted service or send repository content to a cod
 Preview a project upgrade before applying it:
 
 ```sh
-npx --yes codex-sdlc@0.6.0 upgrade \
+npx --yes codex-sdlc@1.0.0 upgrade \
   --root /absolute/path/to/coordinator --dry-run
 ```
 
@@ -240,10 +240,10 @@ Applied upgrades create backups. Rollback checks managed-file integrity before r
 | --- | --- |
 | [Getting started](docs/getting-started.md) | [CLI setup and lifecycle reference](docs/cli-reference.md) |
 | [Multi-repository workspaces](docs/multi-repository.md) | [Role models and dispatch records](docs/agent-models.md) |
-| [What's new in 0.6.0](docs/releases/0.6.0.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
+| [What's new in 1.0.0](docs/releases/1.0.0.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
 | [Support](SUPPORT.md) | [Contributing](CONTRIBUTING.md) |
 
-Current verification includes automated runtime tests, plugin and skill validation, and independent built-CLI checks. Native Linux/Windows qualification and a complete delivery test spanning multiple models remain pending. See the [0.6.0 validation notes](docs/releases/0.6.0.md#validation).
+Current verification includes automated runtime tests, plugin and skill validation, and independent built-CLI checks. Native Linux/Windows qualification and a matched real-agent performance benchmark remain pending. See the [1.0.0 validation notes](docs/releases/1.0.0.md#validation).
 
 ## Build with us
 
