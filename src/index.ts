@@ -1,6 +1,15 @@
 export { configureAgents, updateAgentPolicy, planAgent, resolveAgentPlan, recordAgentDispatch } from "./agents.js";
 export type { AgentPolicy, AgentCapabilities, AgentPlan, AgentDispatch, RoleModel, ReasoningEffort } from "./agents.js";
 export { main } from "./cli.js";
+export { prepareTask, handoffTask } from "./task-operations.js";
+export { activateTask } from "./task-activation.js";
+export { collectTaskChecks } from "./task-checks.js";
+export { preflightProject } from "./preflight.js";
+export { getRunTiming, summarizeRunTiming } from "./run-timing.js";
+export { repairTask, recoverRepair } from "./repairs.js";
+export { publishCompactSpecification, publishCompactQc } from "./compact-artifacts.js";
+export type { CompactSpecificationInput, CompactQcInput } from "./compact-artifacts.js";
+export type { CompactAssessment, WorkflowProfile } from "./workflow-profile.js";
 export { configureRepositories, initializeProject, inspectProject } from "./install.js";
 export { rollbackProject, uninstallProject, upgradeProject } from "./installation-lifecycle.js";
 export { loadFramework, loadLocal, loadProject, loadWorkflow } from "./config.js";

@@ -17,8 +17,11 @@ import { loadRunSnapshotUnderLock, validateRunSnapshotUnderLock } from "./runs.j
 import { parseStrictYamlDocument, structuredDocumentRevision } from "./semantic-contracts.js";
 import { validateDocument } from "./schemas.js";
 import type { RunManifest } from "./types.js";
+import { assertFrozenWorkflowProfile } from "./workflow-profile.js";
 
 export interface ManifestTransactionOptions extends RunAuthorityLockOptions {
+  /** Internal compound operations restore their staged files before rollback validation, under the run lock. */
+  rollbackChanges?: () => Promise<void>;
   /** Test-only hook for deterministic cleanup coverage after the temp write. */
   beforeReplace?: (manifestPath: string, temporaryPath: string) => Promise<void> | void;
   /** Test-only hook after publication and before the final repository validation. */
@@ -79,10 +82,12 @@ async function mutateRunManifestInternal<T>(
   await resolvePathInsideRoot(root, `.sdlc/runs/${runId}`, { mustExist: true });
   const lock = await acquireRunAuthorityLock(root, runId, options);
   try {
+    await assertNoPendingRepair(root, runId);
     const authorityVersion = await readAuthorityVersion(root, runId);
     const snapshot = await loadRunSnapshotUnderLock(root, runId, true, lock);
     const manifest = structuredClone(snapshot.manifest);
     const value = await mutate(manifest);
+    assertFrozenWorkflowProfile(snapshot.manifest, manifest);
     const validation = validateDocument("run", manifest);
     if (!validation.valid) {
       throw new Error(`updated manifest is invalid: ${validation.diagnostics.join("; ")}`);
@@ -110,6 +115,7 @@ async function mutateRunManifestInternal<T>(
       await assertAuthorityVersion(root, runId, authorityVersion);
       await writeAuthorityVersion(root, runId, authorityVersion + 1);
     }, async () => {
+      await options.rollbackChanges?.();
       const rollbackSnapshot = await loadRunSnapshotUnderLock(root, runId, true, lock);
       if (rollbackSnapshot.manifestSource !== snapshot.manifestSource) {
         throw new Error("rollback manifest identity does not match the prior manifest");
@@ -120,6 +126,11 @@ async function mutateRunManifestInternal<T>(
       }
     });
     return { manifest, value, authorityVersion: authorityVersion + 1 };
+  } catch (error) {
+    try { await options.rollbackChanges?.(); } catch (rollbackError) {
+      throw new Error(`manifest mutation failed (${errorMessage(error)}); file rollback failed (${errorMessage(rollbackError)})`);
+    }
+    throw error;
   } finally {
     await releaseRunAuthorityLock(lock);
   }
@@ -143,6 +154,7 @@ export async function publishRunAuthority(
   const lock = await acquireRunAuthorityLock(root, runId, options);
   let stagingDirectory: string | undefined;
   try {
+    await assertNoPendingRepair(root, runId);
     const authorityVersion = await readAuthorityVersion(root, runId);
     if (options.expectedVersion !== authorityVersion) {
       throw new Error(`stale authority version: expected ${options.expectedVersion} but actual ${authorityVersion}`);
@@ -446,7 +458,13 @@ async function rollbackPublications(states: readonly PublicationState[]): Promis
 
 const authorityVersionFile = ".sdlc-authority-version.json";
 
-async function readAuthorityVersion(root: string, runId: string): Promise<number> {
+export async function assertNoPendingRepair(root: string, runId: string): Promise<void> {
+  const path = await resolvePathInsideRoot(root, `.sdlc/runs/${runId}/.repair-transaction.json`);
+  try { await lstat(path); } catch (error) { if (isMissing(error)) return; throw error; }
+  throw new Error("an interrupted repair needs recover-repair before another mutation or evidence collection");
+}
+
+export async function readAuthorityVersion(root: string, runId: string): Promise<number> {
   const path = await resolvePathInsideRoot(root, `.sdlc/runs/${runId}/${authorityVersionFile}`);
   let source: string;
   try { source = await readFile(path, "utf8"); } catch (error) {
@@ -470,7 +488,7 @@ async function assertAuthorityVersion(root: string, runId: string, expected: num
   if (actual !== expected) throw new Error(`run authority version changed during transaction: expected ${expected} but actual ${actual}`);
 }
 
-async function writeAuthorityVersion(root: string, runId: string, version: number): Promise<void> {
+export async function writeAuthorityVersion(root: string, runId: string, version: number): Promise<void> {
   const path = await resolvePathInsideRoot(root, `.sdlc/runs/${runId}/${authorityVersionFile}`);
   await replaceAtomically(path, `${JSON.stringify({ schema_version: 1, version })}\n`);
 }

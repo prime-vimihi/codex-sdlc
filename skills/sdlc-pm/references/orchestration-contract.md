@@ -1,10 +1,12 @@
 # Orchestration contract
 
+The graph and artifact inventory below describe Full/legacy delivery. For a saved Compact run, use the [frozen Compact workflow](compact-workflow.md); do not insert omitted Full stages or convert the profile during resume.
+
 ## Dependency graph
 
 `PM-001 → BA-001 → PM-002 → BE-001 → PM-003 → {BE-002, WEB-001, MOBILE-001 as affected} → INT-001 → QC-001 → PM-004`.
 
-Use the active manifest rather than these example IDs when a workflow supplies different IDs. `WEB-001` and `MOBILE-001` both require completed API-contract review; each is a separate frontend assignment. Integration waits for every affected implementation task.
+Use the active manifest rather than these example IDs when a workflow supplies different IDs. `WEB-001` and `MOBILE-001` require completed API-contract review when backend work is affected; frontend-only graphs depend on requirements review; each is a separate frontend assignment. Integration waits for every affected implementation task.
 
 ## Assignment shape
 
@@ -51,7 +53,7 @@ production_deployment: prohibited
 role_reports_may_request_completed: false
 ```
 
-Scenario rules are state-derived: approval request precedes decision and its bound transition; intake never skips BA; backend API contract and PM review precede frontend; configured evidence precedes a passed gate and review completion; integration precedes independent QC; finalization prepares Product Owner review and never deploys.
+Scenario rules are state-derived: approval request precedes decision and its bound transition; intake never skips BA; backend API contract and PM review precede frontend when backend is affected; configured evidence precedes a passed gate and review completion; integration precedes independent QC; finalization prepares Product Owner review and never deploys.
 
 ## Transition sequence
 

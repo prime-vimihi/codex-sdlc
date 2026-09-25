@@ -4,7 +4,9 @@ import { createHash } from "node:crypto";
 import { loadProject } from "./config.js";
 import { assertEvidenceReference, resolveRunReference } from "./evidence-validation.js";
 import { mutateRunManifest } from "./manifest-transaction.js";
-import { qualityGateTaskStages } from "./quality-gates.js";
+import { qualityGateStage } from "./quality-gates.js";
+import { assertCompactReview, assertCompactVerification } from "./compact-artifacts.js";
+import { isCompactRun } from "./workflow-profile.js";
 import type { RunManifest } from "./types.js";
 
 const alwaysRequiredGates = ["requirements", "integration", "qc"] as const;
@@ -13,6 +15,10 @@ export async function finalizeRun(root: string, runId: string, actor: string, no
   const transaction = await mutateRunManifest(root, runId, async (manifest) => {
     normalizeLegacyInapplicableGates(manifest);
     assertReadyForProductOwnerReview(manifest);
+    if (isCompactRun(manifest)) {
+      await assertCompactReview(root, runId, manifest);
+      await assertCompactVerification(root, runId, manifest);
+    }
     if (manifest.agent_policy?.product_owner_review === "advisory") await assertProductOwnerAdvisory(root, runId, manifest);
     await assertReferencedFilesExist(root, runId, manifest);
     await assertEvidencePassed(root, runId, manifest);
@@ -78,7 +84,7 @@ function assertReadyForProductOwnerReview(manifest: RunManifest): void {
   }
   const requiredGates = new Set<string>(alwaysRequiredGates);
   if (manifest.affected_applications?.backend) {
-    requiredGates.add("api_contract");
+    if (!isCompactRun(manifest)) requiredGates.add("api_contract");
     requiredGates.add("backend");
   }
   if (manifest.affected_applications?.web) requiredGates.add("web");
@@ -95,7 +101,7 @@ function assertReadyForProductOwnerReview(manifest: RunManifest): void {
       throw new Error(`${gateId} quality gate must be not_applicable when ${application} is unaffected`);
     }
   }
-  if (!manifest.affected_applications?.backend && manifest.quality_gates.api_contract?.status !== "not_applicable") {
+  if ((!manifest.affected_applications?.backend || isCompactRun(manifest)) && manifest.quality_gates.api_contract?.status !== "not_applicable") {
     throw new Error("api_contract quality gate must be not_applicable when backend is unaffected");
   }
   const blocker = manifest.blockers.find((candidate) => candidate.status === "open");
@@ -154,7 +160,7 @@ async function assertEvidencePassed(root: string, runId: string, manifest: RunMa
     }
   }
   for (const [gateId, gate] of Object.entries(manifest.quality_gates)) {
-    const expectedStage = qualityGateTaskStages[gateId as keyof typeof qualityGateTaskStages];
+    const expectedStage = qualityGateStage(gateId, manifest);
     if (expectedStage === undefined) continue;
     for (const reference of gate.evidence) {
       const evidence = await assertEvidenceReference({

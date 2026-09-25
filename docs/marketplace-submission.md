@@ -14,7 +14,7 @@
 
 Long description:
 
-Set up and coordinate resumable software delivery across one repository or multiple Git checkouts, with configurable models by role, independent quality control, and optional advisory AI Product Owner review. Final acceptance remains human. codex-sdlc records tasks, approvals, evidence, defects, and release decisions in a coordinator repository so work can be validated and resumed. The public plugin supplies Codex skills; its pinned npm CLI creates and operates the repository-local `.sdlc` framework.
+Set up and coordinate resumable software delivery across one repository or multiple Git checkouts, with configurable models by role, independent quality control, and optional advisory AI Product Owner review. Choose Full delivery or opt-in Compact for bounded features using established patterns. Runtime helpers prepare assignments, collect checks, generate handoffs, and preserve repair history. Final acceptance remains human. codex-sdlc records tasks, approvals, evidence, defects, and release decisions in a coordinator repository so work can be validated and resumed. The public plugin supplies Codex skills; its pinned npm CLI creates and operates the repository-local `.sdlc` framework.
 
 ## Starter prompts
 
@@ -72,7 +72,14 @@ Set up and coordinate resumable software delivery across one repository or multi
 - Expected behavior: Preview and save inherited PM, `gpt-6-sol/high` for BA, and `gpt-6-luna/xhigh` for backend, web/mobile frontend, and QC in `.sdlc/project.yaml`. Preserve PO settings. A mode-only request does not start a feature run; every subsequently started run snapshots the preset.
 - User prompt: `$sdlc --normal` in the same project.
 - Expected behavior: Remove model, effort, and fallback overrides for the five delivery roles. Preserve existing run snapshots and optional PO settings. New runs inherit their delivery-role models.
-- Fixture: A disposable initialized project using plugin/runtime 0.6.0. The host must advertise the requested models and efforts to exercise actual dispatch; saving and previewing configuration need no model dispatch.
+- Fixture: A disposable initialized project using plugin/runtime 1.0.0. The host must advertise the requested models and efforts to exercise actual dispatch; saving and previewing configuration need no model dispatch.
+
+### 8. Deliver a bounded feature with Compact
+
+- User prompt: `$sdlc --compact Add a display-name length hint beside the existing profile input, using the current validation rule and UI pattern.`
+- Expected behavior: The PM assesses bounded scope, established patterns, and the absence of migration, breaking API, authorization, sensitive-data, or unresolved cross-system changes. It starts a new Compact run, reviews the BA specification, delegates affected implementation, and requires independent QC with current evidence and both integration and QC gates.
+- Expected result: The run saves its Compact profile and immutable review binding; generated claims and acceptance views match the canonical specification. Final human acceptance stays pending. Existing runs and saved model presets are unchanged.
+- Fixture: A disposable initialized project using plugin/runtime 1.0.0, an existing profile form and validation rule, runnable declared checks, and a host that can enforce the required evidence isolation.
 
 ## Negative tests
 
@@ -109,9 +116,19 @@ Set up and coordinate resumable software delivery across one repository or multi
 - User prompt: `$sdlc --save-my-token --normal`.
 - Expected behavior: Explain that the flags conflict and leave project configuration unchanged. The equivalent runtime command fails before writing.
 
+### 7. Reject ineligible Compact work
+
+- User prompt: `$sdlc --compact Replace the authorization model and migrate existing permissions.`
+- Expected behavior: Explain that authorization changes and migrations require Full delivery. Do not start a Compact run or weaken its eligibility assessment.
+
+### 8. Reject stale or failed Compact verification
+
+- Scenario: QC evidence predates the current repair cycle, belongs to another task, is future-dated, or has been superseded by a failed check.
+- Expected behavior: Reject the evidence for readiness and require current independent verification. Do not reuse a prior passing result to hide a later failure.
+
 ## Release notes
 
-Version 0.6.0 adds the sdlc entry skill and persistent project model presets. `/sdlc --save-my-token` inherits PM, selects Sol/high for BA, and Luna/extra-high for backend, web/mobile frontend, and QC. `/sdlc --normal` restores inherited models for those roles. Explicit `$sdlc` invocation is supported when a client reserves slash commands. Settings apply to every new run while preserving existing run policies, optional AI Product Owner settings, and other projects. Both CLI presets support dry-run previews and reject conflicting settings. Final acceptance remains human.
+Version 1.0.0 adds opt-in Compact delivery for bounded features, with one canonical BA specification, generated supporting views, and independent integrated QC. Full remains the default. New runtime helpers handle task preparation, activation, checks, handoffs, repair history, preflight, and timing. Configured application roots and Next.js routes are handled consistently, and multiple technical capabilities can share a business requirement. Existing project model presets remain available. PM review, current verification evidence, and final human acceptance are preserved. A scripted fixture measured about 22% lower framework execution time for Compact versus the new Full workflow; real-agent delivery time and token savings are not yet measured.
 
 ## Portal prerequisites
 
@@ -130,12 +147,12 @@ Version 0.6.0 adds the sdlc entry skill and persistent project model presets. `/
 
 Submit the skills-only plugin from the release source tree. The bundle root contains `plugin.json`, `skills/`, `.codex-plugin/plugin.json`, `README.md`, `docs/getting-started.md`, `docs/agent-models.md`, and the referenced brand assets. It requires no MCP server, authentication configuration, demo credentials, or network allowlist.
 
-Build the upload ZIP and npm tarball from the reviewed 0.6.0 source. The prepared artifacts are under `build/public-submission/0.6.0/`; verify their hashes using that directory’s `SHA256SUMS` before upload.
+Build the upload ZIP and npm tarball from the reviewed 1.0.0 source. The prepared artifacts are under `build/public-submission/1.0.0/`; verify their hashes using that directory’s `SHA256SUMS` before upload.
 
 ## Release order
 
-1. Tag the reviewed source revision as `v0.6.0` and publish the GitHub release using `docs/releases/0.6.0.md`.
-2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@0.6.0` to npm with provenance, then verify that the public registry serves 0.6.0. Do not submit the plugin update until npm serves 0.6.0.
+1. Tag the reviewed source revision as `v1.0.0` and publish the GitHub release using `docs/releases/1.0.0.md`.
+2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@1.0.0` to npm with provenance, then verify that the public registry serves 1.0.0. Do not submit the plugin update until npm serves 1.0.0.
 3. Open the existing codex-sdlc listing in the OpenAI plugin submission portal, create a version update, keep the type **Skills only**, and upload the prepared skills bundle and listing logo.
 4. Copy the listing, prompts, tests, availability, and release notes from this document; complete publisher identity and policy attestations.
 5. Submit for review. After approval, explicitly publish the approved version to the universal Plugins Directory.

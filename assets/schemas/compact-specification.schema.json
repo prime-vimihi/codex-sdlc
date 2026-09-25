@@ -1,0 +1,330 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "task_id",
+    "producer",
+    "revision",
+    "facts_sha256",
+    "scope",
+    "requirements",
+    "acceptance_criteria",
+    "api_change"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$"
+    },
+    "task_id": {
+      "const": "BA-001"
+    },
+    "producer": {
+      "const": "ba"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "facts_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "in_scope",
+        "out_of_scope"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "in_scope": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "out_of_scope": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "fact_ids"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^REQ-[0-9]+$"
+          },
+          "description": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "fact_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^FACT-[0-9]+$"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "requirement_id",
+          "given",
+          "when",
+          "then",
+          "evidence_types"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AC-[0-9]+$"
+          },
+          "requirement_id": {
+            "type": "string",
+            "pattern": "^REQ-[0-9]+$"
+          },
+          "given": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "when": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "then": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "evidence_types": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "command",
+                "api",
+                "ui",
+                "live_database",
+                "observation"
+              ]
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "api_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "description"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "unchanged",
+            "additive"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "pattern": "\\S"
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sdlc.local/schemas/compact-specification.schema.json",
+  "title": "Compact business specification",
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "requirements",
+        "acceptance_criteria",
+        "api_change"
+      ],
+      "properties": {
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "in_scope",
+            "out_of_scope"
+          ],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "in_scope": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              "uniqueItems": true
+            },
+            "out_of_scope": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "requirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "description",
+              "fact_ids"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^REQ-[0-9]+$"
+              },
+              "description": {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              "fact_ids": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^FACT-[0-9]+$"
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "acceptance_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "requirement_id",
+              "given",
+              "when",
+              "then",
+              "evidence_types"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^AC-[0-9]+$"
+              },
+              "requirement_id": {
+                "type": "string",
+                "pattern": "^REQ-[0-9]+$"
+              },
+              "given": {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              "when": {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              "then": {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              "evidence_types": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "command",
+                    "api",
+                    "ui",
+                    "live_database",
+                    "observation"
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "api_change": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "description"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "unchanged",
+                "additive"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "pattern": "\\S"
+            }
+          }
+        }
+      }
+    }
+  }
+}

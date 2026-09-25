@@ -3,7 +3,9 @@ import { createHash } from "node:crypto";
 import { loadProject } from "./config.js";
 import { assertEvidenceReference, resolveRunReference } from "./evidence-validation.js";
 import { mutateRunManifest } from "./manifest-transaction.js";
-import { qualityGateTaskStages } from "./quality-gates.js";
+import { qualityGateStage } from "./quality-gates.js";
+import { assertCompactReview, assertCompactVerification, reviewCompactSpecification } from "./compact-artifacts.js";
+import { isCompactRun } from "./workflow-profile.js";
 import type { QualityGate, RunManifest, SdlcDecision, TaskStatus } from "./types.js";
 
 type ApprovalTarget = Extract<TaskStatus, "running" | "completed">;
@@ -28,7 +30,18 @@ export async function recordQualityGate(
     if (gate === undefined) throw new Error(`quality gate does not exist: ${gateId}`);
     if (gate.status === "not_applicable") throw new Error(`quality gate is not applicable: ${gateId}`);
     if (status === "passed" && references.length === 0) throw new Error(`passed quality gate requires evidence: ${gateId}`);
-    const expectedStage = qualityGateTaskStages[gateId as keyof typeof qualityGateTaskStages];
+    if (isCompactRun(manifest)) {
+      if (gateId === "requirements" && status === "passed") {
+        if (actor !== "pm") throw new Error("Compact requirements gate must be reviewed by pm");
+        if (!["awaiting_review", "completed"].includes(manifest.tasks.find((task) => task.id === "BA-001")?.status ?? "")) throw new Error("Compact specification must be handed off before PM review");
+        if (!references.includes("artifacts/ba/specification.yaml") || references.some((reference) => !["artifacts/ba/specification.yaml", "artifacts/ba/semantic-claims.yaml", "artifacts/ba/acceptance-criteria.md"].includes(reference))) throw new Error("Compact requirements gate evidence must include the specification and only its derived views");
+        manifest.compact_review = await reviewCompactSpecification(root, runId, manifest);
+      } else if (status === "passed") {
+        await assertCompactReview(root, runId, manifest);
+        if (gateId === "integration" || gateId === "qc") await assertCompactVerification(root, runId, manifest);
+      }
+    }
+    const expectedStage = qualityGateStage(gateId, manifest);
     for (const reference of references) {
       await resolveRunReference(root, runId, reference);
       if (expectedStage === undefined) continue;

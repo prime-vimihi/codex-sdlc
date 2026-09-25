@@ -52,6 +52,11 @@ export async function readEvidenceReference(input: EvidenceReferenceValidationIn
   if (task === undefined) {
     throw new Error(`evidence task ID does not exist in the active run: ${input.reference}`);
   }
+  const repair = input.manifest.repair_history?.findLast((entry) => entry.affected_task_ids.includes(task.id));
+  const archivedReference = input.manifest.repair_history?.some((entry) => entry.tasks.some((prior) => prior.id === task.id && prior.evidence.includes(input.reference)));
+  if (archivedReference || (repair !== undefined && Date.parse(evidence.started_at) < Date.parse(repair.at))) {
+    throw new Error(`evidence predates the current repair cycle for ${task.id}: ${input.reference}`);
+  }
   try {
     taskStageContract(task);
   } catch (error) {

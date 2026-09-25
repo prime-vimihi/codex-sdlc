@@ -155,7 +155,7 @@
     "repositoryPath": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^(?:\\.|(?![A-Za-z]:)(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)$"
+      "format": "portable-repository-path"
     },
     "repositoryId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
     "taskStatus": {

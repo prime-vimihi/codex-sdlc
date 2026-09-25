@@ -4,6 +4,8 @@ For the first-run walkthrough, read [Getting started](getting-started.md). Retur
 
 ## Build and test
 
+Version 1.0.0 is in development. Release-pinned 1.0.0 commands below apply after publication; use the local tarball procedure while testing this branch.
+
 Requirements: Node.js `>=24.16.0 <25` and npm 11.
 
 ```sh
@@ -15,10 +17,45 @@ npm pack
 Install the published CLI with:
 
 ```sh
-npm install --global codex-sdlc@0.6.0
+npm install --global codex-sdlc@1.0.0
 ```
 
 ## Project setup modes
+
+### Opt-in Compact runs
+
+Full remains the default. To start a new Compact run, provide a complete project-local JSON risk assessment as described in the [Compact guide](../skills/sdlc-pm/references/compact-workflow.md):
+
+```sh
+node .sdlc/runtime.cjs start --id CHANGE-001 --title "Requested change" \
+  --request .sdlc/requests/change.md --applications web \
+  --profile compact --assessment .sdlc/requests/change-assessment.json --json
+node .sdlc/runtime.cjs compact-spec CHANGE-001 --json < specification-input.json
+node .sdlc/runtime.cjs compact-qc CHANGE-001 --json < qc-input.json
+```
+
+`compact-spec` runs only while BA-001 is running, and `compact-qc` only while QC-001 is running. Both consume strict JSON semantic inputs, derive metadata/views, support `--dry-run` and `--expected-version`, and leave transitions/gates for the appropriate reviewer. The commands shown above occur at different workflow stages, not consecutively without the intervening implementation and reviews.
+
+An assessment is valid only with `--profile compact`. It must confirm bounded scope and existing patterns and explicitly exclude migrations, breaking APIs, authorization changes, new sensitive-data exposure, and unresolved cross-system risk. Unknown risk fails selection. A saved profile and reviewed specification binding are immutable; changed scope needs a new run. Existing runs and model presets are unchanged.
+
+Compact requires both integration and QC gates, with integration performed inside QC. Approved or handed-off verification cannot be rerun silently: reopen an uncompleted QC review and reset both gates before executing further checks, then regenerate the verification record. Product fixes use the existing repair cycle. See [benchmark methodology](workflow-benchmark.md) for reproducible framework-only measurements.
+
+### Runtime-assisted delivery (1.0.0)
+
+Run these from the initialized coordinator. The workflow, permitted paths, configured commands, actual model dispatch, and independent review remain authoritative.
+
+| Command | Input and effect |
+| --- | --- |
+| `preflight --applications backend,web --expect-root web=apps/platform --json` | Read-only local readiness inspection; supports `--root`, repeated `--expect-root`, `--require-file`, and `--command`. Does not test live services/data. |
+| `prepare-task RUN-001 WEB-001 --json` | JSON stdin: `{controls, commandIds}`. Generates the canonical assignment and task packet; does not activate. Supports `--dry-run` and `--expected-version`. |
+| `activate-task RUN-001 WEB-001 --reason "Reviewed assignment and real dispatch" --json` | JSON stdin: existing `{plan, agent_id, actual_model, actual_reasoning_effort, observation_source}`. Records host dispatch, then starts a ready task. Exact retry is idempotent. |
+| `check-task RUN-001 WEB-001 --json` | Runs assigned required commands in order and stops at failure. Optional repeated `--command` must be assigned. Other task roles need explicit command IDs. Does not approve a gate. |
+| `handoff-task RUN-001 WEB-001 --json` | JSON stdin: `{requirementOutcomes, changedFiles}`. Outcomes identify both `requirement_id` and `capability`. Generates metadata and requests review; never completes. Supports preview/version check. |
+| `repair-task RUN-001 WEB-001 --defect DEF-001 --actor pm --reason "Acceptance failure" --json` | Archives a completed or review-rejected implementation and invalidates dependent tasks. Supports `--dry-run`. New assignment/dispatch/evidence is required. |
+| `recover-repair RUN-001 --actor pm --json` | Completes or rolls back an interrupted repair only if journal, manifest, file bytes, and authority version still match. |
+| `timing RUN-001 --json` | Reports lifecycle state intervals and recorded collector execution, including archived repair cycles. |
+
+Use the [task-operation guide](../skills/sdlc-pm/references/task-operations.md) for complete JSON examples and boundaries. Lower-level lifecycle and publication commands remain available for existing/manual workflows and exceptional approval/scaffolding cases. Repaired runs retain their history and need a 1.0.0-capable runtime; unrepaired legacy runs remain supported. Existing model presets keep their original meaning.
 
 ### Project model modes
 
@@ -112,9 +149,9 @@ Use the `generic` application preset or `none` database preset when a listed pre
 Install the generated tarball, preview the bounded changes, and then initialize. During local testing, pin the generated repository launcher to the tarball:
 
 ```sh
-npm install --global ./codex-sdlc-0.6.0.tgz
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz --dry-run
-codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz
+npm install --global ./codex-sdlc-1.0.0.tgz
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-1.0.0.tgz --dry-run
+codex-sdlc init --root /path/to/project --name example --applications web --web-root . --web-preset nextjs --runtime-spec file:/absolute/path/codex-sdlc-1.0.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 ```
@@ -133,8 +170,8 @@ The installer preserves existing `AGENTS.md` and `.gitignore` content, refuses c
 Preview and apply an upgrade with the new runtime package pinned into the repository:
 
 ```sh
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz --dry-run
-codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-0.6.0.tgz
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-1.0.0.tgz --dry-run
+codex-sdlc upgrade --root /path/to/project --runtime-spec file:/absolute/path/codex-sdlc-1.0.0.tgz
 cd /path/to/project
 node .sdlc/runtime.cjs restore
 node .sdlc/runtime.cjs doctor

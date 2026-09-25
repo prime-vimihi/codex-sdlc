@@ -1,4 +1,5 @@
-import type { Task, TaskRole, TaskStage, TaskTarget } from "./types.js";
+import type { RunManifest, Task, TaskRole, TaskStage, TaskTarget } from "./types.js";
+import { isCompactRun } from "./workflow-profile.js";
 
 interface TaskStageContract {
   role: TaskRole;
@@ -44,6 +45,20 @@ export function qualityGateForTask(task: Task): string | undefined {
   return taskStageContract(task).qualityGate;
 }
 
-export function requiresCollectorEvidence(task: Task): boolean {
-  return taskStageContract(task).collectorEvidence;
+export function qualityGatesForTask(task: Task, manifest?: RunManifest): string[] {
+  if (manifest !== undefined && isCompactRun(manifest) && task.id === "QC-001") return ["integration", "qc"];
+  const gate = qualityGateForTask(task);
+  return gate === undefined ? [] : [gate];
+}
+
+export function qualityGateStage(gateId: string, manifest?: RunManifest): TaskStage | undefined {
+  if (manifest !== undefined && isCompactRun(manifest)) {
+    if (gateId === "requirements") return undefined;
+    if (gateId === "integration") return "qc";
+  }
+  return qualityGateTaskStages[gateId as keyof typeof qualityGateTaskStages];
+}
+
+export function requiresCollectorEvidence(task: Task, manifest?: RunManifest): boolean {
+  return taskStageContract(task).collectorEvidence || (manifest !== undefined && isCompactRun(manifest) && task.id === "QC-001");
 }

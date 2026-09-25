@@ -7,6 +7,7 @@ import { parseDocument, stringify } from "yaml";
 import { agentPolicyDiagnostics, assertTaskAgentDispatch, type AgentPolicy } from "./agents.js";
 import { assertProductOwnerAdvisory } from "./product-owner.js";
 import { assertAcyclic } from "./graph.js";
+import { repairHistoryDiagnostics } from "./repair-validation.js";
 import { loadProject, loadWorkflow } from "./config.js";
 import { FRAMEWORK_VERSION } from "./constants.js";
 import { resolvePathInsideRoot, SdlcPathError } from "./paths.js";
@@ -21,10 +22,15 @@ import {
 } from "./run-authority-lock.js";
 import type { RunManifest, Task, TaskRole, TaskStage, TaskStatus, TaskTarget, WorkflowConfig } from "./types.js";
 import { resolveWorkspace } from "./workspace.js";
+import { assertCompactReview, readCompactVerification } from "./compact-artifacts.js";
+import { assertWorkflowProfile, compactOutputs, isCompactRun, resolveWorkflowProfile, type CompactAssessment } from "./workflow-profile.js";
+import { qualityGatesForTask } from "./quality-gates.js";
 
 const runIdPattern = /^[A-Z][A-Z0-9]*-[0-9]+$/;
 
 export interface StartRunInput {
+  profile?: "full" | "compact";
+  assessment?: CompactAssessment;
   id: string;
   title: string;
   requestFile: string;
@@ -51,6 +57,7 @@ export interface StartRunOptions {
 }
 
 export async function startRun(root: string, input: StartRunInput, options: StartRunOptions = {}): Promise<string> {
+  resolveWorkflowProfile(input.profile, input.assessment);
   if (!runIdPattern.test(input.id)) {
     throw new Error(`invalid run ID: ${input.id}`);
   }
@@ -81,7 +88,7 @@ export async function startRun(root: string, input: StartRunInput, options: Star
     const manifestPath = join(temporaryDirectory, "manifest.yaml");
     const requestDestination = join(temporaryDirectory, "request.md");
     const template = await readFile(templatePath, "utf8");
-    const manifest = renderManifest(template, input, await loadWorkflow(root), project.agents);
+    const manifest = renderManifest(template, input, input.profile === "compact" ? undefined : await loadWorkflow(root), project.agents);
     const validation = await validateManifest(manifest, root, input.id);
     if (!validation.valid) {
       throw new Error(`rendered run manifest is invalid:\n${validation.diagnostics.join("\n")}`);
@@ -204,7 +211,7 @@ export async function validateRunSnapshotUnderLock(
   return { valid: diagnostics.length === 0, diagnostics };
 }
 
-function renderManifest(template: string, input: StartRunInput, workflow: WorkflowConfig, agents?: AgentPolicy): RunManifest {
+function renderManifest(template: string, input: StartRunInput, workflow: WorkflowConfig | undefined, agents?: AgentPolicy): RunManifest {
   const tasks = createTasks(input, workflow, agents);
   const replacements: Record<string, string> = {
     run_id: input.id,
@@ -218,7 +225,7 @@ function renderManifest(template: string, input: StartRunInput, workflow: Workfl
     affected_database: String(input.affectedApplications.database),
     affected_shared_packages: String(input.affectedApplications.sharedPackages),
     tasks_yaml: indent(stringify(tasks).trimEnd(), 2),
-    api_contract_quality_gate_status: input.affectedApplications.backend ? "pending" : "not_applicable",
+    api_contract_quality_gate_status: input.profile !== "compact" && input.affectedApplications.backend ? "pending" : "not_applicable",
     backend_quality_gate_status: input.affectedApplications.backend ? "pending" : "not_applicable",
     web_quality_gate_status: input.affectedApplications.web ? "pending" : "not_applicable",
     mobile_quality_gate_status: input.affectedApplications.mobile ? "pending" : "not_applicable",
@@ -230,10 +237,14 @@ function renderManifest(template: string, input: StartRunInput, workflow: Workfl
   }
   const manifest = parseManifest(rendered);
   if (agents !== undefined) manifest.agent_policy = structuredClone(agents);
+  const profile = resolveWorkflowProfile(input.profile, input.assessment);
+  if (profile !== undefined) manifest.workflow_profile = profile;
   return manifest;
 }
 
-function createTasks(input: StartRunInput, workflow: WorkflowConfig, agents?: AgentPolicy): Task[] {
+function createTasks(input: StartRunInput, workflow: WorkflowConfig | undefined, agents?: AgentPolicy): Task[] {
+  if (input.profile === "compact") return createCompactTasks(input, agents);
+  if (workflow === undefined) throw new Error("Full workflow configuration is required");
   const outputsByStage = new Map(workflow.stages.map((stage) => [stage.id, stage.required_outputs]));
   const tasks: Task[] = [
     createTask("PM-001", "Intake and discovery", "intake", "pm", null, [], outputsByStage, input.now, "ready"),
@@ -279,6 +290,32 @@ function createTasks(input: StartRunInput, workflow: WorkflowConfig, agents?: Ag
     }
     if (task.role === "backend" || task.role === "frontend") {
       task.required_inputs.push(`tasks/${task.id}.assignment.yaml`);
+    }
+  }
+  return tasks;
+}
+
+function createCompactTasks(input: StartRunInput, agents?: AgentPolicy): Task[] {
+  const outputs = new Map(Object.entries(compactOutputs).map(([stage, paths]) => [stage as TaskStage, [...paths]]));
+  const tasks = [
+    createTask("PM-001", "Compact intake", "intake", "pm", null, [], outputs, input.now, "ready"),
+    createTask("BA-001", "Compact specification and review", "requirements", "ba", null, ["PM-001"], outputs, input.now),
+  ];
+  const implementationIds: string[] = [];
+  for (const [application, id, stage, role] of [["backend", "BE-002", "backend_implementation", "backend"], ["web", "WEB-001", "web_implementation", "frontend"], ["mobile", "MOB-001", "mobile_implementation", "frontend"]] as const) {
+    if (!input.affectedApplications[application]) continue;
+    tasks.push(createTask(id, `${application} implementation`, stage, role, application, ["BA-001"], outputs, input.now));
+    implementationIds.push(id);
+  }
+  tasks.push(createTask("QC-001", "Independent integration and verification", "qc", "qc", "qc", implementationIds, outputs, input.now));
+  if (agents?.product_owner_review === "advisory") tasks.push(createTask("PO-001", "AI Product Owner advisory review", "product_owner_advisory", "po", null, ["QC-001"], outputs, input.now));
+  tasks.push(createTask("PM-004", "Product Owner delivery package", "product_owner_review", "pm", null, [agents?.product_owner_review === "advisory" ? "PO-001" : "QC-001"], outputs, input.now));
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  for (const task of tasks) {
+    task.required_inputs = [...new Set(task.dependencies.flatMap((id) => byId.get(id)?.required_outputs ?? []))];
+    if (task.role === "backend" || task.role === "frontend") task.required_inputs.push("facts.yaml", `tasks/${task.id}.assignment.yaml`);
+    if (task.id === "QC-001" || task.id === "PO-001" || task.id === "PM-004") {
+      task.required_inputs = [...new Set([...task.required_inputs, "request.md", "facts.yaml", ...byId.get("BA-001")!.required_outputs, ...byId.get("QC-001")!.required_outputs.filter(() => task.id !== "QC-001")])];
     }
   }
   return tasks;
@@ -331,7 +368,11 @@ async function validateManifest(manifest: unknown, root: string, runId: string):
     return { valid: false, diagnostics: [...diagnostics, ...(await manifestPathDiagnostics(manifest, root, runId))] };
   }
   if (manifest.agent_policy !== undefined) diagnostics.push(...agentPolicyDiagnostics(manifest.agent_policy));
+  if (manifest.workflow_profile !== undefined) {
+    try { assertWorkflowProfile(manifest.workflow_profile); } catch (error) { diagnostics.push(errorMessage(error)); }
+  } else if (manifest.compact_review !== undefined) diagnostics.push("Full runs cannot contain Compact review bindings");
   const tasks = manifest.tasks;
+  if (diagnostics.length === 0) diagnostics.push(...await repairHistoryDiagnostics(root, runId, manifest as unknown as RunManifest));
   if (diagnostics.length === 0) {
     for (const task of tasks) {
       if (["running", "awaiting_review", "awaiting_approval", "completed"].includes(task.status)) {
@@ -361,9 +402,48 @@ async function validateManifest(manifest: unknown, root: string, runId: string):
     diagnostics.push(errorMessage(error));
   }
   diagnostics.push(...dependencyStateDiagnostics(tasks));
-  diagnostics.push(...canonicalGraphDiagnostics(manifest, tasks, await loadWorkflow(root)));
+  diagnostics.push(...canonicalGraphDiagnostics(manifest, tasks, isCompactRun(manifest as unknown as RunManifest) ? undefined : await loadWorkflow(root)));
   diagnostics.push(...(await manifestPathDiagnostics(manifest, root, runId)));
+  if (diagnostics.length === 0 && isCompactRun(manifest as unknown as RunManifest)) diagnostics.push(...await compactStateDiagnostics(root, runId, manifest as unknown as RunManifest));
   return { valid: diagnostics.length === 0, diagnostics };
+}
+
+async function compactStateDiagnostics(root: string, runId: string, manifest: RunManifest): Promise<string[]> {
+  const diagnostics: string[] = [];
+  if (manifest.quality_gates.api_contract?.status !== "not_applicable") diagnostics.push("Compact api_contract gate must be not_applicable; the reviewed specification owns the combined contract");
+  for (const gate of ["requirements", "integration", "qc"]) if (manifest.quality_gates[gate]?.status === "not_applicable") diagnostics.push(`Compact ${gate} gate is required`);
+  for (const task of manifest.tasks) {
+    if (task.transitions.some((entry) => entry.to === "completed" && entry.actor !== "pm")
+      || (task.status === "completed" && !task.transitions.some((entry) => entry.to === "completed" && entry.actor === "pm"))) diagnostics.push(`Compact task ${task.id} requires completion reviewed by pm`);
+    if (task.status === "completed") for (const gate of qualityGatesForTask(task, manifest)) if (manifest.quality_gates[gate]?.status !== "passed") diagnostics.push(`Compact completed task ${task.id} requires passed ${gate} gate`);
+  }
+  const downstreamActive = manifest.tasks.some((task) => !["PM-001", "BA-001"].includes(task.id) && task.status !== "pending" && task.status !== "cancelled");
+  if (downstreamActive && manifest.quality_gates.requirements?.status !== "passed") diagnostics.push("Compact implementation and verification require a passed requirements review");
+  const requirementsGate = manifest.quality_gates.requirements;
+  if (requirementsGate?.status === "passed") {
+    const review = requirementsGate.history?.at(-1);
+    if (review?.status !== "passed" || review.actor !== "pm" || !sameStrings(review.evidence, requirementsGate.evidence)
+      || !requirementsGate.evidence.includes("artifacts/ba/specification.yaml")) diagnostics.push("Compact requirements gate requires the recorded PM specification review");
+  }
+  const reviewed = manifest.compact_review !== undefined || manifest.quality_gates.requirements?.status === "passed"
+    || manifest.tasks.find((task) => task.id === "BA-001")?.status === "completed" || downstreamActive;
+  if (reviewed) {
+    try { await assertCompactReview(root, runId, manifest); } catch (error) { diagnostics.push(errorMessage(error)); }
+  }
+  const qc = manifest.tasks.find((task) => task.id === "QC-001");
+  if (qc !== undefined && (["awaiting_review", "completed"].includes(qc.status) || manifest.quality_gates.integration?.status === "passed" || manifest.quality_gates.qc?.status === "passed")) {
+    try {
+      const verification = await readCompactVerification(root, runId, manifest);
+      if (verification.recommendation !== "ready") throw new Error("Compact QC handoff requires complete passed acceptance coverage and no open defects");
+      const currentCollectorReferences = new Set(verification.collector_evidence.filter((entry) => entry.status === "passed").map((entry) => entry.reference));
+      for (const gateId of ["integration", "qc"]) {
+        const gate = manifest.quality_gates[gateId];
+        if (gate?.status === "passed" && (gate.evidence.length === 0 || gate.evidence.some((reference) => !currentCollectorReferences.has(reference)))) diagnostics.push(`Compact ${gateId} gate requires current independent QC collector evidence`);
+      }
+    } catch (error) { diagnostics.push(errorMessage(error)); }
+  }
+  if (qc?.status === "completed" && (manifest.quality_gates.integration?.status !== "passed" || manifest.quality_gates.qc?.status !== "passed")) diagnostics.push("Compact QC completion requires passed integration and qc gates");
+  return diagnostics;
 }
 
 async function manifestPathDiagnostics(manifest: Record<string, unknown>, root: string, runId: string): Promise<string[]> {
@@ -421,7 +501,7 @@ function dependencyStateDiagnostics(tasks: Task[]): string[] {
   });
 }
 
-function canonicalGraphDiagnostics(manifest: Record<string, unknown>, tasks: Task[], workflow: WorkflowConfig): string[] {
+function canonicalGraphDiagnostics(manifest: Record<string, unknown>, tasks: Task[], workflow: WorkflowConfig | undefined): string[] {
   const affected = affectedApplicationsFromManifest(manifest);
   if (affected === undefined) {
     return [];
@@ -435,6 +515,7 @@ function canonicalGraphDiagnostics(manifest: Record<string, unknown>, tasks: Tas
     requestFile: "request.md",
     affectedApplications: affected,
     now: "1970-01-01T00:00:00.000Z",
+    ...(isRecord(manifest.workflow_profile) && manifest.workflow_profile.name === "compact" ? { profile: "compact" as const } : {}),
   }, workflow, manifest.agent_policy as AgentPolicy | undefined);
   const expectedById = new Map(expectedTasks.map((task) => [task.id, task]));
   const actualById = new Map(tasks.map((task) => [task.id, task]));
@@ -581,7 +662,7 @@ async function writeManifest(path: string, manifest: RunManifest): Promise<void>
   await writeFile(path, source, { encoding: "utf8", flag: "wx" });
 }
 
-function parseManifest(source: string): RunManifest {
+export function parseManifest(source: string): RunManifest {
   const document = parseDocument(source);
   if (document.errors.length > 0) {
     throw new Error(document.errors.map((error) => error.message).join("\n"));

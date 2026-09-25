@@ -1,5 +1,7 @@
 # Role model dispatch
 
+Model routing is independent of workflow profile. Compact uses the same saved role policy and actual host dispatch records; it does not imply cheaper models or lower reasoning effort.
+
 Read this when `manifest.agent_policy` exists. It is the run's frozen policy; project settings apply only to new runs. Roles without settings retain host inheritance. Configuring `frontend` covers both web and mobile. A `po` role or advisory review setting adds `PO-001` between QC and the PM delivery package.
 
 ## Host preflight
@@ -22,6 +24,8 @@ Use the current host's advertised agent tool schema or model listing. Do not inf
 This is a shape example. Populate it from the actual host. Describe omitted-effort behavior as `model-default`, `inherit-parent`, or `unknown`; supply the actual parent effort only if exposed. A model entry may include its host-advertised `default_reasoning_effort`. Do not infer the current effort from a model name. Set a capability to false when unavailable. An unavailable model/effort blocks routing unless a configured fallback matches. Tell the user when a fallback is selected. A later host rejection may still indicate account or capacity restrictions; report it and stop that dispatch. Do not change a project's preferences or invent availability to get past the error.
 
 ## Launch and record
+
+On runtime 1.0.0, prepare eligible tasks through [runtime-assisted delivery](task-operations.md), then use `activate-task` with the real dispatch JSON to combine steps 4 and 5 below. This works for configured and inherited roles. The child still waits until the helper succeeds, and host launch/model observations remain unchanged. Use the lower-level sequence for existing manual/exceptional flows and older runtimes.
 
 1. Check the task is ready, dependencies are complete, and required inputs exist. Prepare any typed backend/frontend assignment through the existing publisher. Obtain the agent plan after those inputs are ready.
 2. Delegate this bounded task with the returned `selected.model` and optional `selected.reasoning_effort` as actual tool parameters. If `selected` is null, omit model/effort parameters. Pass the plan’s selected effort when present, including an explicitly resolved host default. When absent, omission follows the host’s declared default/inheritance behavior; the planner checks inherited effort compatibility. Unknown behavior requires a configured effort or an advertised model default. With `collaboration.spawn_agent`, pass `fork_turns: "none"` and a self-contained assignment. Never combine overrides with a full-history fork. Do not select a named custom agent whose TOML overrides the intended model or effort.

@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": ["id", "title", "stage", "role", "target", "status", "dependencies", "required_inputs", "required_outputs", "outputs", "evidence", "transitions", "started_at", "completed_at", "commit", "blocker_reason", "failure_reason"],
   "properties": {
+    "activation_offset": { "type": "integer", "minimum": 0 },
     "agent_dispatches": { "type": "array", "items": { "$ref": "agent-dispatch.schema.json" } },
     "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*-[0-9]+$" },
     "title": { "type": "string", "minLength": 1 },

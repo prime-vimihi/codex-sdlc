@@ -5,7 +5,9 @@ import { loadProject } from "./config.js";
 import { assertEvidenceReference } from "./evidence-validation.js";
 import { resolvePathInsideRoot, SdlcPathError } from "./paths.js";
 import { assertAcyclic, findReadyTaskIds } from "./graph.js";
-import { qualityGateForTask, requiresCollectorEvidence } from "./quality-gates.js";
+import { qualityGatesForTask, requiresCollectorEvidence } from "./quality-gates.js";
+import { assertCompactReview, assertCompactVerification } from "./compact-artifacts.js";
+import { isCompactRun } from "./workflow-profile.js";
 import type { QualityGate, RunManifest, SdlcDecision, Task, TaskStatus } from "./types.js";
 
 const allowedTransitions: Readonly<Record<TaskStatus, readonly TaskStatus[]>> = {
@@ -75,6 +77,10 @@ export async function prepareTransitionContext(
 ): Promise<TransitionContext> {
   const task = manifest.tasks.find((candidate) => candidate.id === request.taskId);
   if (task === undefined) throw new SdlcTransitionError(`Task ${request.taskId} does not exist`);
+  if (isCompactRun(manifest)) {
+    if (!["PM-001", "BA-001"].includes(task.id) && ["running", "awaiting_review", "completed"].includes(request.to)) await assertCompactReview(root, runId, manifest);
+    if (task.id === "QC-001" && ["awaiting_review", "completed"].includes(request.to)) await assertCompactVerification(root, runId, manifest);
+  }
   assertPreparationOptions(task.status, request.to, options);
   if (task.role === "po" && ["awaiting_review", "completed"].includes(request.to)) await assertProductOwnerAdvisory(root, runId, manifest);
 
@@ -272,6 +278,7 @@ function assertTransitionConditions(
   manifest: RunManifest,
   context: TransitionContext,
 ): void {
+  if (isCompactRun(manifest) && request.to === "completed" && request.actor !== "pm") throw new SdlcTransitionError("Compact task completion requires review by pm");
   if (task.status === "ready" && request.to === "running") {
     const missing = task.required_inputs.filter((path) => !context.existingInputPaths.includes(path));
     if (missing.length > 0) throw new SdlcTransitionError(`Task ${task.id} is missing required inputs: ${missing.join(", ")}`);
@@ -299,7 +306,7 @@ function assertTransitionConditions(
     }
   }
 
-  if ((request.to === "awaiting_review" || request.to === "completed") && requiresCollectorEvidence(task)) {
+  if ((request.to === "awaiting_review" || request.to === "completed") && requiresCollectorEvidence(task, manifest)) {
     if (context.passedEvidencePaths.length === 0) {
       throw new SdlcTransitionError(`Task ${task.id} requires collector command evidence before ${request.to}`);
     }
@@ -313,8 +320,7 @@ function assertTransitionConditions(
   }
 
   if (request.to === "completed") {
-    const qualityGate = qualityGateForTask(task);
-    if (qualityGate !== undefined && context.qualityGateStatuses[qualityGate] !== "passed") {
+    for (const qualityGate of qualityGatesForTask(task, manifest)) if (context.qualityGateStatuses[qualityGate] !== "passed") {
       throw new SdlcTransitionError(`Task ${task.id} requires passed ${qualityGate} quality gate`);
     }
   }

@@ -1,4 +1,5 @@
 import type { AgentPolicy, AgentDispatch } from "./agents.js";
+import type { WorkflowProfile } from "./workflow-profile.js";
 
 export type ApplicationLifecycle = "planned" | "scaffolded" | "active";
 
@@ -176,6 +177,8 @@ export interface TaskTransition {
 }
 
 export interface Task {
+  /** Ready activations retained in archived repair cycles; prevents stale dispatch reuse. */
+  activation_offset?: number;
   agent_dispatches?: AgentDispatch[];
   id: string;
   title: string;
@@ -280,7 +283,31 @@ export interface SdlcBlocker {
   status: "open" | "resolved";
 }
 
+export interface RepairRecord {
+  id: string;
+  task_id: string;
+  defect_id: string;
+  reason: string;
+  actor: "pm";
+  at: string;
+  affected_task_ids: string[];
+  tasks: Task[];
+  quality_gates: Record<string, QualityGate>;
+  archives: Array<{ path: string; archive_path: string; sha256: string }>;
+}
+
+export interface CompactReview {
+  specification_revision: number;
+  specification_sha256: string;
+  facts_sha256: string;
+  semantic_claims_sha256: string;
+  acceptance_criteria_sha256: string;
+}
+
 export interface RunManifest {
+  workflow_profile?: WorkflowProfile;
+  compact_review?: CompactReview;
+  repair_history?: RepairRecord[];
   agent_policy?: AgentPolicy;
   schema_version: 1;
   run: {

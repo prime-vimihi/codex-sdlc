@@ -5,6 +5,10 @@ description: Use when an integrated feature needs independent acceptance, API, w
 
 # SDLC Quality Assurance
 
+For a saved Compact run, follow [Compact independent verification](../sdlc-pm/references/compact-workflow.md): integrate and independently check the result, then publish one `compact-qc` record and generated summary instead of the six Full-mode documents below. Both integration and QC gates still require complete current evidence. Failed, blocked, and untested criteria never become passes merely because the workflow is Compact.
+
+Identify required live services and test data during intake planning so environment gaps are visible before implementation. Keep mock, service-level, and live-database evidence distinct. For a defect after implementation completion, ask PM to open a runtime 1.0.0 `repair-task` cycle; use the fresh repaired result for independent retest. Do not reopen completed tasks by editing manifests. Use `timing` for recorded durations without treating state time as pure model execution.
+
 For a multi-repository workspace, resolve each application, command, and changed-file entry through its declared repository ID in `.sdlc/project.yaml` and `.sdlc/local.yaml`. Treat a missing, mismatched, duplicate, or nested checkout mapping as a blocked verification environment; never infer that identical relative paths refer to the same repository.
 
 Independently verify approved requirements. Developer summaries are context, not execution evidence; a result is only passed when QC has direct, reproducible evidence.
