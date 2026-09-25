@@ -256,7 +256,7 @@ function assertObservedSelection(record: AgentDispatch): void {
   }
 }
 
-function activation(task: Task): number { return task.transitions.filter((entry) => entry.to === "ready").length; }
+function activation(task: Task): number { return (task.activation_offset ?? 0) + task.transitions.filter((entry) => entry.to === "ready").length; }
 function primarySelection(settings: RoleModel): ModelSelection {
   return { model: settings.model, ...(settings.reasoning_effort === undefined ? {} : { reasoning_effort: settings.reasoning_effort }) };
 }

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 
-import { portablePathContains, portableRepositoryPathKey } from "./paths.js";
+import { portablePathContains } from "./paths.js";
 
 import {
   parseStrictYamlDocument,
@@ -209,7 +209,7 @@ function reconcileWrites(
     if (!assignment.allowed_write_roots.some((root) => containsPath(root, write.path))) {
       diagnostics.push(`write path ${write.path} is outside allowed roots`);
     }
-    if (!isSelectedTargetPath(assignment, write.path)) {
+    if (!isSelectedTargetPath(assignment, authority, write.path)) {
       diagnostics.push(`write path ${write.path} is not owned by target ${assignment.target}`);
     }
   }
@@ -302,11 +302,11 @@ function reconcileRequirementResults(
   expected: NormativeDeliveryState,
   diagnostics: string[],
 ): void {
-  compareKeyed(requirements, results, "requirement_id", "observations.requirement_results", diagnostics);
+  compareKeyed(requirements, results, "capability", "observations.requirement_results", diagnostics);
   for (const requirement of requirements) {
-    const result = results.find((candidate) => candidate.requirement_id === requirement.requirement_id);
+    const result = results.find((candidate) => candidate.capability === requirement.capability);
     if (result === undefined) continue;
-    compareScalar(result.capability, requirement.capability, `observations.requirement_results.${requirement.requirement_id}.capability`, diagnostics);
+    compareScalar(result.requirement_id, requirement.requirement_id, `observations.requirement_results.${requirement.capability}.requirement_id`, diagnostics);
     compareScalar(result.required, requirement.required, `observations.requirement_results.${requirement.requirement_id}.required`, diagnostics);
     if (requirement.required && result.status === "not_applicable") diagnostics.push(`required result ${requirement.requirement_id} cannot be not_applicable`);
     const legalStatuses: DeliveryResultStatus[] = expected.barrier !== "eligible"
@@ -412,9 +412,9 @@ function requiredResultsSatisfied(assignment: DeliveryAssignment, report: Delive
   const requirements = assignment.role === "backend" ? assignment.controls.api_requirements : assignment.controls.requirements;
   const results = report.role === "backend" ? report.observations.requirement_results : report.observations.requirement_results;
   return requirements.filter((requirement) => requirement.required).every((requirement) => {
-    const result = results.find((candidate) => candidate.requirement_id === requirement.requirement_id);
+    const result = results.find((candidate) => candidate.capability === requirement.capability);
     const allowed = assignment.stage === "api_contract" ? ["documented", "implemented"] : ["implemented"];
-    return result !== undefined && allowed.includes(result.status);
+    return result !== undefined && result.requirement_id === requirement.requirement_id && allowed.includes(result.status);
   });
 }
 
@@ -455,22 +455,11 @@ function containsPath(root: string, path: string): boolean {
   }
 }
 
-function isSelectedTargetPath(assignment: DeliveryAssignment, path: string): boolean {
-  const targetFolder = assignment.target === "backend" ? "backend" : assignment.target;
-  let pathKey: string;
-  try { pathKey = portableRepositoryPathKey(path); } catch { return false; }
-  if (pathKey === "apps" || pathKey.startsWith("apps/")) {
-    return assignment.allowed_write_roots.some((root) => {
-      let rootKey: string;
-      try { rootKey = portableRepositoryPathKey(root); } catch { return false; }
-      const segments = rootKey.split("/");
-      const application = segments[0] === "apps" ? segments[1] : undefined;
-      const ownsTarget = application === targetFolder || application?.endsWith(`-${targetFolder}`) === true;
-      return ownsTarget && containsPath(root, path);
-    });
-  }
+/** Permission roots come from the project-backed authority resolver, not folder names. */
+function isSelectedTargetPath(assignment: DeliveryAssignment, authority: DeliveryAuthoritySnapshot, path: string): boolean {
+  if (!authority.workflow.permission_roots.some((root) => containsPath(root, path))) return false;
   const artifactRoot = `.sdlc/runs/${assignment.run_id}/artifacts`;
-  if (containsPath(artifactRoot, path)) return containsPath(`${artifactRoot}/${targetFolder}`, path);
+  if (containsPath(artifactRoot, path)) return containsPath(`${artifactRoot}/${authority.task.target}`, path);
   return true;
 }
 

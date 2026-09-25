@@ -5,6 +5,8 @@ description: Use when an active SDLC run needs feature requirements, typed fact-
 
 # SDLC Business Analysis
 
+Keep business requirements tied to real user outcomes. Runtime 1.0.0 allows several distinct technical capabilities to reference the same `REQ-*`; do not split or renumber requirements merely to satisfy the five backend capability slots. Fact/claim reconciliation and acceptance traceability remain required.
+
 Create reviewable requirements from the run's typed facts; Product Owner and PM approval remain separate decisions.
 
 1. Read the active run manifest, assigned BA task, immutable request, PM intake artifacts including `facts.yaml`, `.sdlc/project.yaml`, applicable `AGENTS.md`, policies, workflow, and templates. If project documentation is configured in another repository, resolve `resources.documentation` through `.sdlc/local.yaml`; cite it as source material while keeping authoritative BA run artifacts in the coordinator repository.

@@ -56,6 +56,8 @@ Eight Codex skills and a repository-local CLI keep tasks, evidence, blockers, an
 
 ## Get started
 
+**1.0.0 development:** This branch adds runtime-assisted delivery. Until 1.0.0 is published, test its local package using the [contributor guide](docs/cli-reference.md#try-the-local-package-in-an-unrelated-repository). The public 0.6.0 package does not contain these new operations.
+
 You need **Codex**, **Node.js `>=24.16.0 <25`**, **npm 11**, and an existing application repository. Setup configures your application directories; it does not scaffold application code.
 
 ### 1. Install the plugin
@@ -111,6 +113,18 @@ For a global CLI installation, use `npm install --global codex-sdlc@0.6.0`.
 </details>
 
 ## Your repositories. Your stack.
+
+### Less delivery bookkeeping in 1.0.0
+
+The runtime can now prepare task assignments, record agent activation, collect declared checks, and generate handoff reports from real files and execution evidence. PM still reviews the result, and QC still verifies acceptance independently.
+
+- `preflight` detects local application/root, fixture-file, and command problems before implementation. Live services and populated data remain explicit checks.
+- `prepare-task`, `activate-task`, `check-task`, and `handoff-task` replace manual IDs, hashes, inventories, and report metadata for eligible backend/frontend work.
+- `repair-task` preserves earlier cycles and invalidates affected verification after a QC defect or rejected implementation review. `recover-repair` handles an interrupted file transaction.
+- `timing` reports recorded lifecycle intervals and collector durations, with overlapping work and unknown model time clearly distinguished.
+- Configured roots such as `apps/api` and Next.js route groups/dynamic segments work consistently. Several technical capabilities can reference one business requirement.
+
+See [runtime-assisted delivery](skills/sdlc-pm/references/task-operations.md) and [1.0.0 release notes](docs/releases/1.0.0.md). This release keeps the existing full workflow; compact profiles, parallel scheduling, evidence caching, and model-default changes are deferred. Automatic handoff verifies the caller-declared task-owned subset of actual uncommitted Git changes; it does not independently infer ownership of omitted files or support deleted product paths.
 
 Start with a web-only, mobile-only, backend-only, or combined project. Use multi-repository mode when the applications live in separate Git checkouts.
 

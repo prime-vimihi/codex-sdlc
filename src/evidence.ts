@@ -6,7 +6,7 @@ import { canonicalizeCommandDeclaration, type CanonicalCommandProvenance } from 
 import { assertNetworkPolicyAttested, executeCommand } from "./commands.js";
 import { loadProject } from "./config.js";
 import { createEvidenceId, evidencePathsForId } from "./evidence-identifiers.js";
-import { mutateRunManifest } from "./manifest-transaction.js";
+import { assertNoPendingRepair, mutateRunManifest } from "./manifest-transaction.js";
 import { SdlcPathError, resolvePathInsideRoot } from "./paths.js";
 import { SdlcPolicyError } from "./policy.js";
 import { configuredSecretValues, redactText } from "./redaction.js";
@@ -21,6 +21,7 @@ export async function executeConfiguredCommand(
   commandId: string,
   timing: string | { clock?: () => string } = {},
 ): Promise<EvidenceRecord> {
+  await assertNoPendingRepair(root, runId);
   const project = await loadProject(root);
   const secrets = configuredSecretValues(project.security.secret_environment_variables);
   try {

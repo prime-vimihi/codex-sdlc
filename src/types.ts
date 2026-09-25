@@ -176,6 +176,8 @@ export interface TaskTransition {
 }
 
 export interface Task {
+  /** Ready activations retained in archived repair cycles; prevents stale dispatch reuse. */
+  activation_offset?: number;
   agent_dispatches?: AgentDispatch[];
   id: string;
   title: string;
@@ -280,7 +282,21 @@ export interface SdlcBlocker {
   status: "open" | "resolved";
 }
 
+export interface RepairRecord {
+  id: string;
+  task_id: string;
+  defect_id: string;
+  reason: string;
+  actor: "pm";
+  at: string;
+  affected_task_ids: string[];
+  tasks: Task[];
+  quality_gates: Record<string, QualityGate>;
+  archives: Array<{ path: string; archive_path: string; sha256: string }>;
+}
+
 export interface RunManifest {
+  repair_history?: RepairRecord[];
   agent_policy?: AgentPolicy;
   schema_version: 1;
   run: {

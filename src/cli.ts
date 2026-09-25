@@ -20,6 +20,12 @@ import { parseStrictYamlDocument } from "./semantic-contracts.js";
 import { prepareTransitionContext, SdlcTransitionError, SdlcTransitionUsageError, transitionTask } from "./transitions.js";
 import { SdlcValidationError, type TaskStatus } from "./types.js";
 import { resolveWorkspace } from "./workspace.js";
+import { preflightProject } from "./preflight.js";
+import { getRunTiming } from "./run-timing.js";
+import { prepareTask, handoffTask, type PrepareTaskInput, type HandoffTaskInput } from "./task-operations.js";
+import { activateTask } from "./task-activation.js";
+import { collectTaskChecks } from "./task-checks.js";
+import { repairTask, recoverRepair } from "./repairs.js";
 
 const exitCodes = {
   success: 0,
@@ -281,6 +287,91 @@ export async function main(rawArguments = process.argv.slice(2)): Promise<number
       const result = await inspectProject(options.root ?? ".");
       const diagnostics = result.diagnostics.map((message) => ({ code: "DIAGNOSTIC", message }));
       emit("doctor", result, result.ready ? "installation is ready" : "installation needs attention", diagnostics, result.ready ? exitCodes.success : exitCodes.failure);
+    });
+
+  program.command("preflight")
+    .description("inspect local readiness without starting services or executing application checks")
+    .option("--root <path>", "coordinator root", ".")
+    .option("--applications <csv>", "affected backend, web, or mobile applications")
+    .option("--expect-root <role=path>", "verify the intended application root; repeatable", collectOption, [])
+    .option("--require-file <path>", "required local fixture or file, optionally repository:path", collectOption, [])
+    .option("--command <id>", "inspect a configured command without executing it", collectOption, [])
+    .action(async (options: { root: string; applications?: string; expectRoot: string[]; requireFile: string[]; command: string[] }) => {
+      executed = true; activeCommand = "preflight";
+      if (options.expectRoot.some((entry) => !/^(backend|web|mobile)=.+$/.test(entry))) throw new CliFailure(exitCodes.usage, { code: "USAGE", message: "--expect-root requires backend=path, web=path, or mobile=path" });
+      const result = await preflightProject(options.root, {
+        applications: options.applications === undefined ? undefined : parseConfiguredApplications(options.applications),
+        expectedRoots: parseRepositoryMappings(options.expectRoot), requiredFiles: options.requireFile,
+        commands: options.command.length ? options.command : undefined,
+      });
+      emit("preflight", result, result.ready ? "local preflight ready; live services and acceptance data remain unchecked" : "local preflight blocked", result.diagnostics.map((message) => ({ code: "PREFLIGHT", message })), result.ready ? exitCodes.success : exitCodes.failure);
+    });
+
+  program.command("prepare-task <run-id> <task-id>")
+    .description("derive and publish an assignment from semantic controls supplied as JSON on stdin")
+    .option("--dry-run", "derive the task packet without writing")
+    .option("--expected-version <version>", "require the observed run authority version")
+    .action(async (runId: string, taskId: string, options: { dryRun?: boolean; expectedVersion?: string }) => {
+      executed = true; activeCommand = "prepare-task";
+      const result = await prepareTask(root, runId, taskId, await readJsonInput() as PrepareTaskInput, { dryRun: options.dryRun, expectedVersion: options.expectedVersion === undefined ? undefined : parseAuthorityVersion(options.expectedVersion), now });
+      emit("prepare-task", result, `${result.dryRun ? "previewed" : "prepared"} ${taskId}; actual agent dispatch and activation remain separate`);
+    });
+
+  program.command("activate-task <run-id> <task-id>")
+    .description("record a successful host dispatch from JSON stdin, then start the ready task")
+    .requiredOption("--reason <reason>")
+    .action(async (runId: string, taskId: string, options: { reason: string }) => {
+      executed = true; activeCommand = "activate-task";
+      const result = await activateTask(root, runId, taskId, await readJsonInput() as AgentDispatchInput, options.reason, now);
+      emit("activate-task", result, `${taskId} is running; host adapter may now activate the recorded agent`);
+    });
+
+  program.command("check-task <run-id> <task-id>")
+    .description("collect assigned command evidence in order; never approve a quality gate")
+    .option("--command <id>", "select a declared check; required for tasks without an implementation assignment", collectOption, [])
+    .action(async (runId: string, taskId: string, options: { command: string[] }) => {
+      executed = true; activeCommand = "check-task";
+      const result = await collectTaskChecks(root, runId, taskId, options.command.length ? options.command : undefined);
+      emit("check-task", result, result.passed ? `${taskId} command checks passed; review remains pending` : `${taskId} command failed; remaining checks were not run`, result.passed ? [] : [{ code: "COMMAND_FAILED", message: "configured command failed" }], result.passed ? exitCodes.success : exitCodes.failure);
+    });
+
+  program.command("handoff-task <run-id> <task-id>")
+    .description("assemble a verified report from JSON outcomes and actual task-owned Git changes")
+    .option("--dry-run", "validate and preview without publishing")
+    .option("--expected-version <version>", "require the observed run authority version")
+    .action(async (runId: string, taskId: string, options: { dryRun?: boolean; expectedVersion?: string }) => {
+      executed = true; activeCommand = "handoff-task";
+      const result = await handoffTask(root, runId, taskId, await readJsonInput() as HandoffTaskInput, { dryRun: options.dryRun, expectedVersion: options.expectedVersion === undefined ? undefined : parseAuthorityVersion(options.expectedVersion), now });
+      emit("handoff-task", result, `${result.dryRun ? "previewed handoff for" : "handed off"} ${taskId}; independent review and gate approval remain required`);
+    });
+
+  program.command("repair-task <run-id> <task-id>")
+    .description("archive a completed or review-rejected implementation cycle and invalidate downstream verification")
+    .requiredOption("--defect <id>")
+    .requiredOption("--actor <actor>")
+    .requiredOption("--reason <reason>")
+    .option("--dry-run", "show affected tasks without writing")
+    .action(async (runId: string, taskId: string, options: { defect: string; actor: string; reason: string; dryRun?: boolean }) => {
+      executed = true; activeCommand = "repair-task";
+      const result = await repairTask(root, runId, taskId, { defectId: options.defect, actor: options.actor, reason: options.reason, dryRun: options.dryRun, now });
+      emit("repair-task", result, `${result.dry_run ? "planned" : "opened"} ${result.repair.id}; fresh implementation and independent retest required`);
+    });
+
+  program.command("recover-repair <run-id>")
+    .description("recover interrupted repair files only when the journal still matches the manifest")
+    .requiredOption("--actor <actor>")
+    .action(async (runId: string, options: { actor: string }) => {
+      executed = true; activeCommand = "recover-repair";
+      const result = await recoverRepair(root, runId, options.actor);
+      emit("recover-repair", result, result.recovered ? `recovered ${result.repair_id}: ${result.outcome}` : "no interrupted repair");
+    });
+
+  program.command("timing <run-id>")
+    .description("summarize recorded lifecycle intervals and collector durations, including repair cycles")
+    .action(async (runId: string) => {
+      executed = true; activeCommand = "timing";
+      const result = await getRunTiming(root, runId, { now });
+      emit("timing", result, `recorded wall time ${result.wall_ms === null ? "unavailable" : `${(result.wall_ms / 60000).toFixed(1)} minutes`}; collector execution ${(result.collector_command_ms / 1000).toFixed(1)} seconds; use --json for intervals and limitations`);
     });
 
   program.command("upgrade")

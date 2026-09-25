@@ -115,6 +115,10 @@ async function resolveRepositoryDeliveryAuthorityUnderLock(
   const task = manifest.tasks.find((candidate) => candidate.id === taskId);
   if (task === undefined) throw new Error(`delivery assignment task ${taskId} does not exist in run ${runId}`);
   assertDeliveryTask(task);
+  const archived = await readArchivedAssignment(root, runId, taskId, manifest);
+  if (archived !== undefined && (assignment.revision <= archived.revision || assignment.assignment_id !== archived.assignment_id)) {
+    throw new Error(`${taskId} assignment must retain its identity and advance beyond archived repair revision ${archived.revision}`);
+  }
 
   const factsPath = `.sdlc/runs/${runId}/facts.yaml`;
   const factsSource = await readRepositoryFile(root, factsPath);
@@ -279,7 +283,25 @@ export async function validateRepositoryStructuredDelivery(
   return { valid: diagnostics.length === 0, diagnostics: [...new Set(diagnostics)] };
 }
 
-async function resolveRequiredInputs(root: string, runId: string, task: Task): Promise<DeliveryAuthorityInput[]> {
+export async function readArchivedAssignment(root: string, runId: string, taskId: string, manifest: RunManifest): Promise<DeliveryAssignment | undefined> {
+  let latest: DeliveryAssignment | undefined;
+  for (const repair of manifest.repair_history ?? []) {
+    const archive = repair.archives.find((entry) => entry.path === `tasks/${taskId}.assignment.yaml`);
+    if (archive === undefined) continue;
+    if (archive.archive_path !== `repairs/${repair.id}/${archive.path}`) throw new Error("invalid archived assignment path");
+    const source = await readRepositoryFile(root, `.sdlc/runs/${runId}/${archive.archive_path}`);
+    if (sha256(source) !== archive.sha256) throw new Error("archived assignment integrity changed");
+    const value = parseStrictYamlDocument(source);
+    assertSchema("deliveryAssignment", value, "archived assignment");
+    const assignment = value as DeliveryAssignment;
+    if (assignment.run_id !== runId || assignment.task_id !== taskId) throw new Error("archived assignment identity mismatch");
+    if (latest !== undefined && (assignment.assignment_id !== latest.assignment_id || assignment.revision <= latest.revision)) throw new Error("archived assignment revisions must advance with stable identity");
+    latest = assignment;
+  }
+  return latest;
+}
+
+export async function resolveRequiredInputs(root: string, runId: string, task: Task): Promise<DeliveryAuthorityInput[]> {
   const ownAssignment = `tasks/${task.id}.assignment.yaml`;
   return Promise.all(task.required_inputs.filter((path) => path !== ownAssignment).map(async (runPath) => {
     const repositoryPath = `.sdlc/runs/${runId}/${runPath}`;
@@ -341,7 +363,7 @@ async function resolveChangedFiles(
   return { path: changedFilesPath, sha256: sha256(source), files };
 }
 
-async function resolvePermissionRoots(
+export async function resolvePermissionRoots(
   root: string,
   runId: string,
   task: Task,
@@ -394,7 +416,7 @@ function isSharedContractRoot(path: string, project: ProjectConfig): boolean {
     : path === configured;
 }
 
-function resolveApprovalDecisions(manifest: RunManifest, task: Task): DeliveryAuthorityApproval[] {
+export function resolveApprovalDecisions(manifest: RunManifest, task: Task): DeliveryAuthorityApproval[] {
   return (manifest.decisions ?? [])
     .filter((decision) => (
       decision.action === "destructive_migration"
@@ -485,7 +507,7 @@ function approvalAuthority(runId: string, taskId: string, decision: SdlcDecision
     : { ...base, status: "approved", complete: true, approved_by: "product-owner", consumed: false, consumed_at: null };
 }
 
-function workflowOutputs(runId: string, task: Task): RequiredDeliveryOutput[] {
+export function workflowOutputs(runId: string, task: Task): RequiredDeliveryOutput[] {
   return task.required_outputs
     .filter((path) => !path.endsWith("-delivery-report.yaml"))
     .map((path) => ({
@@ -496,7 +518,7 @@ function workflowOutputs(runId: string, task: Task): RequiredDeliveryOutput[] {
     }));
 }
 
-async function resolveArtifactIntegrity(root: string, report: DeliveryReport): Promise<DeliveryArtifactIntegrity[]> {
+export async function resolveArtifactIntegrity(root: string, report: DeliveryReport): Promise<DeliveryArtifactIntegrity[]> {
   return Promise.all(report.artifacts.filter(isProducedArtifact).map(async (artifact) => {
     const source = await readRepositoryFile(root, artifact.path);
     return {
@@ -586,7 +608,7 @@ function artifactKind(path: string): ArtifactKind {
   throw new Error(`workflow output has no structured delivery artifact kind: ${path}`);
 }
 
-function producerForRunPath(path: string): Exclude<TaskRole, never> {
+export function producerForRunPath(path: string): Exclude<TaskRole, never> {
   if (path.startsWith("artifacts/ba/")) return "ba";
   if (path.startsWith("artifacts/backend/")) return "backend";
   if (path.startsWith("artifacts/web/") || path.startsWith("artifacts/mobile/")) return "frontend";
@@ -605,7 +627,7 @@ function isTargetPermissionRoot(task: Task, path: string, project: ProjectConfig
   return path === project.applications.mobile?.root || path === artifactRoot;
 }
 
-function repositoryForTask(project: ProjectConfig, task: Task): string {
+export function repositoryForTask(project: ProjectConfig, task: Task): string {
   if (task.stage === "api_contract" && project.resources?.api_contracts !== undefined) {
     return project.resources.api_contracts.repository;
   }
@@ -615,7 +637,7 @@ function repositoryForTask(project: ProjectConfig, task: Task): string {
   return project.workspace?.coordinator ?? "coordinator";
 }
 
-function documentRevision(source: string, path: string): number {
+export function documentRevision(source: string, path: string): number {
   let value: unknown;
   try {
     if (path.endsWith(".yaml") || path.endsWith(".yml")) value = parseStrictYamlDocument(source);

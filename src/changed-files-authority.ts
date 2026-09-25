@@ -224,7 +224,7 @@ function isPortableGlobPattern(value: unknown): value is string {
   return value.split("/").every((segment) => segment.length > 0
     && segment !== "."
     && segment !== ".."
-    && /^(?:\*\*|[A-Za-z0-9._-]*\*?[A-Za-z0-9._-]*)$/u.test(segment));
+    && (segment === "**" || ((segment.match(/\*/g)?.length ?? 0) <= 1 && isPortableRepositoryPath(segment.replace("*", "wildcard")))));
 }
 
 function portableGlobMatches(pattern: string, path: string): boolean {

@@ -5,6 +5,8 @@ description: Use when a PM delivery assignment delegates a web or mobile impleme
 
 # SDLC frontend
 
+For a normal 1.0.0 runtime assignment, use the prepared task packet and [runtime-assisted delivery](../sdlc-pm/references/task-operations.md). Implement only its selected web/mobile scope, produce substantive artifacts, collect assigned checks with `check-task`, and give actual requirement/capability outcomes and product changes to `handoff-task`. Return the saved report path and status; the runtime generates hashes and metadata. Never approve your own gate or complete the task. The strict envelope rules below apply to an explicitly supplied legacy evaluator stimulus or manual delivery contract.
+
 Read these references before responding:
 
 - `references/role-contract.md`

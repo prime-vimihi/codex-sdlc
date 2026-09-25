@@ -23,6 +23,8 @@ This is a shape example. Populate it from the actual host. Describe omitted-effo
 
 ## Launch and record
 
+On runtime 1.0.0, prepare eligible tasks through [runtime-assisted delivery](task-operations.md), then use `activate-task` with the real dispatch JSON to combine steps 4 and 5 below. This works for configured and inherited roles. The child still waits until the helper succeeds, and host launch/model observations remain unchanged. Use the lower-level sequence for existing manual/exceptional flows and older runtimes.
+
 1. Check the task is ready, dependencies are complete, and required inputs exist. Prepare any typed backend/frontend assignment through the existing publisher. Obtain the agent plan after those inputs are ready.
 2. Delegate this bounded task with the returned `selected.model` and optional `selected.reasoning_effort` as actual tool parameters. If `selected` is null, omit model/effort parameters. Pass the plan’s selected effort when present, including an explicitly resolved host default. When absent, omission follows the host’s declared default/inheritance behavior; the planner checks inherited effort compatibility. Unknown behavior requires a configured effort or an advertised model default. With `collaboration.spawn_agent`, pass `fork_turns: "none"` and a self-contained assignment. Never combine overrides with a full-history fork. Do not select a named custom agent whose TOML overrides the intended model or effort.
 3. The initial child message must tell it to wait for an activation message before producing artifacts. Include coordinator root, run/task identity, matching skill path, allowed scope, required inputs/outputs, configured command IDs, and the selected model plan. Shared repository state remains authoritative.

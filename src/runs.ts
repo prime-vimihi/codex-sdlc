@@ -7,6 +7,7 @@ import { parseDocument, stringify } from "yaml";
 import { agentPolicyDiagnostics, assertTaskAgentDispatch, type AgentPolicy } from "./agents.js";
 import { assertProductOwnerAdvisory } from "./product-owner.js";
 import { assertAcyclic } from "./graph.js";
+import { repairHistoryDiagnostics } from "./repair-validation.js";
 import { loadProject, loadWorkflow } from "./config.js";
 import { FRAMEWORK_VERSION } from "./constants.js";
 import { resolvePathInsideRoot, SdlcPathError } from "./paths.js";
@@ -332,6 +333,7 @@ async function validateManifest(manifest: unknown, root: string, runId: string):
   }
   if (manifest.agent_policy !== undefined) diagnostics.push(...agentPolicyDiagnostics(manifest.agent_policy));
   const tasks = manifest.tasks;
+  if (diagnostics.length === 0) diagnostics.push(...await repairHistoryDiagnostics(root, runId, manifest as unknown as RunManifest));
   if (diagnostics.length === 0) {
     for (const task of tasks) {
       if (["running", "awaiting_review", "awaiting_approval", "completed"].includes(task.status)) {
@@ -581,7 +583,7 @@ async function writeManifest(path: string, manifest: RunManifest): Promise<void>
   await writeFile(path, source, { encoding: "utf8", flag: "wx" });
 }
 
-function parseManifest(source: string): RunManifest {
+export function parseManifest(source: string): RunManifest {
   const document = parseDocument(source);
   if (document.errors.length > 0) {
     throw new Error(document.errors.map((error) => error.message).join("\n"));

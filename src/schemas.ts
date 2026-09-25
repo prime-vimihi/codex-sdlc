@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import type { ValidateFunction } from "ajv";
 import type { Ajv2020 as Ajv2020Instance } from "ajv/dist/2020.js";
 
+import { isPortableRepositoryPath } from "./paths.js";
 import { evidencePathsForId } from "./evidence-identifiers.js";
 import type { ValidationResult } from "./types.js";
 
@@ -72,6 +73,8 @@ function validators(): Map<SchemaName, ValidateFunction> {
   const schemasDirectory = fileURLToPath(new URL("../assets/schemas/", import.meta.url));
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   addFormats(ajv);
+  ajv.addFormat("portable-repository-path", { type: "string", validate: isPortableRepositoryPath });
+  ajv.addFormat("portable-command-cwd", { type: "string", validate: (value: string) => isPortableRepositoryPath(value === "./" ? "." : value.endsWith("/.") ? value.slice(0, -2) : value) });
   for (const fileName of readdirSync(schemasDirectory)) {
     if (fileName.endsWith(".schema.json")) {
       ajv.addSchema(JSON.parse(readFileSync(resolve(schemasDirectory, fileName), "utf8")) as object);
@@ -110,7 +113,6 @@ function assignmentSemanticDiagnostics(value: Record<string, unknown>): string[]
     ...duplicateKeyDiagnostics(value.available_evidence, "command_key", "available_evidence"),
     ...evidenceReferenceDiagnostics(value.available_evidence, "available_evidence"),
     ...duplicateKeyDiagnostics(value.evidence_requirements, "command_key", "evidence_requirements"),
-    ...duplicateKeyDiagnostics(controls.api_requirements ?? controls.requirements, "requirement_id", "controls.requirements"),
     ...duplicateKeyDiagnostics(controls.api_requirements ?? controls.requirements, "capability", "controls.requirements"),
     ...sourceReferenceDiagnostics(controls.api_requirements ?? controls.requirements, "controls.requirements"),
     ...gapQuestionDiagnostics(controls, "controls"),
@@ -136,7 +138,6 @@ function reportSemanticDiagnostics(value: Record<string, unknown>): string[] {
     ...duplicateKeyDiagnostics(value.evidence, "evidence_id", "evidence"),
     ...duplicateKeyDiagnostics(value.evidence, "command_key", "evidence"),
     ...evidenceReferenceDiagnostics(value.evidence, "evidence"),
-    ...duplicateKeyDiagnostics(observations.requirement_results, "requirement_id", "observations.requirement_results"),
     ...duplicateKeyDiagnostics(observations.requirement_results, "capability", "observations.requirement_results"),
     ...gapQuestionDiagnostics(observations, "observations"),
   ];

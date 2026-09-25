@@ -2,6 +2,14 @@
 
 All notable changes to codex-sdlc are documented here.
 
+## 1.0.0 - Unreleased
+
+- Add local readiness preflight, generated task assignments and handoffs, recorded activation, ordered command collection, and lifecycle timing.
+- Add explicit archived repair cycles for completed implementations and rejected handoffs, downstream gate invalidation, stale-authority rejection, and interruption recovery.
+- Fix ownership for configured application roots and unify portable path handling across assignments, command working directories, and permission patterns.
+- Allow multiple technical capabilities to reference one business requirement while preserving exact capability/report mapping.
+- Keep independent review, QC, human acceptance, existing model presets, and unrepaired legacy runs. Compact profiles, parallel scheduling, and evidence caching remain deferred.
+
 ## 0.6.0 - 2026-09-24
 
 - Add the `sdlc` entry skill for `/sdlc --save-my-token` and `/sdlc --normal` chat shorthand, with explicit `$sdlc` invocation support.

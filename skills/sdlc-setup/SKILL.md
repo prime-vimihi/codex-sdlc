@@ -11,7 +11,7 @@ Resolve the repository the user selected before running a command. Read its `AGE
 
 For a new setup, explain briefly that the installed plugin supplies Codex skills while the npm CLI creates and operates `.sdlc`. Plugin skills stay in Codex's plugin cache; initialization does not create `.agents/skills` in the project.
 
-Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 0.6.0. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@0.6.0`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
+Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 1.0.0. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@1.0.0`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
 
 Infer the project name, application roots, technologies, and workspace shape from the selected repository. Ask only for missing information that changes repository topology or application ownership. State which checkout will own `.sdlc` before previewing a multi-repository installation.
 
@@ -48,6 +48,8 @@ Use `--agent-reasoning pm=high` for an explicit effort. `--agent-fallback backen
 Settings are stored in coordinator `.sdlc/project.yaml` and copied into new run manifests. Existing runs keep their snapshot. Configuration validates syntax; model access and supported reasoning are checked by the host adapter at dispatch. No `.codex/agents` files or API keys are needed: the PM skill sends explicit model parameters to Codex’s subagent tools. A configured PM model runs through task-only PM children. Do not claim to change the current conversation model. If the installed runtime predates these commands, upgrade it before applying settings.
 
 ## Diagnose and lifecycle operations
+
+Runtime 1.0.0 adds `preflight` for selected application roots, required local fixture files, and configured command availability. Use it before an eligible feature delivery; it never starts services or proves live database readiness. See [runtime-assisted delivery](../sdlc-pm/references/task-operations.md). Upgrading preserves unrepaired legacy run shapes. Once a 1.0.0 repair adds archived cycles and activation offsets, the run requires a 1.0.0-capable runtime; do not downgrade its runtime or hand-edit away the new history.
 
 `doctor` is read-only. Report every diagnostic with the concrete file or command the user must fix. Do not start a feature run while required project checks are generated failing placeholders.
 
