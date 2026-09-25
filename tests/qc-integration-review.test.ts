@@ -7,6 +7,7 @@ import { afterAll, beforeAll, expect, test } from 'vitest';
 import { createDeliveryFixture, activateFixture, writeFixtureOutputs, collectFixtureEvidence } from './helpers/delivery-fixture.js';
 import { prepareTask, handoffTask } from '../src/task-operations.js';
 
+// Complete CLI and repair cycles need time for child processes and CI filesystem load.
 test('independent repro: changed-during-test source must not count as verified', async () => {
   const fixture = await createDeliveryFixture();
   try {
@@ -24,7 +25,7 @@ test('independent repro: changed-during-test source must not count as verified',
     await command;
     await expect(handoffTask(fixture.root,fixture.runId,fixture.taskId,fixture.handoffInput)).rejects.toThrow(/stale|changed|verification/);
   } finally { await rm(fixture.root,{recursive:true,force:true}); }
-});
+}, 30_000);
 
 import { activateAndHandoffFixture } from './helpers/delivery-fixture.js';
 import { recordQualityGate } from '../src/lifecycle.js';
@@ -54,7 +55,7 @@ test('independent repro: committed repair recovery must advance authority versio
     expect(await recoverRepair(fixture.root,fixture.runId,'pm')).toMatchObject({recovered:true,outcome:'committed'});
     expect(await readAuthorityVersion(fixture.root,fixture.runId)).toBeGreaterThan(version);
   } finally { await rm(fixture.root,{recursive:true,force:true}); }
-});
+}, 30_000);
 
 import { spawnSync } from 'node:child_process';
 let cliFixtureRoot: string;
@@ -96,7 +97,7 @@ test('independent built CLI: prepare, plan, activate, failed/passed checks, and 
     expect(handed.code).toBe(0); expect(handed.body.result.taskStatus).toBe('awaiting_review');
     expect((await loadRun(fixture.root,fixture.runId)).quality_gates.web?.status).toBe('pending');
   } finally {await rm(fixture.root,{recursive:true,force:true});}
-});
+}, 30_000);
 
 test('independent repro: unresolved repair journal blocks ordinary mutation, publication, and command execution', async () => {
   const fixture=await createDeliveryFixture();
@@ -120,4 +121,4 @@ test('independent repro: unresolved repair journal blocks ordinary mutation, pub
     await expect(collectFixtureEvidence(fixture)).rejects.toThrow(/repair|interrupted/);
     await expect(readFile(resolve(fixture.root,fixture.appRoot,'must-not-run-during-recovery'))).rejects.toThrow();
   } finally {await rm(fixture.root,{recursive:true,force:true});}
-});
+}, 30_000);

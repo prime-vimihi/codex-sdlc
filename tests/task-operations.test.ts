@@ -17,7 +17,8 @@ async function fixture(options: Parameters<typeof createDeliveryFixture>[0] = {}
 async function runningFixture() { const value = await fixture(); await prepareTask(value.root, value.runId, value.taskId, value.input); await activateFixture(value); await writeFixtureOutputs(value); return value; }
 async function runBytes(value: DeliveryFixture) { return readFile(resolve(value.root, `.sdlc/runs/${value.runId}/manifest.yaml`), "utf8"); }
 
-describe("automatic task preparation and handoff", () => {
+// These integration cases create Git repositories and execute delivery cycles under CI filesystem load.
+describe("automatic task preparation and handoff", { timeout: 30_000 }, () => {
   test("prepares a compact authoritative packet idempotently without activating or changing dry-run files", async () => {
     const value = await fixture();
     const before = await runBytes(value);
