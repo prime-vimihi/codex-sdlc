@@ -56,7 +56,7 @@ Eight Codex skills and a repository-local CLI keep tasks, evidence, blockers, an
 
 ## Get started
 
-**1.0.1 development:** Token-saving mode now selects GPT-6.1 Sol for BA. The new preset requires plugin/runtime 1.0.1; until publication, use the [local package procedure](docs/cli-reference.md#try-the-local-package-in-an-unrelated-repository).
+**New in 1.0.1:** Token-saving mode now selects GPT-6.1 Sol for BA. Update both plugin and project runtime, then reapply the preset for new runs. See the [release notes](docs/releases/1.0.1.md).
 
 **New in 1.0.0:** Runtime-assisted delivery reduces manual task bookkeeping, and eligible bounded features can use opt-in Compact mode. See the [release notes](docs/releases/1.0.0.md) for changes and upgrade guidance.
 
@@ -95,7 +95,7 @@ To continue later, ask Codex to resume the existing run. Its manifest records th
 Run this against an existing web repository:
 
 ```sh
-npx --yes codex-sdlc@1.0.0 init \
+npx --yes codex-sdlc@1.0.1 init \
   --root /absolute/path/to/web --name example-web \
   --applications web --web-root . --web-preset nextjs \
   --dry-run
@@ -110,7 +110,7 @@ node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-For a global CLI installation, use `npm install --global codex-sdlc@1.0.0`.
+For a global CLI installation, use `npm install --global codex-sdlc@1.0.1`.
 
 </details>
 
@@ -228,7 +228,7 @@ codex-sdlc does not operate a hosted service or send repository content to a cod
 Preview a project upgrade before applying it:
 
 ```sh
-npx --yes codex-sdlc@1.0.0 upgrade \
+npx --yes codex-sdlc@1.0.1 upgrade \
   --root /absolute/path/to/coordinator --dry-run
 ```
 
@@ -242,10 +242,10 @@ Applied upgrades create backups. Rollback checks managed-file integrity before r
 | --- | --- |
 | [Getting started](docs/getting-started.md) | [CLI setup and lifecycle reference](docs/cli-reference.md) |
 | [Multi-repository workspaces](docs/multi-repository.md) | [Role models and dispatch records](docs/agent-models.md) |
-| [What's new in 1.0.0](docs/releases/1.0.0.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
+| [What's new in 1.0.1](docs/releases/1.0.1.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
 | [Support](SUPPORT.md) | [Contributing](CONTRIBUTING.md) |
 
-Current verification includes automated runtime tests, plugin and skill validation, and independent built-CLI checks. Native Linux/Windows qualification and a matched real-agent performance benchmark remain pending. See the [1.0.0 validation notes](docs/releases/1.0.0.md#validation).
+Current verification includes automated runtime tests, plugin and skill validation, and independent built-CLI checks. Native Linux/Windows qualification and a matched real-agent performance benchmark remain pending. See the [1.0.1 validation notes](docs/releases/1.0.1.md#validation).
 
 ## Build with us
 

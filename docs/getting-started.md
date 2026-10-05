@@ -16,7 +16,7 @@ Version 1.0.0 includes opt-in Compact delivery and runtime-assisted task operati
 Open the repository that should own `.sdlc` and start a new Codex task:
 
 ```text
-Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes. If the CLI is unavailable, use codex-sdlc@1.0.0 through npx.
+Initialize codex-sdlc for this existing repository. Explain the setup choices and show the dry run before applying changes. If the CLI is unavailable, use codex-sdlc@1.0.1 through npx.
 ```
 
 Tell Codex which applications already exist and where they live. Supported presets are Go for backend, Next.js for web, Flutter for mobile, PostgreSQL for the primary database, and Redis for cache. Codex will inspect the repository, show the proposed files, apply the same command without `--dry-run`, restore the pinned project runtime, and run diagnostics.
@@ -38,7 +38,7 @@ For a new bounded feature using established patterns, ask `$sdlc --compact <desc
 Preview first:
 
 ```sh
-npx --yes codex-sdlc@1.0.0 init --root /absolute/path/to/web --name example-web \
+npx --yes codex-sdlc@1.0.1 init --root /absolute/path/to/web --name example-web \
   --applications web --web-root . --web-preset nextjs --dry-run
 ```
 
@@ -58,7 +58,7 @@ One checkout is the coordinator and owns `.sdlc`. The reserved repository ID `co
 This example uses the frontend checkout as the coordinator and maps a backend elsewhere:
 
 ```sh
-npx --yes codex-sdlc@1.0.0 init \
+npx --yes codex-sdlc@1.0.1 init \
   --root /absolute/path/to/frontend \
   --name example-platform \
   --workspace-mode multi-repository \
@@ -79,7 +79,7 @@ node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-Only the coordinator receives `.sdlc`. The plugin skills remain in each user's Codex plugin cache. Another contributor binds their local checkout paths with `npx --yes codex-sdlc@1.0.0 configure --root <coordinator> --repo <id>=<absolute-path>` and reruns `doctor`.
+Only the coordinator receives `.sdlc`. The plugin skills remain in each user's Codex plugin cache. Another contributor binds their local checkout paths with `npx --yes codex-sdlc@1.0.1 configure --root <coordinator> --repo <id>=<absolute-path>` and reruns `doctor`.
 
 Choose single-repository or multi-repository mode before starting delivery. Version 1.0.0 does not automatically convert an initialized single-repository project to multi-repository mode. Preserve existing runs before changing topology.
 
@@ -94,7 +94,7 @@ You can also ask: `Enable an advisory AI Product Owner review using Sol.` The re
 After installing the new plugin version, preview the project runtime upgrade:
 
 ```sh
-npx --yes codex-sdlc@1.0.0 upgrade --root /absolute/path/to/coordinator --dry-run
+npx --yes codex-sdlc@1.0.1 upgrade --root /absolute/path/to/coordinator --dry-run
 ```
 
 Run the same command without `--dry-run`, then run `node .sdlc/runtime.cjs restore`, `doctor`, and `validate-config` from the coordinator. The plugin update supplies skills; the project upgrade supplies commands and schemas.

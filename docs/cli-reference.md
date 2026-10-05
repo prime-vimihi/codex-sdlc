@@ -4,7 +4,7 @@ For the first-run walkthrough, read [Getting started](getting-started.md). Retur
 
 ## Build and test
 
-Version 1.0.0 is published. The 1.0.1 token-saving preset update is in development; use the local tarball procedure while testing that update.
+Version 1.0.1 updates the token-saving preset to GPT-6.1 Sol for BA. Upgrade the runtime and reapply the preset to update saved project settings for new runs.
 
 Requirements: Node.js `>=24.16.0 <25` and npm 11.
 
@@ -17,7 +17,7 @@ npm pack
 Install the published CLI with:
 
 ```sh
-npm install --global codex-sdlc@1.0.0
+npm install --global codex-sdlc@1.0.1
 ```
 
 ## Project setup modes
