@@ -2,6 +2,12 @@
 
 All notable changes to codex-sdlc are documented here.
 
+## 1.0.1 - Unreleased
+
+- Update `--save-my-token` to use `gpt-6.1-sol/high` for BA. PM inherits, and backend, web/mobile frontend, and QC continue to use `gpt-6-luna/xhigh`.
+- Require plugin/runtime 1.0.1 for the updated preset and document reapplying it after upgrade. Saved project settings, existing run snapshots, optional PO settings, and explicitly chosen fallbacks are preserved until the user changes them.
+- Add migration coverage for previewing and reapplying the preset, freezing earlier GPT-6 Sol runs, and rejecting a host without GPT-6.1 Sol instead of substituting another model.
+
 ## 1.0.0 - 2026-09-25
 
 - Add opt-in, assessed Compact runs with a frozen revisioned graph, one canonical BA specification, generated compatibility views, and one independent integrated QC record. Full remains the default; saved model settings and existing runs retain their meaning.

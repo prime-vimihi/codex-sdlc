@@ -56,6 +56,8 @@ Eight Codex skills and a repository-local CLI keep tasks, evidence, blockers, an
 
 ## Get started
 
+**1.0.1 development:** Token-saving mode now selects GPT-6.1 Sol for BA. The new preset requires plugin/runtime 1.0.1; until publication, use the [local package procedure](docs/cli-reference.md#try-the-local-package-in-an-unrelated-repository).
+
 **New in 1.0.0:** Runtime-assisted delivery reduces manual task bookkeeping, and eligible bounded features can use opt-in Compact mode. See the [release notes](docs/releases/1.0.0.md) for changes and upgrade guidance.
 
 You need **Codex**, **Node.js `>=24.16.0 <25`**, **npm 11**, and an existing application repository. Setup configures your application directories; it does not scaffold application code.
@@ -124,7 +126,7 @@ The runtime can now prepare task assignments, record agent activation, collect d
 - `timing` reports recorded lifecycle intervals and collector durations, with overlapping work and unknown model time clearly distinguished.
 - Configured roots such as `apps/api` and Next.js route groups/dynamic segments work consistently. Several technical capabilities can reference one business requirement.
 
-See [runtime-assisted delivery](skills/sdlc-pm/references/task-operations.md) and [1.0.0 release notes](docs/releases/1.0.0.md). Full remains the default; eligible new runs can now opt into Compact. Parallel scheduling, evidence caching, and model-default changes remain deferred. Automatic handoff verifies the caller-declared task-owned subset of actual uncommitted Git changes; it does not independently infer ownership of omitted files or support deleted product paths.
+See [runtime-assisted delivery](skills/sdlc-pm/references/task-operations.md) and [1.0.0 release notes](docs/releases/1.0.0.md). Full remains the default; eligible new runs can now opt into Compact. Parallel scheduling and evidence caching remain deferred. Automatic handoff verifies the caller-declared task-owned subset of actual uncommitted Git changes; it does not independently infer ownership of omitted files or support deleted product paths.
 
 ### Compact delivery for bounded features
 
@@ -199,9 +201,9 @@ These chat shortcuts, introduced in 0.6.0, remain available:
 /sdlc --normal
 ```
 
-Token-saving mode keeps PM inherited, uses Sol (`gpt-6-sol`) with high reasoning for BA, and Luna (`gpt-6-luna`) with extra-high reasoning for backend, web/mobile frontend, and QC. Normal mode restores inheritance for those roles. Both save to the current project's `.sdlc/project.yaml` for every new run; existing runs and optional AI Product Owner settings are preserved.
+Token-saving mode keeps PM inherited, uses GPT-6.1 Sol (`gpt-6.1-sol`) with high reasoning for BA, and Luna (`gpt-6-luna`) with extra-high reasoning for backend, web/mobile frontend, and QC. Normal mode restores inheritance for those roles. Both save to the current project's `.sdlc/project.yaml` for every new run; existing runs and optional AI Product Owner settings are preserved.
 
-These are skill-handled chat shortcuts. In clients that reject custom slash commands, invoke `$sdlc --save-my-token` or `$sdlc --normal`. Both plugin and runtime must be 0.6.0 or newer. See [project mode details and CLI equivalents](docs/agent-models.md#project-model-modes).
+These are skill-handled chat shortcuts. In clients that reject custom slash commands, invoke `$sdlc --save-my-token` or `$sdlc --normal`. The updated token-saving preset requires plugin/runtime 1.0.1 or newer; normal mode requires 0.6.0 or newer. After upgrading an existing project, reapply `--save-my-token` to update its saved preset. See [project mode details and CLI equivalents](docs/agent-models.md#project-model-modes).
 
 ## What stays in your repository
 

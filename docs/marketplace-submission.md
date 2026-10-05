@@ -69,10 +69,10 @@ Set up and coordinate resumable software delivery across one repository or multi
 ### 7. Save and reset project model modes
 
 - User prompt: `$sdlc --save-my-token` in an initialized disposable project.
-- Expected behavior: Preview and save inherited PM, `gpt-6-sol/high` for BA, and `gpt-6-luna/xhigh` for backend, web/mobile frontend, and QC in `.sdlc/project.yaml`. Preserve PO settings. A mode-only request does not start a feature run; every subsequently started run snapshots the preset.
+- Expected behavior: With plugin/runtime 1.0.1, preview and save inherited PM, `gpt-6.1-sol/high` for BA, and `gpt-6-luna/xhigh` for backend, web/mobile frontend, and QC in `.sdlc/project.yaml`. Preserve PO settings. A mode-only request does not start a feature run; every subsequently started run snapshots the preset. Upgraded projects reapply the preset; existing runs retain their original model policy.
 - User prompt: `$sdlc --normal` in the same project.
 - Expected behavior: Remove model, effort, and fallback overrides for the five delivery roles. Preserve existing run snapshots and optional PO settings. New runs inherit their delivery-role models.
-- Fixture: A disposable initialized project using plugin/runtime 1.0.0. The host must advertise the requested models and efforts to exercise actual dispatch; saving and previewing configuration need no model dispatch.
+- Fixture: A disposable initialized project using plugin/runtime 1.0.1. The host must advertise the requested models and efforts to exercise actual dispatch; saving and previewing configuration need no model dispatch.
 
 ### 8. Deliver a bounded feature with Compact
 
@@ -128,6 +128,8 @@ Set up and coordinate resumable software delivery across one repository or multi
 
 ## Release notes
 
+The pending 1.0.1 update changes the token-saving BA selection to GPT-6.1 Sol/high. Other delivery roles retain GPT-6 Luna/extra-high and PM inherits. Existing projects reapply the preset after updating both plugin and runtime; saved runs retain their original models. Host capability validation and explicit fallback policy are preserved.
+
 Version 1.0.0 adds opt-in Compact delivery for bounded features, with one canonical BA specification, generated supporting views, and independent integrated QC. Full remains the default. New runtime helpers handle task preparation, activation, checks, handoffs, repair history, preflight, and timing. Configured application roots and Next.js routes are handled consistently, and multiple technical capabilities can share a business requirement. Existing project model presets remain available. PM review, current verification evidence, and final human acceptance are preserved. A scripted fixture measured about 22% lower framework execution time for Compact versus the new Full workflow; real-agent delivery time and token savings are not yet measured.
 
 ## Portal prerequisites
@@ -147,12 +149,12 @@ Version 1.0.0 adds opt-in Compact delivery for bounded features, with one canoni
 
 Submit the skills-only plugin from the release source tree. The bundle root contains `plugin.json`, `skills/`, `.codex-plugin/plugin.json`, `README.md`, `docs/getting-started.md`, `docs/agent-models.md`, and the referenced brand assets. It requires no MCP server, authentication configuration, demo credentials, or network allowlist.
 
-Build the upload ZIP and npm tarball from the reviewed 1.0.0 source. The prepared artifacts are under `build/public-submission/1.0.0/`; verify their hashes using that directory’s `SHA256SUMS` before upload.
+When 1.0.1 is ready for publication, build the upload ZIP and npm tarball from its reviewed source under `build/public-submission/1.0.1/`; verify their hashes using that directory’s `SHA256SUMS` before upload.
 
 ## Release order
 
-1. Tag the reviewed source revision as `v1.0.0` and publish the GitHub release using `docs/releases/1.0.0.md`.
-2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@1.0.0` to npm with provenance, then verify that the public registry serves 1.0.0. Do not submit the plugin update until npm serves 1.0.0.
+1. Tag the reviewed source revision as `v1.0.1` and publish the GitHub release using `docs/releases/1.0.1.md`.
+2. Wait for `.github/workflows/publish.yml` to publish `codex-sdlc@1.0.1` to npm with provenance, then verify that the public registry serves 1.0.1. Do not submit the plugin update until npm serves 1.0.1.
 3. Open the existing codex-sdlc listing in the OpenAI plugin submission portal, create a version update, keep the type **Skills only**, and upload the prepared skills bundle and listing logo.
 4. Copy the listing, prompts, tests, availability, and release notes from this document; complete publisher identity and policy attestations.
 5. Submit for review. After approval, explicitly publish the approved version to the universal Plugins Directory.

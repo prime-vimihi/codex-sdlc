@@ -1,6 +1,6 @@
 # Choose a model for each SDLC role
 
-Custom role settings are available in codex-sdlc 0.5.0. The project mode shortcuts below require both the 0.6.0 plugin and runtime. Updating the plugin does not upgrade existing projects; upgrade the runtime as described in the [getting started guide](getting-started.md).
+Custom role settings are available in codex-sdlc 0.5.0. The updated token-saving preset requires both the 1.0.1 plugin and runtime; normal mode remains supported from 0.6.0. Updating the plugin does not upgrade existing projects; upgrade the runtime as described in the [getting started guide](getting-started.md).
 
 ## Project model modes
 
@@ -15,7 +15,7 @@ The new `sdlc` skill interprets this chat shorthand and saves the following proj
 | Role | Model | Reasoning |
 | --- | --- | --- |
 | PM | Inherited | Inherited |
-| BA | `gpt-6-sol` | `high` |
+| BA | `gpt-6.1-sol` | `high` |
 | Backend | `gpt-6-luna` | `xhigh` (extra-high) |
 | Frontend, including web and mobile | `gpt-6-luna` | `xhigh` (extra-high) |
 | QC | `gpt-6-luna` | `xhigh` (extra-high) |
@@ -28,7 +28,7 @@ To restore normal inherited models:
 
 Normal mode removes model, reasoning, and fallback overrides for PM, BA, backend, frontend, and QC. It does not restore custom models that existed before token-saving mode. Both commands preserve optional AI Product Owner configuration and all other project settings.
 
-Each selection is stored in the coordinator's `.sdlc/project.yaml` and applies to **every new run** until you change it. Other projects and existing runs are unaffected. A mode-only request does not start a feature run. In a multi-repository workspace, run it in the coordinator to cover its mapped applications. An uninitialized project needs setup first.
+Each selection is stored in the coordinator's `.sdlc/project.yaml` and applies to **every new run** until you change it. After upgrading from 1.0.0, send `/sdlc --save-my-token` again to replace the saved BA selection with GPT-6.1 Sol. Upgrading alone preserves saved settings. Other projects and existing runs are unaffected. A mode-only request does not start a feature run. In a multi-repository workspace, run it in the coordinator to cover its mapped applications. An uninitialized project needs setup first.
 
 Codex's explicit skill syntax is `$sdlc --save-my-token` or `$sdlc --normal`; use it if your client reserves slash commands for built-in actions. The plugin handles `/sdlc` as prompt shorthand rather than registering a native slash command. See [official skill invocation guidance](https://learn.chatgpt.com/docs/build-skills).
 
@@ -41,7 +41,9 @@ node .sdlc/runtime.cjs configure-agents --normal
 
 Add `--dry-run --json` to preview without saving. Use `--root /absolute/path/to/coordinator` to select a project explicitly. The two modes are mutually exclusive and cannot be combined with individual role or PO configuration flags; make custom changes in a separate invocation. Applying the same preset again keeps the same settings.
 
-The presets require `gpt-6-sol/high` and `gpt-6-luna/xhigh` support on the user's host. Configuration saves the requested policy; dispatch still validates availability. No fallback is added, and an unavailable model or effort stops dispatch. Token-saving mode selects these models; actual token usage depends on the work.
+The preset requires `gpt-6.1-sol/high` and `gpt-6-luna/xhigh` support on the user's host. Configuration saves the requested policy; dispatch still validates availability. No fallback is added, and an unavailable model or effort stops dispatch. Token-saving mode selects these models; actual token usage depends on the work.
+
+The model IDs match [OpenAI's current Codex model guidance](https://learn.chatgpt.com/docs/models), checked on 2026-10-05. GPT-6.1 Sol is the newer Sol selection; GPT-6 Luna remains the current Luna selection. SDLC pins exact IDs rather than silently changing a saved policy when another generation is released. Reasoning effort is retained across this update; compare actual delivery results before claiming time or token savings.
 
 ## Custom role settings
 

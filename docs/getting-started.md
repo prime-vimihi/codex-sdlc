@@ -87,7 +87,7 @@ Choose single-repository or multi-repository mode before starting delivery. Vers
 
 Ask Codex: `Configure frontend to use Astra, backend to use Luna, and PM and QC to use Sol.` The setup skill maps your choices to model IDs supported by your Codex host and stores them in the coordinator’s `.sdlc/project.yaml`. Unspecified roles inherit from Codex.
 
-You can also ask: `Enable an advisory AI Product Owner review using Sol.` The review runs after QC; final acceptance remains your decision. See [Choose a model for each role](agent-models.md) for exact commands, explicit fallbacks, and resetting settings. Custom role settings require plugin/runtime 0.5.0 or newer. Project presets (`$sdlc --save-my-token` and `$sdlc --normal`) require 0.6.0. Existing runs keep their original model settings.
+You can also ask: `Enable an advisory AI Product Owner review using Sol.` The review runs after QC; final acceptance remains your decision. See [Choose a model for each role](agent-models.md) for exact commands, explicit fallbacks, and resetting settings. Custom role settings require plugin/runtime 0.5.0 or newer. The GPT-6.1 Sol preset (`$sdlc --save-my-token`) requires plugin/runtime 1.0.1 or newer; `$sdlc --normal` requires 0.6.0. After upgrading, reapply the token-saving preset to update existing saved settings. Existing runs keep their original model settings.
 
 ## Upgrade an existing project
 

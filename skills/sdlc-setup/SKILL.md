@@ -11,7 +11,7 @@ Resolve the repository the user selected before running a command. Read its `AGE
 
 For a new setup, explain briefly that the installed plugin supplies Codex skills while the npm CLI creates and operates `.sdlc`. Plugin skills stay in Codex's plugin cache; initialization does not create `.agents/skills` in the project.
 
-Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 1.0.0. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@1.0.0`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
+Confirm Node.js satisfies the version declared by codex-sdlc. Run `codex-sdlc --version` when the executable is available and use it only when it reports 1.0.1. If it is unavailable or differs, run the release-pinned CLI through `npx --yes codex-sdlc@1.0.1`; do not require a global installation. Let the environment request approval if downloading the package requires network access.
 
 Infer the project name, application roots, technologies, and workspace shape from the selected repository. Ask only for missing information that changes repository topology or application ownership. State which checkout will own `.sdlc` before previewing a multi-repository installation.
 
@@ -37,7 +37,7 @@ Report the selected shape, coordinator, mapped repositories, created files, runt
 
 ## Role models
 
-For `/sdlc --save-my-token`, `/sdlc --normal`, or their `$sdlc` equivalents, follow the [sdlc entry point](../sdlc/SKILL.md). It applies a project preset through `configure-agents --save-my-token` or `configure-agents --normal`. These flags require runtime 0.6.0 or newer; upgrade older runtimes before applying a mode. Preserve optional PO settings and existing run snapshots.
+For `/sdlc --save-my-token`, `/sdlc --normal`, or their `$sdlc` equivalents, follow the [sdlc entry point](../sdlc/SKILL.md). It applies a project preset through `configure-agents --save-my-token` or `configure-agents --normal`. The GPT-6.1 Sol token-saving preset requires runtime 1.0.1 or newer; normal mode requires 0.6.0 or newer. After upgrading, reapply `--save-my-token` to update an existing saved preset. Preserve optional PO settings and existing run snapshots.
 
 When the user asks to choose agent models, use `configure-agents` after initialization or pass the same `--agent-model`, `--agent-reasoning`, `--agent-fallback`, and `--po-review` settings during `init`. Canonical roles are `pm`, `ba`, `backend`, `frontend`, `qc`, and `po`; translate FE/BE/Product Owner to `frontend`/`backend`/`po`. The frontend setting covers web and mobile. Use exact model IDs exposed by the current host and preserve the user’s selected models. Do not choose a model for an unspecified role.
 

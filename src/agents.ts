@@ -111,7 +111,7 @@ export function updateAgentPolicy(current: AgentPolicy | undefined, options: Omi
   if (preset) {
     for (const role of ["pm", "ba", "backend", "frontend", "qc"] as const) delete result.roles[role];
     if (options.saveMyToken) {
-      result.roles.ba = { model: "gpt-6-sol", reasoning_effort: "high" };
+      result.roles.ba = { model: "gpt-6.1-sol", reasoning_effort: "high" };
       for (const role of ["backend", "frontend", "qc"] as const) {
         result.roles[role] = { model: "gpt-6-luna", reasoning_effort: "xhigh" };
       }
