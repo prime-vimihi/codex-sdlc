@@ -13,7 +13,7 @@ import { loadRun, startRun } from "../src/runs.js";
 
 const roots: string[] = [];
 const savedRoles: AgentPolicy["roles"] = {
-  ba: { model: "gpt-6-sol", reasoning_effort: "high" },
+  ba: { model: "gpt-6.1-sol", reasoning_effort: "high" },
   backend: { model: "gpt-6-luna", reasoning_effort: "xhigh" },
   frontend: { model: "gpt-6-luna", reasoning_effort: "xhigh" },
   qc: { model: "gpt-6-luna", reasoning_effort: "xhigh" },
@@ -23,7 +23,7 @@ const capabilities: AgentCapabilities = {
   model_selection: true,
   reasoning_selection: true,
   models: [
-    { id: "gpt-6-sol", reasoning_efforts: ["high"] },
+    { id: "gpt-6.1-sol", reasoning_efforts: ["high"] },
     { id: "gpt-6-luna", reasoning_efforts: ["xhigh"] },
   ],
 };
@@ -127,6 +127,31 @@ describe("project model presets", () => {
     const root = await fixture();
     expect((await cli(root, "--normal")).code).toBe(0);
     expect((await loadProject(root)).agents).toEqual({ roles: {}, product_owner_review: "disabled" });
+  });
+
+  test("reapplying the preset updates saved GPT-6 Sol without rewriting existing runs or using an implicit fallback", async () => {
+    const previousPolicy: AgentPolicy = {
+      roles: { ...savedRoles, ba: { model: "gpt-6-sol", reasoning_effort: "high" } },
+      product_owner_review: "disabled",
+    };
+    const root = await fixture(previousPolicy);
+    const previous = await run(root, "PREVIOUS-001");
+    const path = resolve(root, ".sdlc/runs/PREVIOUS-001/manifest.yaml");
+    const before = await readFile(path, "utf8");
+    const oldHost: AgentCapabilities = {
+      ...capabilities,
+      models: [{ id: "gpt-6-sol", reasoning_efforts: ["high"] }, capabilities.models[1]!],
+    };
+
+    expect((await cli(root, "--save-my-token", "--dry-run")).payload.result.agents.roles.ba).toEqual(savedRoles.ba);
+    expect((await loadProject(root)).agents).toEqual(previousPolicy);
+    expect((await cli(root, "--save-my-token")).code).toBe(0);
+    const updated = await run(root, "UPDATED-001");
+    expect(updated.agent_policy).toEqual({ roles: savedRoles, product_owner_review: "disabled" });
+    expect(resolveAgentPlan(updated, "BA-001", capabilities).selected).toEqual(savedRoles.ba);
+    expect(() => resolveAgentPlan(updated, "BA-001", oldHost)).toThrow("No implicit fallback");
+    expect(resolveAgentPlan(previous, "BA-001", oldHost).selected).toEqual(previousPolicy.roles.ba);
+    expect(await readFile(path, "utf8")).toBe(before);
   });
 
   test("grammar and CLI reject conflicting presets and manual settings without writing", async () => {

@@ -56,6 +56,8 @@ Eight Codex skills and a repository-local CLI keep tasks, evidence, blockers, an
 
 ## Get started
 
+**New in 1.0.1:** Token-saving mode now selects GPT-6.1 Sol for BA. Update both plugin and project runtime, then reapply the preset for new runs. See the [release notes](docs/releases/1.0.1.md).
+
 **New in 1.0.0:** Runtime-assisted delivery reduces manual task bookkeeping, and eligible bounded features can use opt-in Compact mode. See the [release notes](docs/releases/1.0.0.md) for changes and upgrade guidance.
 
 You need **Codex**, **Node.js `>=24.16.0 <25`**, **npm 11**, and an existing application repository. Setup configures your application directories; it does not scaffold application code.
@@ -93,7 +95,7 @@ To continue later, ask Codex to resume the existing run. Its manifest records th
 Run this against an existing web repository:
 
 ```sh
-npx --yes codex-sdlc@1.0.0 init \
+npx --yes codex-sdlc@1.0.1 init \
   --root /absolute/path/to/web --name example-web \
   --applications web --web-root . --web-preset nextjs \
   --dry-run
@@ -108,7 +110,7 @@ node .sdlc/runtime.cjs doctor
 node .sdlc/runtime.cjs validate-config
 ```
 
-For a global CLI installation, use `npm install --global codex-sdlc@1.0.0`.
+For a global CLI installation, use `npm install --global codex-sdlc@1.0.1`.
 
 </details>
 
@@ -124,7 +126,7 @@ The runtime can now prepare task assignments, record agent activation, collect d
 - `timing` reports recorded lifecycle intervals and collector durations, with overlapping work and unknown model time clearly distinguished.
 - Configured roots such as `apps/api` and Next.js route groups/dynamic segments work consistently. Several technical capabilities can reference one business requirement.
 
-See [runtime-assisted delivery](skills/sdlc-pm/references/task-operations.md) and [1.0.0 release notes](docs/releases/1.0.0.md). Full remains the default; eligible new runs can now opt into Compact. Parallel scheduling, evidence caching, and model-default changes remain deferred. Automatic handoff verifies the caller-declared task-owned subset of actual uncommitted Git changes; it does not independently infer ownership of omitted files or support deleted product paths.
+See [runtime-assisted delivery](skills/sdlc-pm/references/task-operations.md) and [1.0.0 release notes](docs/releases/1.0.0.md). Full remains the default; eligible new runs can now opt into Compact. Parallel scheduling and evidence caching remain deferred. Automatic handoff verifies the caller-declared task-owned subset of actual uncommitted Git changes; it does not independently infer ownership of omitted files or support deleted product paths.
 
 ### Compact delivery for bounded features
 
@@ -199,9 +201,9 @@ These chat shortcuts, introduced in 0.6.0, remain available:
 /sdlc --normal
 ```
 
-Token-saving mode keeps PM inherited, uses Sol (`gpt-6-sol`) with high reasoning for BA, and Luna (`gpt-6-luna`) with extra-high reasoning for backend, web/mobile frontend, and QC. Normal mode restores inheritance for those roles. Both save to the current project's `.sdlc/project.yaml` for every new run; existing runs and optional AI Product Owner settings are preserved.
+Token-saving mode keeps PM inherited, uses GPT-6.1 Sol (`gpt-6.1-sol`) with high reasoning for BA, and Luna (`gpt-6-luna`) with extra-high reasoning for backend, web/mobile frontend, and QC. Normal mode restores inheritance for those roles. Both save to the current project's `.sdlc/project.yaml` for every new run; existing runs and optional AI Product Owner settings are preserved.
 
-These are skill-handled chat shortcuts. In clients that reject custom slash commands, invoke `$sdlc --save-my-token` or `$sdlc --normal`. Both plugin and runtime must be 0.6.0 or newer. See [project mode details and CLI equivalents](docs/agent-models.md#project-model-modes).
+These are skill-handled chat shortcuts. In clients that reject custom slash commands, invoke `$sdlc --save-my-token` or `$sdlc --normal`. The updated token-saving preset requires plugin/runtime 1.0.1 or newer; normal mode requires 0.6.0 or newer. After upgrading an existing project, reapply `--save-my-token` to update its saved preset. See [project mode details and CLI equivalents](docs/agent-models.md#project-model-modes).
 
 ## What stays in your repository
 
@@ -226,7 +228,7 @@ codex-sdlc does not operate a hosted service or send repository content to a cod
 Preview a project upgrade before applying it:
 
 ```sh
-npx --yes codex-sdlc@1.0.0 upgrade \
+npx --yes codex-sdlc@1.0.1 upgrade \
   --root /absolute/path/to/coordinator --dry-run
 ```
 
@@ -240,10 +242,10 @@ Applied upgrades create backups. Rollback checks managed-file integrity before r
 | --- | --- |
 | [Getting started](docs/getting-started.md) | [CLI setup and lifecycle reference](docs/cli-reference.md) |
 | [Multi-repository workspaces](docs/multi-repository.md) | [Role models and dispatch records](docs/agent-models.md) |
-| [What's new in 1.0.0](docs/releases/1.0.0.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
+| [What's new in 1.0.1](docs/releases/1.0.1.md) | [Release history](https://github.com/prime-vimihi/codex-sdlc/releases) |
 | [Support](SUPPORT.md) | [Contributing](CONTRIBUTING.md) |
 
-Current verification includes automated runtime tests, plugin and skill validation, and independent built-CLI checks. Native Linux/Windows qualification and a matched real-agent performance benchmark remain pending. See the [1.0.0 validation notes](docs/releases/1.0.0.md#validation).
+Current verification includes automated runtime tests, plugin and skill validation, and independent built-CLI checks. Native Linux/Windows qualification and a matched real-agent performance benchmark remain pending. See the [1.0.1 validation notes](docs/releases/1.0.1.md#validation).
 
 ## Build with us
 

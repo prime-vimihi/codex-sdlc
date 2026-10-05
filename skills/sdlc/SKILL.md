@@ -11,7 +11,7 @@ Treat `/sdlc --save-my-token` and `/sdlc --normal` as chat shorthand for this sk
 
 1. Resolve the selected project's coordinator directory and read its `AGENTS.md` and `.sdlc/project.yaml`. In a multi-repository workspace, the coordinator owns this setting for all mapped applications. Never select a different project or write global Codex settings. If the coordinator is unknown, ask for its location. If the project is not initialized, explain that setup is required; use [sdlc-setup](../sdlc-setup/SKILL.md) when initialization is requested rather than inventing application roots.
 2. Accept exactly one of `--save-my-token` and `--normal`. Both together, or either combined with custom role model, effort, fallback, reset, or PO settings, are conflicting requests: explain the conflict without changing configuration. Custom role changes can be made separately through [sdlc-setup](../sdlc-setup/SKILL.md).
-3. From the coordinator, run the corresponding command below with `--dry-run --json` first. Inspect the returned settings. An explicit mode request authorizes saving that preset: unless the user asked only for a preview, run the same command without `--dry-run`. Do not ask for another confirmation for the requested mode. If the runtime rejects the new flag, report that its version lacks this feature and use the setup upgrade workflow with version 0.6.0 or newer. Do not rewrite project configuration manually or claim success after a failed command.
+3. For `--save-my-token`, check `node .sdlc/runtime.cjs --version` first: the GPT-6.1 Sol preset requires runtime 1.0.1 or newer. If it is older, use the [setup upgrade workflow](../sdlc-setup/SKILL.md) before applying the preset; older runtimes can accept the flag while selecting the previous Sol model. `--normal` remains supported on runtime 0.6.0 or newer. From the coordinator, run the corresponding command below with `--dry-run --json` first. Inspect the returned settings. An explicit mode request authorizes saving that preset: unless the user asked only for a preview, run the same command without `--dry-run`. Do not ask for another confirmation for the requested mode. If the runtime rejects the flag, use the setup upgrade workflow. Do not rewrite project configuration manually or claim success after a failed command.
 
    ```sh
    node .sdlc/runtime.cjs configure-agents --save-my-token --dry-run --json
@@ -30,7 +30,7 @@ Treat `/sdlc --save-my-token` and `/sdlc --normal` as chat shorthand for this sk
 | Role | `--save-my-token` | `--normal` |
 | --- | --- | --- |
 | PM | Inherited | Inherited |
-| BA | `gpt-6-sol`, `high` | Inherited |
+| BA | `gpt-6.1-sol`, `high` | Inherited |
 | Backend | `gpt-6-luna`, `xhigh` | Inherited |
 | Frontend (web and mobile) | `gpt-6-luna`, `xhigh` | Inherited |
 | QC | `gpt-6-luna`, `xhigh` | Inherited |
